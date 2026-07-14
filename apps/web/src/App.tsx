@@ -7,6 +7,7 @@ import { LoginPage } from "./auth/LoginPage";
 import { CharacterPage } from "./features/character/CharacterPage";
 import { LibraryPage } from "./features/library/LibraryPage";
 import { JournalPage } from "./features/journal/JournalPage";
+import { GrowthPage } from "./features/growth/GrowthPage";
 import { SplitsPage } from "./features/splits/SplitsPage";
 import { TodayPage } from "./features/today/TodayPage";
 
@@ -65,12 +66,13 @@ export function App() {
         <Routes>
         <Route element={<AppShell />}>
           <Route index element={<TodayPage />} />
+          <Route path="growth" element={<GrowthPage />} />
           <Route path="journal" element={<JournalPage />} />
           <Route path="character" element={<CharacterPage />} />
           <Route path="library" element={<LibraryPage />} />
           <Route path="splits" element={<SplitsPage />} />
           {Object.entries(pages)
-            .filter(([path]) => !["today", "journal", "character", "library", "splits"].includes(path))
+            .filter(([path]) => !["today", "growth", "journal", "character", "library", "splits"].includes(path))
             .map(([path, page]) => (
               <Route key={path} path={path} element={<PlaceholderPage {...page} />} />
             ))}

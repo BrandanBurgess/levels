@@ -102,6 +102,7 @@ function renderPage(isAuthenticated: boolean, sessions: WorkoutSession[] = [acti
 
 afterEach(() => {
   localStorage.clear();
+  sessionStorage.clear();
   vi.restoreAllMocks();
 });
 
@@ -280,5 +281,27 @@ describe("JournalPage", () => {
     expect(screen.getByRole("button", { name: "Keep training" })).toHaveFocus();
     fireEvent.click(screen.getByRole("button", { name: "Keep training" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("carries an accepted growth target into the matching journal exercise", async () => {
+    sessionStorage.setItem(
+      `levels:growth:accepted:${exercise.id}`,
+      JSON.stringify({
+        suggestion: {
+          exercise_id: exercise.id,
+          exercise_name: exercise.name,
+          suggestion_type: "add_rep",
+          suggested_delta: 1,
+          delta_unit: "rep",
+          confidence: "medium",
+          explanation: ["Aim for one additional rep with stable form."],
+          source_session_ids: ["session-source"],
+        },
+      }),
+    );
+    renderPage(true);
+    expect((await screen.findByText(/Growth target:/)).parentElement).toHaveTextContent(
+      "Aim for one additional rep with stable form.",
+    );
   });
 });
