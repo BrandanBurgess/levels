@@ -12,6 +12,8 @@
     "test": "vitest run --coverage"
   },
   "dependencies": {
+    "@levels/api-client": "0.1.0",
+    "@tanstack/react-query": "5.101.2",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router-dom": "7.18.1"

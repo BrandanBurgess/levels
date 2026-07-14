@@ -1,7 +1,9 @@
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "./app/AppShell";
+import { AppProviders } from "./app/AppProviders";
 import { PlaceholderPage } from "./app/PlaceholderPage";
+import { LoginPage } from "./auth/LoginPage";
 
 const pages = {
   today: {
@@ -53,8 +55,9 @@ const pages = {
 
 export function App() {
   return (
-    <HashRouter>
-      <Routes>
+    <AppProviders>
+      <HashRouter>
+        <Routes>
         <Route element={<AppShell />}>
           <Route index element={<PlaceholderPage {...pages.today} />} />
           {Object.entries(pages)
@@ -63,8 +66,10 @@ export function App() {
               <Route key={path} path={path} element={<PlaceholderPage {...page} />} />
             ))}
           <Route path="*" element={<Navigate replace to="/" />} />
+          <Route path="login" element={<LoginPage />} />
         </Route>
-      </Routes>
-    </HashRouter>
+        </Routes>
+      </HashRouter>
+    </AppProviders>
   );
 }

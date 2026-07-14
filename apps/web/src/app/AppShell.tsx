@@ -1,5 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 
+import { useAuth } from "../auth/context";
+
 type NavItem = { label: string; to: string; icon: string; end?: boolean };
 
 const primaryNavigation: NavItem[] = [
@@ -36,6 +38,7 @@ function NavigationLink({ item, mobile = false }: { item: NavItem; mobile?: bool
 }
 
 export function AppShell() {
+  const { admin, isAuthenticated, logout } = useAuth();
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
@@ -49,7 +52,7 @@ export function AppShell() {
           </span>
           <span>LEVELS</span>
         </NavLink>
-        <p className="mode-label">Public showcase</p>
+        <p className="mode-label">{isAuthenticated ? `Owner · ${admin?.displayName}` : "Public showcase"}</p>
         <nav aria-label="Primary navigation" className="side-nav">
           {primaryNavigation.slice(0, 4).map((item) => (
             <NavigationLink item={item} key={item.to} />
@@ -61,9 +64,11 @@ export function AppShell() {
             <NavigationLink item={item} key={item.to} />
           ))}
         </nav>
-        <NavLink className="owner-link" to="/settings">
-          Owner sign in
-        </NavLink>
+        {isAuthenticated ? (
+          <button className="owner-link owner-link--button" onClick={logout} type="button">Sign out</button>
+        ) : (
+          <NavLink className="owner-link" to="/login">Owner sign in</NavLink>
+        )}
       </aside>
 
       <div className="shell-center">
@@ -74,7 +79,7 @@ export function AppShell() {
             </span>
             <span>LEVELS</span>
           </NavLink>
-          <span className="public-badge">Public</span>
+          <span className="public-badge">{isAuthenticated ? "Owner" : "Public"}</span>
         </header>
         <main id="main-content" tabIndex={-1}>
           <Outlet />

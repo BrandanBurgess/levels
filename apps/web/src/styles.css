@@ -84,7 +84,8 @@ a { color: inherit; }
   .side-nav__link { display: flex; min-height: 3rem; align-items: center; gap: 0.8rem; padding: 0.65rem 0.8rem; border-radius: 0.75rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 720; text-decoration: none; }
   .side-nav__link:hover { color: var(--text); background: var(--surface-1); }
   .side-nav__link.is-active { color: var(--purple-150); background: linear-gradient(90deg, rgb(116 48 215 / 28%), rgb(116 48 215 / 8%)); box-shadow: inset 3px 0 var(--purple-400); }
-  .owner-link { min-height: 2.8rem; margin-top: auto; padding: 0.75rem; border: 1px solid rgb(196 154 255 / 22%); border-radius: 0.75rem; color: var(--purple-150); font-size: 0.82rem; font-weight: 800; text-align: center; text-decoration: none; }
+.owner-link { min-height: 2.8rem; margin-top: auto; padding: 0.75rem; border: 1px solid rgb(196 154 255 / 22%); border-radius: 0.75rem; color: var(--purple-150); font-size: 0.82rem; font-weight: 800; text-align: center; text-decoration: none; }
+  .owner-link--button { width: 100%; background: transparent; cursor: pointer; }
   .shell-center { padding-bottom: 0; }
   .mobile-header, .mobile-nav { display: none; }
   .context-rail { position: sticky; top: 0; display: flex; height: 100vh; flex-direction: column; gap: 1rem; padding: 1.5rem 1rem; border-left: 1px solid rgb(196 154 255 / 12%); background: rgb(14 9 21 / 55%); }
@@ -94,6 +95,13 @@ a { color: inherit; }
   .rail-card__value { margin: 0; color: var(--text-strong); font-weight: 800; line-height: 1.35; }
   .rail-card__hint { margin: 0.6rem 0 0; color: var(--text-muted); font-size: 0.78rem; line-height: 1.5; }
 }
+
+.login-page { max-width: 45rem; }
+.login-card { display: grid; gap: 0.7rem; margin-top: 2rem; padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid rgb(196 154 255 / 18%); border-radius: 1.25rem; background: var(--surface-1); }
+.login-card label { margin-top: 0.35rem; color: var(--text); font-size: 0.86rem; font-weight: 800; }
+.login-card input { min-height: 3rem; padding: 0.7rem 0.8rem; border: 1px solid rgb(196 154 255 / 24%); border-radius: 0.7rem; color: var(--text-strong); background: var(--bg-1); }
+.form-error { margin: 0.3rem 0; color: var(--danger); line-height: 1.5; }
+.button--primary { color: var(--text-strong); background: linear-gradient(135deg, var(--purple-600), var(--purple-700)); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
