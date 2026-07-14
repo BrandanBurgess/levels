@@ -11,6 +11,7 @@ from .errors import register_error_handlers
 from .features.exercises.routes import exercise_blueprint
 from .features.growth.routes import growth_blueprint
 from .features.profile.routes import profile_blueprint
+from .features.records.routes import record_blueprint
 from .features.sessions.routes import session_blueprint
 from .features.splits.routes import split_blueprint
 from .features.today.routes import today_blueprint
@@ -52,6 +53,7 @@ def create_app(settings: Settings | None = None) -> Flask:
     app.register_blueprint(exercise_blueprint)
     app.register_blueprint(growth_blueprint)
     app.register_blueprint(profile_blueprint)
+    app.register_blueprint(record_blueprint)
     app.register_blueprint(session_blueprint)
     app.register_blueprint(split_blueprint)
     app.register_blueprint(today_blueprint)
