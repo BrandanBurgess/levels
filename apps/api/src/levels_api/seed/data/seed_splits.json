@@ -1,0 +1,1138 @@
+{
+  "schema_version": 1,
+  "profile": {
+    "display_name": "Brandan Burgess",
+    "height_cm": 179,
+    "body_weight_kg": 79.38,
+    "preferred_units": "imperial",
+    "timezone": "America/Toronto"
+  },
+  "settings": {
+    "default_water_goal_ml": 2800,
+    "water_quick_add_ml": [
+      250,
+      500,
+      750
+    ],
+    "default_target_rir": 2,
+    "default_load_increment_kg": 1.133980925
+  },
+  "splits": [
+    {
+      "name": "Brandan Athletic Upper / Lower",
+      "slug": "brandan-athletic-upper-lower",
+      "description": "Four efficient days plus optional conditioning or specialization.",
+      "is_active": true,
+      "days": [
+        {
+          "name": "Upper A \u2014 Incline + Back",
+          "day_type": "upper",
+          "sequence": 1,
+          "items": [
+            {
+              "exercise_id": "jump_rope_easy",
+              "item_type": "activation",
+              "sets": 1,
+              "rep_min": null,
+              "rep_max": null,
+              "rest_seconds": 90,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": "3\u20135 easy minutes.",
+              "alternatives": [
+                "stationary_bike_easy"
+              ]
+            },
+            {
+              "exercise_id": "incline_barbell_bench_press",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 5,
+              "rep_max": 8,
+              "rest_seconds": 150,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "incline_dumbbell_press",
+                "incline_smith_press"
+              ]
+            },
+            {
+              "exercise_id": "pull_up",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 5,
+              "rep_max": 10,
+              "rest_seconds": 150,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "weighted_pull_up",
+                "assisted_pull_up",
+                "neutral_grip_lat_pulldown"
+              ]
+            },
+            {
+              "exercise_id": "chest_supported_row",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 120,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "seated_cable_row",
+                "plate_loaded_row"
+              ]
+            },
+            {
+              "exercise_id": "cable_lateral_raise",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 15,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "dumbbell_lateral_raise",
+                "machine_lateral_raise"
+              ]
+            },
+            {
+              "exercise_id": "incline_dumbbell_curl",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": "arms-a",
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "preacher_curl_machine",
+                "cable_curl"
+              ]
+            },
+            {
+              "exercise_id": "rope_triceps_pressdown",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": "arms-a",
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "straight_bar_pressdown",
+                "overhead_cable_triceps_extension"
+              ]
+            },
+            {
+              "exercise_id": "farmer_carry",
+              "item_type": "conditioning",
+              "sets": 3,
+              "rep_min": null,
+              "rep_max": null,
+              "rest_seconds": 60,
+              "target_rir": null,
+              "superset_group": null,
+              "optional": true,
+              "notes": null,
+              "alternatives": [
+                "plank",
+                "stationary_bike_intervals"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Lower A \u2014 Squat + Single Leg",
+          "day_type": "lower",
+          "sequence": 2,
+          "items": [
+            {
+              "exercise_id": "stationary_bike_easy",
+              "item_type": "activation",
+              "sets": 1,
+              "rep_min": null,
+              "rep_max": null,
+              "rest_seconds": 90,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": "3\u20135 easy minutes.",
+              "alternatives": [
+                "jump_rope_easy"
+              ]
+            },
+            {
+              "exercise_id": "high_bar_back_squat",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 5,
+              "rep_max": 8,
+              "rest_seconds": 180,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "front_squat",
+                "hack_squat"
+              ]
+            },
+            {
+              "exercise_id": "barbell_hip_thrust",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 120,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "machine_hip_thrust",
+                "glute_bridge"
+              ]
+            },
+            {
+              "exercise_id": "bulgarian_split_squat",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 120,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "reverse_lunge",
+                "step_up"
+              ]
+            },
+            {
+              "exercise_id": "seated_leg_curl",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 75,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "lying_leg_curl",
+                "single_leg_curl"
+              ]
+            },
+            {
+              "exercise_id": "standing_calf_raise",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 12,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "seated_calf_raise",
+                "leg_press_calf_raise"
+              ]
+            },
+            {
+              "exercise_id": "hanging_knee_raise",
+              "item_type": "core",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 12,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "ab_wheel_rollout",
+                "plank"
+              ]
+            },
+            {
+              "exercise_id": "jump_rope_intervals",
+              "item_type": "conditioning",
+              "sets": 5,
+              "rep_min": null,
+              "rep_max": null,
+              "rest_seconds": 30,
+              "target_rir": null,
+              "superset_group": null,
+              "optional": true,
+              "notes": null,
+              "alternatives": [
+                "stationary_bike_intervals",
+                "sled_push"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Upper B \u2014 Shoulders + Lats",
+          "day_type": "upper",
+          "sequence": 3,
+          "items": [
+            {
+              "exercise_id": "stationary_bike_easy",
+              "item_type": "activation",
+              "sets": 1,
+              "rep_min": null,
+              "rep_max": null,
+              "rest_seconds": 90,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": "3 easy minutes.",
+              "alternatives": [
+                "jump_rope_easy"
+              ]
+            },
+            {
+              "exercise_id": "standing_barbell_overhead_press",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 5,
+              "rep_max": 8,
+              "rest_seconds": 150,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "seated_dumbbell_shoulder_press",
+                "machine_shoulder_press"
+              ]
+            },
+            {
+              "exercise_id": "neutral_grip_pull_up",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 5,
+              "rep_max": 10,
+              "rest_seconds": 150,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "neutral_grip_lat_pulldown",
+                "chin_up"
+              ]
+            },
+            {
+              "exercise_id": "flat_dumbbell_bench_press",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 120,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "weighted_push_up",
+                "machine_chest_press"
+              ]
+            },
+            {
+              "exercise_id": "one_arm_cable_row",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 90,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "seated_cable_row",
+                "chest_supported_row"
+              ]
+            },
+            {
+              "exercise_id": "dumbbell_lateral_raise",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 15,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": "delts-b",
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "cable_lateral_raise",
+                "machine_lateral_raise"
+              ]
+            },
+            {
+              "exercise_id": "reverse_pec_deck",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 8,
+              "rep_max": 15,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": "delts-b",
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "cable_rear_delt_fly",
+                "face_pull"
+              ]
+            },
+            {
+              "exercise_id": "hammer_curl",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": "arms-b",
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "rope_hammer_curl"
+              ]
+            },
+            {
+              "exercise_id": "overhead_cable_triceps_extension",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": "arms-b",
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "rope_triceps_pressdown"
+              ]
+            },
+            {
+              "exercise_id": "plank",
+              "item_type": "core",
+              "sets": 2,
+              "rep_min": null,
+              "rep_max": null,
+              "rest_seconds": 45,
+              "target_rir": null,
+              "superset_group": null,
+              "optional": true,
+              "notes": null,
+              "alternatives": [
+                "farmer_carry",
+                "rowing_machine"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Lower B \u2014 Athletic Legs",
+          "day_type": "lower",
+          "sequence": 4,
+          "items": [
+            {
+              "exercise_id": "stationary_bike_easy",
+              "item_type": "activation",
+              "sets": 1,
+              "rep_min": null,
+              "rep_max": null,
+              "rest_seconds": 90,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": "3\u20135 easy minutes.",
+              "alternatives": [
+                "jump_rope_easy"
+              ]
+            },
+            {
+              "exercise_id": "box_jump",
+              "item_type": "power",
+              "sets": 3,
+              "rep_min": 3,
+              "rep_max": 3,
+              "rest_seconds": 90,
+              "target_rir": null,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "broad_jump"
+              ]
+            },
+            {
+              "exercise_id": "front_squat",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 5,
+              "rep_max": 8,
+              "rest_seconds": 180,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "leg_press",
+                "hack_squat"
+              ]
+            },
+            {
+              "exercise_id": "machine_hip_thrust",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 120,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "barbell_hip_thrust",
+                "45_degree_back_extension"
+              ]
+            },
+            {
+              "exercise_id": "walking_lunge",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 105,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "step_up",
+                "reverse_lunge"
+              ]
+            },
+            {
+              "exercise_id": "lying_leg_curl",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 75,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "seated_leg_curl",
+                "single_leg_curl"
+              ]
+            },
+            {
+              "exercise_id": "ab_wheel_rollout",
+              "item_type": "core",
+              "sets": 3,
+              "rep_min": 5,
+              "rep_max": 10,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "hanging_leg_raise",
+                "pallof_press"
+              ]
+            },
+            {
+              "exercise_id": "seated_calf_raise",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 8,
+              "rep_max": 12,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": [
+                "standing_calf_raise",
+                "leg_press_calf_raise"
+              ]
+            },
+            {
+              "exercise_id": "stationary_bike_intervals",
+              "item_type": "conditioning",
+              "sets": 6,
+              "rep_min": null,
+              "rep_max": null,
+              "rest_seconds": 60,
+              "target_rir": null,
+              "superset_group": null,
+              "optional": true,
+              "notes": null,
+              "alternatives": [
+                "sled_push",
+                "jump_rope_intervals"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Optional \u2014 Condition or Specialize",
+          "day_type": "optional",
+          "sequence": 5,
+          "is_optional": true,
+          "modes": {
+            "conditioning": [
+              {
+                "exercise_id": "stationary_bike_easy",
+                "item_type": "activation",
+                "sets": 1,
+                "rep_min": null,
+                "rep_max": null,
+                "rest_seconds": 90,
+                "target_rir": 2,
+                "superset_group": null,
+                "optional": false,
+                "notes": "5 easy minutes.",
+                "alternatives": []
+              },
+              {
+                "exercise_id": "stationary_bike_intervals",
+                "item_type": "conditioning",
+                "sets": 8,
+                "rep_min": null,
+                "rep_max": null,
+                "rest_seconds": 75,
+                "target_rir": null,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "farmer_carry",
+                "item_type": "conditioning",
+                "sets": 3,
+                "rep_min": null,
+                "rep_max": null,
+                "rest_seconds": 75,
+                "target_rir": null,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "plank",
+                "item_type": "core",
+                "sets": 3,
+                "rep_min": null,
+                "rep_max": null,
+                "rest_seconds": 45,
+                "target_rir": null,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "side_plank",
+                "item_type": "core",
+                "sets": 2,
+                "rep_min": null,
+                "rep_max": null,
+                "rest_seconds": 45,
+                "target_rir": null,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              }
+            ],
+            "shoulders_arms": [
+              {
+                "exercise_id": "cable_lateral_raise",
+                "item_type": "accessory",
+                "sets": 3,
+                "rep_min": 8,
+                "rep_max": 15,
+                "rest_seconds": 60,
+                "target_rir": 1,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "reverse_pec_deck",
+                "item_type": "accessory",
+                "sets": 3,
+                "rep_min": 8,
+                "rep_max": 15,
+                "rest_seconds": 60,
+                "target_rir": 1,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "preacher_curl_machine",
+                "item_type": "accessory",
+                "sets": 3,
+                "rep_min": 6,
+                "rep_max": 10,
+                "rest_seconds": 75,
+                "target_rir": 1,
+                "superset_group": "oa",
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "rope_triceps_pressdown",
+                "item_type": "accessory",
+                "sets": 3,
+                "rep_min": 6,
+                "rep_max": 10,
+                "rest_seconds": 75,
+                "target_rir": 1,
+                "superset_group": "oa",
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "rope_hammer_curl",
+                "item_type": "accessory",
+                "sets": 2,
+                "rep_min": 8,
+                "rep_max": 12,
+                "rest_seconds": 60,
+                "target_rir": 1,
+                "superset_group": "ob",
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "overhead_cable_triceps_extension",
+                "item_type": "accessory",
+                "sets": 2,
+                "rep_min": 8,
+                "rep_max": 12,
+                "rest_seconds": 60,
+                "target_rir": 1,
+                "superset_group": "ob",
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "hanging_leg_raise",
+                "item_type": "core",
+                "sets": 3,
+                "rep_min": 6,
+                "rep_max": 12,
+                "rest_seconds": 60,
+                "target_rir": 1,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              }
+            ],
+            "chest": [
+              {
+                "exercise_id": "machine_chest_press",
+                "item_type": "main",
+                "sets": 3,
+                "rep_min": 6,
+                "rep_max": 10,
+                "rest_seconds": 105,
+                "target_rir": 2,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "pec_deck_fly",
+                "item_type": "accessory",
+                "sets": 3,
+                "rep_min": 8,
+                "rep_max": 15,
+                "rest_seconds": 75,
+                "target_rir": 1,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "push_up",
+                "item_type": "accessory",
+                "sets": 2,
+                "rep_min": 8,
+                "rep_max": 20,
+                "rest_seconds": 60,
+                "target_rir": 1,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              }
+            ],
+            "back": [
+              {
+                "exercise_id": "neutral_grip_lat_pulldown",
+                "item_type": "main",
+                "sets": 3,
+                "rep_min": 6,
+                "rep_max": 10,
+                "rest_seconds": 105,
+                "target_rir": 2,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "plate_loaded_row",
+                "item_type": "main",
+                "sets": 3,
+                "rep_min": 6,
+                "rep_max": 10,
+                "rest_seconds": 120,
+                "target_rir": 2,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              },
+              {
+                "exercise_id": "straight_arm_pulldown",
+                "item_type": "accessory",
+                "sets": 2,
+                "rep_min": 8,
+                "rep_max": 15,
+                "rest_seconds": 75,
+                "target_rir": 1,
+                "superset_group": null,
+                "optional": false,
+                "notes": null,
+                "alternatives": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Push / Pull / Legs",
+      "slug": "push-pull-legs",
+      "description": "Preloaded alternative.",
+      "is_active": false,
+      "days": [
+        {
+          "name": "Push",
+          "day_type": "push",
+          "sequence": 1,
+          "items": [
+            {
+              "exercise_id": "incline_barbell_bench_press",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 5,
+              "rep_max": 8,
+              "rest_seconds": 150,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "machine_chest_press",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 105,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "seated_dumbbell_shoulder_press",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 120,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "cable_lateral_raise",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 15,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "rope_triceps_pressdown",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "overhead_cable_triceps_extension",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 8,
+              "rep_max": 12,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            }
+          ]
+        },
+        {
+          "name": "Pull",
+          "day_type": "pull",
+          "sequence": 2,
+          "items": [
+            {
+              "exercise_id": "pull_up",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 5,
+              "rep_max": 10,
+              "rest_seconds": 150,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "chest_supported_row",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 120,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "straight_arm_pulldown",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 8,
+              "rep_max": 15,
+              "rest_seconds": 75,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "reverse_pec_deck",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 15,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "preacher_curl_machine",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 75,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "hammer_curl",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            }
+          ]
+        },
+        {
+          "name": "Legs",
+          "day_type": "legs",
+          "sequence": 3,
+          "items": [
+            {
+              "exercise_id": "high_bar_back_squat",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 5,
+              "rep_max": 8,
+              "rest_seconds": 180,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "leg_press",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 150,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "barbell_hip_thrust",
+              "item_type": "main",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 120,
+              "target_rir": 2,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "seated_leg_curl",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 10,
+              "rest_seconds": 75,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "leg_extension",
+              "item_type": "accessory",
+              "sets": 2,
+              "rep_min": 8,
+              "rep_max": 15,
+              "rest_seconds": 75,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "standing_calf_raise",
+              "item_type": "accessory",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 15,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            },
+            {
+              "exercise_id": "hanging_knee_raise",
+              "item_type": "core",
+              "sets": 3,
+              "rep_min": 6,
+              "rep_max": 12,
+              "rest_seconds": 60,
+              "target_rir": 1,
+              "superset_group": null,
+              "optional": false,
+              "notes": null,
+              "alternatives": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

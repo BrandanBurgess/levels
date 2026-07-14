@@ -1,0 +1,2792 @@
+{
+  "schema_version": 1,
+  "notes": [
+    "Canonical load is kilograms; display conversion is a UI concern.",
+    "No excluded hinge-lift variants are seeded.",
+    "requested_sam_style means the exercise was included to cover the high-volume bodybuilding style requested by the owner; it is not a claim of an exhaustive personal routine.",
+    "Primary and secondary targets drive the avatar."
+  ],
+  "muscle_groups": [
+    {
+      "id": "upper_chest",
+      "slug": "upper_chest",
+      "display_name": "Upper Chest",
+      "body_region": "chest"
+    },
+    {
+      "id": "mid_chest",
+      "slug": "mid_chest",
+      "display_name": "Mid Chest",
+      "body_region": "chest"
+    },
+    {
+      "id": "lower_chest",
+      "slug": "lower_chest",
+      "display_name": "Lower Chest",
+      "body_region": "chest"
+    },
+    {
+      "id": "front_delts",
+      "slug": "front_delts",
+      "display_name": "Front Delts",
+      "body_region": "shoulders"
+    },
+    {
+      "id": "side_delts",
+      "slug": "side_delts",
+      "display_name": "Side Delts",
+      "body_region": "shoulders"
+    },
+    {
+      "id": "rear_delts",
+      "slug": "rear_delts",
+      "display_name": "Rear Delts",
+      "body_region": "shoulders"
+    },
+    {
+      "id": "lats",
+      "slug": "lats",
+      "display_name": "Lats",
+      "body_region": "back"
+    },
+    {
+      "id": "upper_back",
+      "slug": "upper_back",
+      "display_name": "Upper Back",
+      "body_region": "back"
+    },
+    {
+      "id": "traps",
+      "slug": "traps",
+      "display_name": "Traps",
+      "body_region": "back"
+    },
+    {
+      "id": "spinal_erectors",
+      "slug": "spinal_erectors",
+      "display_name": "Spinal Erectors",
+      "body_region": "back"
+    },
+    {
+      "id": "biceps",
+      "slug": "biceps",
+      "display_name": "Biceps",
+      "body_region": "arms"
+    },
+    {
+      "id": "brachialis",
+      "slug": "brachialis",
+      "display_name": "Brachialis",
+      "body_region": "arms"
+    },
+    {
+      "id": "forearms",
+      "slug": "forearms",
+      "display_name": "Forearms",
+      "body_region": "arms"
+    },
+    {
+      "id": "triceps",
+      "slug": "triceps",
+      "display_name": "Triceps",
+      "body_region": "arms"
+    },
+    {
+      "id": "abs",
+      "slug": "abs",
+      "display_name": "Abs",
+      "body_region": "core"
+    },
+    {
+      "id": "obliques",
+      "slug": "obliques",
+      "display_name": "Obliques",
+      "body_region": "core"
+    },
+    {
+      "id": "hip_flexors",
+      "slug": "hip_flexors",
+      "display_name": "Hip Flexors",
+      "body_region": "core"
+    },
+    {
+      "id": "glutes",
+      "slug": "glutes",
+      "display_name": "Glutes",
+      "body_region": "hips"
+    },
+    {
+      "id": "abductors",
+      "slug": "abductors",
+      "display_name": "Abductors",
+      "body_region": "hips"
+    },
+    {
+      "id": "quads",
+      "slug": "quads",
+      "display_name": "Quads",
+      "body_region": "legs"
+    },
+    {
+      "id": "hamstrings",
+      "slug": "hamstrings",
+      "display_name": "Hamstrings",
+      "body_region": "legs"
+    },
+    {
+      "id": "adductors",
+      "slug": "adductors",
+      "display_name": "Adductors",
+      "body_region": "legs"
+    },
+    {
+      "id": "calves",
+      "slug": "calves",
+      "display_name": "Calves",
+      "body_region": "calves"
+    },
+    {
+      "id": "cardiovascular",
+      "slug": "cardiovascular",
+      "display_name": "Cardiovascular",
+      "body_region": "cardiovascular"
+    },
+    {
+      "id": "full_body",
+      "slug": "full_body",
+      "display_name": "Full Body",
+      "body_region": "full_body"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "incline_barbell_bench_press",
+      "slug": "incline_barbell_bench_press",
+      "name": "Incline Barbell Bench Press",
+      "aliases": [
+        "incline bench"
+      ],
+      "variation_group": "incline_press",
+      "movement_pattern": "horizontal_push",
+      "equipment": "barbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 8,
+      "default_rest_seconds": 150,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "upper_chest"
+      ],
+      "secondary_muscles": [
+        "mid_chest",
+        "front_delts",
+        "triceps"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "incline_dumbbell_press",
+      "slug": "incline_dumbbell_press",
+      "name": "Incline Dumbbell Press",
+      "aliases": [
+        "incline db press"
+      ],
+      "variation_group": "incline_press",
+      "movement_pattern": "horizontal_push",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "upper_chest"
+      ],
+      "secondary_muscles": [
+        "mid_chest",
+        "front_delts",
+        "triceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "incline_smith_press",
+      "slug": "incline_smith_press",
+      "name": "Incline Smith Press",
+      "aliases": [],
+      "variation_group": "incline_press",
+      "movement_pattern": "horizontal_push",
+      "equipment": "smith_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "upper_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "flat_barbell_bench_press",
+      "slug": "flat_barbell_bench_press",
+      "name": "Flat Barbell Bench Press",
+      "aliases": [
+        "bench press"
+      ],
+      "variation_group": "flat_press",
+      "movement_pattern": "horizontal_push",
+      "equipment": "barbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 8,
+      "default_rest_seconds": 150,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "mid_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "flat_dumbbell_bench_press",
+      "slug": "flat_dumbbell_bench_press",
+      "name": "Flat Dumbbell Bench Press",
+      "aliases": [
+        "flat db press"
+      ],
+      "variation_group": "flat_press",
+      "movement_pattern": "horizontal_push",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "mid_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "machine_chest_press",
+      "slug": "machine_chest_press",
+      "name": "Machine Chest Press",
+      "aliases": [],
+      "variation_group": "flat_press",
+      "movement_pattern": "horizontal_push",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "mid_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "plate_loaded_chest_press",
+      "slug": "plate_loaded_chest_press",
+      "name": "Plate-Loaded Chest Press",
+      "aliases": [],
+      "variation_group": "flat_press",
+      "movement_pattern": "horizontal_push",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "mid_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "push_up",
+      "slug": "push_up",
+      "name": "Push-Up",
+      "aliases": [
+        "pushup"
+      ],
+      "variation_group": "push_up",
+      "movement_pattern": "horizontal_push",
+      "equipment": "bodyweight",
+      "measurement_type": "bodyweight_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 20,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "mid_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts",
+        "triceps",
+        "abs"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "weighted_push_up",
+      "slug": "weighted_push_up",
+      "name": "Weighted Push-Up",
+      "aliases": [],
+      "variation_group": "push_up",
+      "movement_pattern": "horizontal_push",
+      "equipment": "bodyweight",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 12,
+      "default_rest_seconds": 90,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "mid_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts",
+        "triceps",
+        "abs"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "pec_deck_fly",
+      "slug": "pec_deck_fly",
+      "name": "Pec Deck Fly",
+      "aliases": [
+        "pec deck"
+      ],
+      "variation_group": "chest_fly",
+      "movement_pattern": "isolation",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "mid_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "cable_fly",
+      "slug": "cable_fly",
+      "name": "Cable Fly",
+      "aliases": [
+        "cable crossover"
+      ],
+      "variation_group": "chest_fly",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "mid_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "low_to_high_cable_fly",
+      "slug": "low_to_high_cable_fly",
+      "name": "Low-to-High Cable Fly",
+      "aliases": [],
+      "variation_group": "chest_fly",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "upper_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "high_to_low_cable_fly",
+      "slug": "high_to_low_cable_fly",
+      "name": "High-to-Low Cable Fly",
+      "aliases": [],
+      "variation_group": "chest_fly",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lower_chest"
+      ],
+      "secondary_muscles": [
+        "mid_chest"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "pull_up",
+      "slug": "pull_up",
+      "name": "Pull-Up",
+      "aliases": [
+        "pullup"
+      ],
+      "variation_group": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "equipment": "pullup_bar",
+      "measurement_type": "bodyweight_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 10,
+      "default_rest_seconds": 150,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "upper_back",
+        "biceps",
+        "forearms"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "weighted_pull_up",
+      "slug": "weighted_pull_up",
+      "name": "Weighted Pull-Up",
+      "aliases": [],
+      "variation_group": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "equipment": "pullup_bar",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 8,
+      "default_rest_seconds": 150,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "upper_back",
+        "biceps",
+        "forearms"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "assisted_pull_up",
+      "slug": "assisted_pull_up",
+      "name": "Assisted Pull-Up",
+      "aliases": [],
+      "variation_group": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "upper_back",
+        "biceps"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "neutral_grip_pull_up",
+      "slug": "neutral_grip_pull_up",
+      "name": "Neutral-Grip Pull-Up",
+      "aliases": [],
+      "variation_group": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "equipment": "pullup_bar",
+      "measurement_type": "bodyweight_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 10,
+      "default_rest_seconds": 150,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "upper_back",
+        "biceps",
+        "brachialis"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "chin_up",
+      "slug": "chin_up",
+      "name": "Chin-Up",
+      "aliases": [
+        "chinup"
+      ],
+      "variation_group": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "equipment": "pullup_bar",
+      "measurement_type": "bodyweight_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 10,
+      "default_rest_seconds": 150,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats",
+        "biceps"
+      ],
+      "secondary_muscles": [
+        "upper_back",
+        "forearms"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "wide_grip_lat_pulldown",
+      "slug": "wide_grip_lat_pulldown",
+      "name": "Wide-Grip Lat Pulldown",
+      "aliases": [
+        "lat pulldown"
+      ],
+      "variation_group": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "upper_back",
+        "biceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "neutral_grip_lat_pulldown",
+      "slug": "neutral_grip_lat_pulldown",
+      "name": "Neutral-Grip Lat Pulldown",
+      "aliases": [],
+      "variation_group": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "upper_back"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "single_arm_lat_pulldown",
+      "slug": "single_arm_lat_pulldown",
+      "name": "Single-Arm Lat Pulldown",
+      "aliases": [],
+      "variation_group": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": true,
+      "default_rep_min": 6,
+      "default_rep_max": 12,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "biceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "straight_arm_pulldown",
+      "slug": "straight_arm_pulldown",
+      "name": "Straight-Arm Pulldown",
+      "aliases": [
+        "cable pullover"
+      ],
+      "variation_group": "lat_isolation",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "triceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "machine_pullover",
+      "slug": "machine_pullover",
+      "name": "Machine Pullover",
+      "aliases": [],
+      "variation_group": "lat_isolation",
+      "movement_pattern": "isolation",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 90,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "mid_chest",
+        "triceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "chest_supported_row",
+      "slug": "chest_supported_row",
+      "name": "Chest-Supported Row",
+      "aliases": [],
+      "variation_group": "horizontal_row",
+      "movement_pattern": "horizontal_pull",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "upper_back"
+      ],
+      "secondary_muscles": [
+        "lats",
+        "rear_delts",
+        "biceps"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "chest_supported_dumbbell_row",
+      "slug": "chest_supported_dumbbell_row",
+      "name": "Chest-Supported Dumbbell Row",
+      "aliases": [],
+      "variation_group": "horizontal_row",
+      "movement_pattern": "horizontal_pull",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "upper_back"
+      ],
+      "secondary_muscles": [
+        "lats",
+        "rear_delts",
+        "biceps"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "seated_cable_row",
+      "slug": "seated_cable_row",
+      "name": "Seated Cable Row",
+      "aliases": [],
+      "variation_group": "horizontal_row",
+      "movement_pattern": "horizontal_pull",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "upper_back"
+      ],
+      "secondary_muscles": [
+        "lats",
+        "rear_delts",
+        "biceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "one_arm_cable_row",
+      "slug": "one_arm_cable_row",
+      "name": "One-Arm Cable Row",
+      "aliases": [],
+      "variation_group": "horizontal_row",
+      "movement_pattern": "horizontal_pull",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": true,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 90,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "lats",
+        "upper_back"
+      ],
+      "secondary_muscles": [
+        "rear_delts",
+        "biceps"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "plate_loaded_row",
+      "slug": "plate_loaded_row",
+      "name": "Plate-Loaded Row",
+      "aliases": [
+        "hammer strength row"
+      ],
+      "variation_group": "horizontal_row",
+      "movement_pattern": "horizontal_pull",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "upper_back"
+      ],
+      "secondary_muscles": [
+        "lats",
+        "rear_delts",
+        "biceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "t_bar_chest_supported_row",
+      "slug": "t_bar_chest_supported_row",
+      "name": "Chest-Supported T-Bar Row",
+      "aliases": [
+        "t-bar row"
+      ],
+      "variation_group": "horizontal_row",
+      "movement_pattern": "horizontal_pull",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "upper_back"
+      ],
+      "secondary_muscles": [
+        "lats",
+        "rear_delts",
+        "biceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "face_pull",
+      "slug": "face_pull",
+      "name": "Face Pull",
+      "aliases": [],
+      "variation_group": "rear_delt_upper_back",
+      "movement_pattern": "horizontal_pull",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 10,
+      "default_rep_max": 20,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "rear_delts",
+        "upper_back"
+      ],
+      "secondary_muscles": [
+        "traps"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "standing_barbell_overhead_press",
+      "slug": "standing_barbell_overhead_press",
+      "name": "Standing Barbell Overhead Press",
+      "aliases": [
+        "ohp"
+      ],
+      "variation_group": "overhead_press",
+      "movement_pattern": "vertical_push",
+      "equipment": "barbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 8,
+      "default_rest_seconds": 150,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "front_delts"
+      ],
+      "secondary_muscles": [
+        "side_delts",
+        "triceps",
+        "upper_chest",
+        "abs"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "seated_dumbbell_shoulder_press",
+      "slug": "seated_dumbbell_shoulder_press",
+      "name": "Seated Dumbbell Shoulder Press",
+      "aliases": [],
+      "variation_group": "overhead_press",
+      "movement_pattern": "vertical_push",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "front_delts"
+      ],
+      "secondary_muscles": [
+        "side_delts",
+        "triceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "machine_shoulder_press",
+      "slug": "machine_shoulder_press",
+      "name": "Machine Shoulder Press",
+      "aliases": [],
+      "variation_group": "overhead_press",
+      "movement_pattern": "vertical_push",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "front_delts"
+      ],
+      "secondary_muscles": [
+        "side_delts",
+        "triceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "smith_shoulder_press",
+      "slug": "smith_shoulder_press",
+      "name": "Smith Shoulder Press",
+      "aliases": [],
+      "variation_group": "overhead_press",
+      "movement_pattern": "vertical_push",
+      "equipment": "smith_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "front_delts"
+      ],
+      "secondary_muscles": [
+        "side_delts",
+        "triceps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "dumbbell_lateral_raise",
+      "slug": "dumbbell_lateral_raise",
+      "name": "Dumbbell Lateral Raise",
+      "aliases": [
+        "side raise"
+      ],
+      "variation_group": "lateral_raise",
+      "movement_pattern": "isolation",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "side_delts"
+      ],
+      "secondary_muscles": [
+        "traps"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "cable_lateral_raise",
+      "slug": "cable_lateral_raise",
+      "name": "Cable Lateral Raise",
+      "aliases": [],
+      "variation_group": "lateral_raise",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": true,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "side_delts"
+      ],
+      "secondary_muscles": [
+        "traps"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "machine_lateral_raise",
+      "slug": "machine_lateral_raise",
+      "name": "Machine Lateral Raise",
+      "aliases": [],
+      "variation_group": "lateral_raise",
+      "movement_pattern": "isolation",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "side_delts"
+      ],
+      "secondary_muscles": [
+        "traps"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "reverse_pec_deck",
+      "slug": "reverse_pec_deck",
+      "name": "Reverse Pec Deck",
+      "aliases": [
+        "rear delt machine"
+      ],
+      "variation_group": "rear_delt_fly",
+      "movement_pattern": "isolation",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "rear_delts"
+      ],
+      "secondary_muscles": [
+        "upper_back"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "cable_rear_delt_fly",
+      "slug": "cable_rear_delt_fly",
+      "name": "Cable Rear-Delt Fly",
+      "aliases": [],
+      "variation_group": "rear_delt_fly",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "rear_delts"
+      ],
+      "secondary_muscles": [
+        "upper_back"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "dumbbell_rear_delt_fly",
+      "slug": "dumbbell_rear_delt_fly",
+      "name": "Dumbbell Rear-Delt Fly",
+      "aliases": [],
+      "variation_group": "rear_delt_fly",
+      "movement_pattern": "isolation",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "rear_delts"
+      ],
+      "secondary_muscles": [
+        "upper_back"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "dumbbell_shrug",
+      "slug": "dumbbell_shrug",
+      "name": "Dumbbell Shrug",
+      "aliases": [],
+      "variation_group": "shrug",
+      "movement_pattern": "isolation",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 12,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "traps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "machine_shrug",
+      "slug": "machine_shrug",
+      "name": "Machine Shrug",
+      "aliases": [],
+      "variation_group": "shrug",
+      "movement_pattern": "isolation",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 12,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "traps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "incline_dumbbell_curl",
+      "slug": "incline_dumbbell_curl",
+      "name": "Incline Dumbbell Curl",
+      "aliases": [],
+      "variation_group": "supinated_curl",
+      "movement_pattern": "isolation",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "preacher_curl_machine",
+      "slug": "preacher_curl_machine",
+      "name": "Machine Preacher Curl",
+      "aliases": [
+        "preacher curl"
+      ],
+      "variation_group": "preacher_curl",
+      "movement_pattern": "isolation",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "preacher_curl_ez_bar",
+      "slug": "preacher_curl_ez_bar",
+      "name": "EZ-Bar Preacher Curl",
+      "aliases": [],
+      "variation_group": "preacher_curl",
+      "movement_pattern": "isolation",
+      "equipment": "barbell",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "cable_curl",
+      "slug": "cable_curl",
+      "name": "Cable Curl",
+      "aliases": [],
+      "variation_group": "supinated_curl",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 12,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "bayesian_cable_curl",
+      "slug": "bayesian_cable_curl",
+      "name": "Bayesian Cable Curl",
+      "aliases": [],
+      "variation_group": "supinated_curl",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": true,
+      "default_rep_min": 8,
+      "default_rep_max": 12,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "hammer_curl",
+      "slug": "hammer_curl",
+      "name": "Hammer Curl",
+      "aliases": [],
+      "variation_group": "neutral_curl",
+      "movement_pattern": "isolation",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "brachialis"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "forearms"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "rope_hammer_curl",
+      "slug": "rope_hammer_curl",
+      "name": "Rope Hammer Curl",
+      "aliases": [],
+      "variation_group": "neutral_curl",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 12,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "brachialis"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "forearms"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "spider_curl",
+      "slug": "spider_curl",
+      "name": "Spider Curl",
+      "aliases": [],
+      "variation_group": "supinated_curl",
+      "movement_pattern": "isolation",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 12,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "rope_triceps_pressdown",
+      "slug": "rope_triceps_pressdown",
+      "name": "Rope Triceps Pressdown",
+      "aliases": [
+        "rope pushdown"
+      ],
+      "variation_group": "pressdown",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "straight_bar_pressdown",
+      "slug": "straight_bar_pressdown",
+      "name": "Straight-Bar Pressdown",
+      "aliases": [],
+      "variation_group": "pressdown",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "overhead_cable_triceps_extension",
+      "slug": "overhead_cable_triceps_extension",
+      "name": "Overhead Cable Triceps Extension",
+      "aliases": [
+        "overhead rope extension"
+      ],
+      "variation_group": "overhead_triceps",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "single_arm_cable_triceps_extension",
+      "slug": "single_arm_cable_triceps_extension",
+      "name": "Single-Arm Cable Triceps Extension",
+      "aliases": [],
+      "variation_group": "pressdown",
+      "movement_pattern": "isolation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": true,
+      "default_rep_min": 8,
+      "default_rep_max": 12,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "dumbbell_skull_crusher",
+      "slug": "dumbbell_skull_crusher",
+      "name": "Dumbbell Skull Crusher",
+      "aliases": [],
+      "variation_group": "elbow_extension",
+      "movement_pattern": "isolation",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "close_grip_bench_press",
+      "slug": "close_grip_bench_press",
+      "name": "Close-Grip Bench Press",
+      "aliases": [],
+      "variation_group": "triceps_press",
+      "movement_pattern": "horizontal_push",
+      "equipment": "barbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 8,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [
+        "mid_chest",
+        "front_delts"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "assisted_dip",
+      "slug": "assisted_dip",
+      "name": "Assisted Dip",
+      "aliases": [],
+      "variation_group": "dip",
+      "movement_pattern": "vertical_push",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "triceps",
+        "lower_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "dip",
+      "slug": "dip",
+      "name": "Dip",
+      "aliases": [],
+      "variation_group": "dip",
+      "movement_pattern": "vertical_push",
+      "equipment": "bodyweight",
+      "measurement_type": "bodyweight_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "triceps",
+        "lower_chest"
+      ],
+      "secondary_muscles": [
+        "front_delts"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "high_bar_back_squat",
+      "slug": "high_bar_back_squat",
+      "name": "High-Bar Back Squat",
+      "aliases": [
+        "back squat"
+      ],
+      "variation_group": "squat",
+      "movement_pattern": "squat",
+      "equipment": "barbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 8,
+      "default_rest_seconds": 180,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "adductors",
+        "abs",
+        "spinal_erectors"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "front_squat",
+      "slug": "front_squat",
+      "name": "Front Squat",
+      "aliases": [],
+      "variation_group": "squat",
+      "movement_pattern": "squat",
+      "equipment": "barbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 8,
+      "default_rest_seconds": 180,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "quads"
+      ],
+      "secondary_muscles": [
+        "glutes",
+        "abs",
+        "upper_back"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "hack_squat",
+      "slug": "hack_squat",
+      "name": "Hack Squat",
+      "aliases": [],
+      "variation_group": "squat_machine",
+      "movement_pattern": "squat",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 150,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "quads"
+      ],
+      "secondary_muscles": [
+        "glutes",
+        "adductors"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "smith_machine_squat",
+      "slug": "smith_machine_squat",
+      "name": "Smith Machine Squat",
+      "aliases": [],
+      "variation_group": "squat_machine",
+      "movement_pattern": "squat",
+      "equipment": "smith_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 150,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "adductors"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "leg_press",
+      "slug": "leg_press",
+      "name": "Leg Press",
+      "aliases": [],
+      "variation_group": "leg_press",
+      "movement_pattern": "squat",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 150,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "adductors"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "single_leg_press",
+      "slug": "single_leg_press",
+      "name": "Single-Leg Press",
+      "aliases": [],
+      "variation_group": "leg_press",
+      "movement_pattern": "squat",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": true,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "adductors"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "bulgarian_split_squat",
+      "slug": "bulgarian_split_squat",
+      "name": "Bulgarian Split Squat",
+      "aliases": [
+        "rear-foot-elevated split squat"
+      ],
+      "variation_group": "split_squat",
+      "movement_pattern": "lunge",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": true,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "adductors",
+        "abs"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "walking_lunge",
+      "slug": "walking_lunge",
+      "name": "Walking Lunge",
+      "aliases": [],
+      "variation_group": "lunge",
+      "movement_pattern": "lunge",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": true,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings",
+        "adductors",
+        "calves"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "reverse_lunge",
+      "slug": "reverse_lunge",
+      "name": "Reverse Lunge",
+      "aliases": [],
+      "variation_group": "lunge",
+      "movement_pattern": "lunge",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": true,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "secondary_muscles": [
+        "hamstrings",
+        "abs"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "step_up",
+      "slug": "step_up",
+      "name": "Step-Up",
+      "aliases": [],
+      "variation_group": "step_up",
+      "movement_pattern": "lunge",
+      "equipment": "dumbbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": true,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 90,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "secondary_muscles": [
+        "hamstrings",
+        "calves"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "leg_extension",
+      "slug": "leg_extension",
+      "name": "Leg Extension",
+      "aliases": [],
+      "variation_group": "knee_extension",
+      "movement_pattern": "knee_extension",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "quads"
+      ],
+      "secondary_muscles": [],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "seated_leg_curl",
+      "slug": "seated_leg_curl",
+      "name": "Seated Leg Curl",
+      "aliases": [],
+      "variation_group": "leg_curl",
+      "movement_pattern": "knee_flexion",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "hamstrings"
+      ],
+      "secondary_muscles": [
+        "calves"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "lying_leg_curl",
+      "slug": "lying_leg_curl",
+      "name": "Lying Leg Curl",
+      "aliases": [],
+      "variation_group": "leg_curl",
+      "movement_pattern": "knee_flexion",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "hamstrings"
+      ],
+      "secondary_muscles": [
+        "calves"
+      ],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "single_leg_curl",
+      "slug": "single_leg_curl",
+      "name": "Single-Leg Curl",
+      "aliases": [],
+      "variation_group": "leg_curl",
+      "movement_pattern": "knee_flexion",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": true,
+      "default_rep_min": 8,
+      "default_rep_max": 12,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "hamstrings"
+      ],
+      "secondary_muscles": [
+        "calves"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "barbell_hip_thrust",
+      "slug": "barbell_hip_thrust",
+      "name": "Barbell Hip Thrust",
+      "aliases": [
+        "hip thrust"
+      ],
+      "variation_group": "hip_thrust",
+      "movement_pattern": "hip_extension",
+      "equipment": "barbell",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 120,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings",
+        "quads"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "machine_hip_thrust",
+      "slug": "machine_hip_thrust",
+      "name": "Machine Hip Thrust",
+      "aliases": [],
+      "variation_group": "hip_thrust",
+      "movement_pattern": "hip_extension",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 10,
+      "default_rest_seconds": 105,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "glute_bridge",
+      "slug": "glute_bridge",
+      "name": "Glute Bridge",
+      "aliases": [],
+      "variation_group": "hip_thrust",
+      "movement_pattern": "hip_extension",
+      "equipment": "bodyweight",
+      "measurement_type": "bodyweight_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings",
+        "abs"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "45_degree_back_extension",
+      "slug": "45_degree_back_extension",
+      "name": "45-Degree Back Extension",
+      "aliases": [
+        "hyperextension"
+      ],
+      "variation_group": "back_extension",
+      "movement_pattern": "hip_extension",
+      "equipment": "bodyweight",
+      "measurement_type": "bodyweight_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "secondary_muscles": [
+        "spinal_erectors"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "cable_pull_through",
+      "slug": "cable_pull_through",
+      "name": "Cable Pull-Through",
+      "aliases": [],
+      "variation_group": "hip_extension",
+      "movement_pattern": "hip_extension",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "hip_abduction_machine",
+      "slug": "hip_abduction_machine",
+      "name": "Hip Abduction Machine",
+      "aliases": [],
+      "variation_group": "hip_abduction",
+      "movement_pattern": "isolation",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 10,
+      "default_rep_max": 20,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "abductors"
+      ],
+      "secondary_muscles": [
+        "glutes"
+      ],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "hip_adduction_machine",
+      "slug": "hip_adduction_machine",
+      "name": "Hip Adduction Machine",
+      "aliases": [],
+      "variation_group": "hip_adduction",
+      "movement_pattern": "isolation",
+      "equipment": "selectorized_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 10,
+      "default_rep_max": 20,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "adductors"
+      ],
+      "secondary_muscles": [],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "standing_calf_raise",
+      "slug": "standing_calf_raise",
+      "name": "Standing Calf Raise",
+      "aliases": [],
+      "variation_group": "calf_raise",
+      "movement_pattern": "calf_raise",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "calves"
+      ],
+      "secondary_muscles": [],
+      "style_tags": [
+        "brandan_default",
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "seated_calf_raise",
+      "slug": "seated_calf_raise",
+      "name": "Seated Calf Raise",
+      "aliases": [],
+      "variation_group": "calf_raise",
+      "movement_pattern": "calf_raise",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "calves"
+      ],
+      "secondary_muscles": [],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "leg_press_calf_raise",
+      "slug": "leg_press_calf_raise",
+      "name": "Leg Press Calf Raise",
+      "aliases": [],
+      "variation_group": "calf_raise",
+      "movement_pattern": "calf_raise",
+      "equipment": "plate_loaded_machine",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "calves"
+      ],
+      "secondary_muscles": [],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "plank",
+      "slug": "plank",
+      "name": "Plank",
+      "aliases": [],
+      "variation_group": "plank",
+      "movement_pattern": "anti_extension",
+      "equipment": "bodyweight",
+      "measurement_type": "duration",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": null,
+      "default_rep_max": null,
+      "default_rest_seconds": 45,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [
+        "obliques",
+        "glutes"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "side_plank",
+      "slug": "side_plank",
+      "name": "Side Plank",
+      "aliases": [],
+      "variation_group": "side_plank",
+      "movement_pattern": "anti_rotation",
+      "equipment": "bodyweight",
+      "measurement_type": "duration",
+      "compound": false,
+      "unilateral": true,
+      "default_rep_min": null,
+      "default_rep_max": null,
+      "default_rest_seconds": 45,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "obliques"
+      ],
+      "secondary_muscles": [
+        "abs",
+        "glutes"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "ab_wheel_rollout",
+      "slug": "ab_wheel_rollout",
+      "name": "Ab-Wheel Rollout",
+      "aliases": [
+        "ab wheel"
+      ],
+      "variation_group": "rollout",
+      "movement_pattern": "anti_extension",
+      "equipment": "other",
+      "measurement_type": "bodyweight_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 5,
+      "default_rep_max": 10,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [
+        "lats",
+        "triceps"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "hanging_knee_raise",
+      "slug": "hanging_knee_raise",
+      "name": "Hanging Knee Raise",
+      "aliases": [],
+      "variation_group": "hanging_raise",
+      "movement_pattern": "trunk_flexion",
+      "equipment": "pullup_bar",
+      "measurement_type": "bodyweight_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 12,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [
+        "hip_flexors"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "hanging_leg_raise",
+      "slug": "hanging_leg_raise",
+      "name": "Hanging Leg Raise",
+      "aliases": [],
+      "variation_group": "hanging_raise",
+      "movement_pattern": "trunk_flexion",
+      "equipment": "pullup_bar",
+      "measurement_type": "bodyweight_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 6,
+      "default_rep_max": 12,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [
+        "hip_flexors",
+        "forearms"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "cable_crunch",
+      "slug": "cable_crunch",
+      "name": "Cable Crunch",
+      "aliases": [],
+      "variation_group": "crunch",
+      "movement_pattern": "trunk_flexion",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [],
+      "style_tags": [
+        "requested_sam_style"
+      ],
+      "archived": false
+    },
+    {
+      "id": "pallof_press",
+      "slug": "pallof_press",
+      "name": "Pallof Press",
+      "aliases": [],
+      "variation_group": "pallof",
+      "movement_pattern": "anti_rotation",
+      "equipment": "cable",
+      "measurement_type": "load_reps",
+      "compound": false,
+      "unilateral": true,
+      "default_rep_min": 8,
+      "default_rep_max": 15,
+      "default_rest_seconds": 45,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "obliques",
+        "abs"
+      ],
+      "secondary_muscles": [],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "box_jump",
+      "slug": "box_jump",
+      "name": "Box Jump",
+      "aliases": [],
+      "variation_group": "jump",
+      "movement_pattern": "jump",
+      "equipment": "other",
+      "measurement_type": "bodyweight_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 3,
+      "default_rep_max": 3,
+      "default_rest_seconds": 90,
+      "automatic_progression_enabled": false,
+      "primary_muscles": [
+        "quads",
+        "glutes",
+        "calves"
+      ],
+      "secondary_muscles": [
+        "full_body"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "broad_jump",
+      "slug": "broad_jump",
+      "name": "Broad Jump",
+      "aliases": [],
+      "variation_group": "jump",
+      "movement_pattern": "jump",
+      "equipment": "bodyweight",
+      "measurement_type": "bodyweight_reps",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": 3,
+      "default_rep_max": 3,
+      "default_rest_seconds": 90,
+      "automatic_progression_enabled": false,
+      "primary_muscles": [
+        "glutes",
+        "quads",
+        "calves"
+      ],
+      "secondary_muscles": [
+        "full_body"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "farmer_carry",
+      "slug": "farmer_carry",
+      "name": "Farmer Carry",
+      "aliases": [
+        "farmer walk"
+      ],
+      "variation_group": "loaded_carry",
+      "movement_pattern": "carry",
+      "equipment": "dumbbell",
+      "measurement_type": "distance",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": null,
+      "default_rep_max": null,
+      "default_rest_seconds": 75,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "forearms",
+        "traps",
+        "abs"
+      ],
+      "secondary_muscles": [
+        "full_body"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "sled_push",
+      "slug": "sled_push",
+      "name": "Sled Push",
+      "aliases": [],
+      "variation_group": "sled",
+      "movement_pattern": "conditioning",
+      "equipment": "sled",
+      "measurement_type": "distance",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": null,
+      "default_rep_max": null,
+      "default_rest_seconds": 90,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "quads",
+        "glutes",
+        "cardiovascular"
+      ],
+      "secondary_muscles": [
+        "calves",
+        "full_body"
+      ],
+      "style_tags": [],
+      "archived": false
+    },
+    {
+      "id": "stationary_bike_easy",
+      "slug": "stationary_bike_easy",
+      "name": "Stationary Bike \u2014 Easy",
+      "aliases": [
+        "bike warm-up"
+      ],
+      "variation_group": "bike",
+      "movement_pattern": "conditioning",
+      "equipment": "bike",
+      "measurement_type": "duration",
+      "compound": false,
+      "unilateral": false,
+      "default_rep_min": null,
+      "default_rep_max": null,
+      "default_rest_seconds": 0,
+      "automatic_progression_enabled": false,
+      "primary_muscles": [
+        "cardiovascular"
+      ],
+      "secondary_muscles": [
+        "quads"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "stationary_bike_intervals",
+      "slug": "stationary_bike_intervals",
+      "name": "Stationary Bike Intervals",
+      "aliases": [
+        "bike sprints"
+      ],
+      "variation_group": "bike",
+      "movement_pattern": "conditioning",
+      "equipment": "bike",
+      "measurement_type": "rounds",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": null,
+      "default_rep_max": null,
+      "default_rest_seconds": 60,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "cardiovascular",
+        "quads"
+      ],
+      "secondary_muscles": [
+        "glutes"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "jump_rope_easy",
+      "slug": "jump_rope_easy",
+      "name": "Jump Rope \u2014 Easy",
+      "aliases": [
+        "skipping"
+      ],
+      "variation_group": "jump_rope",
+      "movement_pattern": "locomotion",
+      "equipment": "jump_rope",
+      "measurement_type": "duration",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": null,
+      "default_rep_max": null,
+      "default_rest_seconds": 0,
+      "automatic_progression_enabled": false,
+      "primary_muscles": [
+        "cardiovascular",
+        "calves"
+      ],
+      "secondary_muscles": [
+        "full_body"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "jump_rope_intervals",
+      "slug": "jump_rope_intervals",
+      "name": "Jump Rope Intervals",
+      "aliases": [],
+      "variation_group": "jump_rope",
+      "movement_pattern": "conditioning",
+      "equipment": "jump_rope",
+      "measurement_type": "rounds",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": null,
+      "default_rep_max": null,
+      "default_rest_seconds": 30,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "cardiovascular",
+        "calves"
+      ],
+      "secondary_muscles": [
+        "full_body"
+      ],
+      "style_tags": [
+        "brandan_default"
+      ],
+      "archived": false
+    },
+    {
+      "id": "rowing_machine",
+      "slug": "rowing_machine",
+      "name": "Rowing Machine",
+      "aliases": [
+        "erg"
+      ],
+      "variation_group": "rower",
+      "movement_pattern": "conditioning",
+      "equipment": "rower",
+      "measurement_type": "duration",
+      "compound": true,
+      "unilateral": false,
+      "default_rep_min": null,
+      "default_rep_max": null,
+      "default_rest_seconds": 0,
+      "automatic_progression_enabled": true,
+      "primary_muscles": [
+        "cardiovascular",
+        "upper_back",
+        "lats"
+      ],
+      "secondary_muscles": [
+        "quads",
+        "glutes",
+        "biceps"
+      ],
+      "style_tags": [],
+      "archived": false
+    }
+  ]
+}
