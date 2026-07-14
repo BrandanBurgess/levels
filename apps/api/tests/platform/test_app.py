@@ -165,6 +165,9 @@ def test_unsafe_configuration_fails_closed(overrides: dict[str, str], message: s
         "DATABASE_URL": "sqlite+pysqlite:///:memory:",
         "CORS_ALLOWED_ORIGINS": "https://levels.example",
         "PUBLIC_WEB_ORIGIN": "https://levels.example",
+        "ADMIN_USERNAME": "owner",
+        "ADMIN_PASSWORD_HASH": "$argon2id$test-placeholder",
+        "JWT_SECRET_KEY": "test-only-key-with-at-least-32-characters",
         **overrides,
     }
     with pytest.raises(ConfigurationError, match=message):

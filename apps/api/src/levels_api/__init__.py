@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from flask import Flask
 
+from .auth.routes import auth_blueprint
+from .auth.service import init_auth
 from .config import Settings
 from .cors import init_cors
 from .database import init_database
@@ -24,6 +26,10 @@ def create_app(settings: Settings | None = None) -> Flask:
         CORS_ALLOWED_ORIGINS=resolved_settings.cors_allowed_origins,
         PUBLIC_WEB_ORIGIN=resolved_settings.public_web_origin,
         LOG_LEVEL=resolved_settings.log_level,
+        ADMIN_USERNAME=resolved_settings.admin_username,
+        ADMIN_PASSWORD_HASH=resolved_settings.admin_password_hash,
+        JWT_SECRET_KEY=resolved_settings.jwt_secret_key,
+        JWT_EXPIRES_SECONDS=resolved_settings.jwt_expires_seconds,
         API_VERSION=__version__,
         TESTING=resolved_settings.testing,
     )
@@ -32,8 +38,10 @@ def create_app(settings: Settings | None = None) -> Flask:
     init_request_context(app)
     init_cors(app)
     init_database(app)
+    init_auth(app)
     register_error_handlers(app)
     app.register_blueprint(health_blueprint)
+    app.register_blueprint(auth_blueprint)
     return app
 
 

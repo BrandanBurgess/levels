@@ -38,6 +38,10 @@ class Settings:
     cors_allowed_origins: tuple[str, ...]
     public_web_origin: str
     log_level: str
+    admin_username: str | None = None
+    admin_password_hash: str | None = None
+    jwt_secret_key: str | None = None
+    jwt_expires_seconds: int = 900
     testing: bool = False
 
     @classmethod
@@ -52,6 +56,9 @@ class Settings:
         log_level = values.get("LOG_LEVEL", "INFO").strip().upper()
         public_web_origin = values.get("PUBLIC_WEB_ORIGIN", DEFAULT_ORIGIN).strip().rstrip("/")
         origins = _parse_origins(values.get("CORS_ALLOWED_ORIGINS", DEFAULT_ORIGIN))
+        admin_username = values.get("ADMIN_USERNAME", "").strip() or None
+        admin_password_hash = values.get("ADMIN_PASSWORD_HASH", "").strip() or None
+        jwt_secret_key = values.get("JWT_SECRET_KEY", "").strip() or None
 
         if app_env not in {"development", "test", "production"}:
             raise ConfigurationError("APP_ENV must be development, test, or production")
@@ -63,6 +70,13 @@ class Settings:
             raise ConfigurationError(f"Invalid LOG_LEVEL: {log_level!r}")
         if public_web_origin not in origins:
             raise ConfigurationError("PUBLIC_WEB_ORIGIN must be present in CORS_ALLOWED_ORIGINS")
+        if admin_password_hash is not None and not admin_password_hash.startswith("$argon2"):
+            raise ConfigurationError("ADMIN_PASSWORD_HASH must be an Argon2 hash")
+        if app_env == "production":
+            if not all((admin_username, admin_password_hash, jwt_secret_key)):
+                raise ConfigurationError("Production admin authentication values are required")
+            if len(jwt_secret_key or "") < 32:
+                raise ConfigurationError("JWT_SECRET_KEY must contain at least 32 characters")
 
         return cls(
             app_env=app_env,
@@ -72,6 +86,9 @@ class Settings:
             cors_allowed_origins=origins,
             public_web_origin=public_web_origin,
             log_level=log_level,
+            admin_username=admin_username,
+            admin_password_hash=admin_password_hash,
+            jwt_secret_key=jwt_secret_key,
             testing=app_env == "test",
         )
 
@@ -81,6 +98,9 @@ class Settings:
         database_url: str = "sqlite+pysqlite:///:memory:",
         *,
         cors_allowed_origins: tuple[str, ...] = (DEFAULT_ORIGIN,),
+        admin_username: str | None = None,
+        admin_password_hash: str | None = None,
+        jwt_secret_key: str | None = None,
     ) -> Settings:
         return cls(
             app_env="test",
@@ -90,5 +110,8 @@ class Settings:
             cors_allowed_origins=cors_allowed_origins,
             public_web_origin=cors_allowed_origins[0],
             log_level="ERROR",
+            admin_username=admin_username,
+            admin_password_hash=admin_password_hash,
+            jwt_secret_key=jwt_secret_key,
             testing=True,
         )
