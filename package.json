@@ -18,10 +18,12 @@
     "openapi:lint": "redocly lint docs/levels_product_handoff/levels_product_handoff/05_OPENAPI.yaml",
     "openapi:generate": "npm --workspace @levels/api-client run generate",
     "openapi:check": "npm run openapi:lint && npm --workspace @levels/api-client run check:generated",
-    "lint": "npm run lint:web && npm run lint:api",
+    "lint": "npm run lint:web && npm run lint:api && npm run lint:e2e",
     "lint:web": "npm --workspace @levels/web run lint",
     "lint:api": "uv run --project apps/api ruff check apps/api/src apps/api/tests && uv run --project apps/api ruff format --check apps/api/src apps/api/tests",
+    "lint:e2e": "uv run --project apps/api ruff check e2e/start_api.py && uv run --project apps/api ruff format --check e2e/start_api.py",
     "typecheck": "npm run typecheck:web && npm run typecheck:client && npm run typecheck:api",
+    "typecheck:e2e": "tsc --project e2e/tsconfig.json --noEmit --pretty false && uv run --project apps/api mypy apps/api/src e2e/start_api.py",
     "typecheck:client": "npm --workspace @levels/api-client run typecheck",
     "typecheck:web": "npm --workspace @levels/web run typecheck",
     "typecheck:api": "uv run --project apps/api mypy apps/api/src",
@@ -30,10 +32,12 @@
     "test:web": "npm --workspace @levels/web run test",
     "test:api": "uv run --project apps/api pytest apps/api/tests",
     "seed": "uv run --project apps/api python -m levels_api.seed",
-    "e2e": "node -e \"console.error('Playwright is introduced by LVL-1004'); process.exit(1)\"",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run openapi:check && npm run build"
+    "e2e": "playwright test",
+    "verify": "npm run lint && npm run typecheck && npm run typecheck:e2e && npm run test && npm run openapi:check && npm run build && npm run e2e"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1",
     "@redocly/cli": "2.39.0",
     "@vitest/coverage-v8": "4.1.10",
     "concurrently": "9.2.0",
