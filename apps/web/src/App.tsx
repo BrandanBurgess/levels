@@ -5,6 +5,7 @@ import { AppProviders } from "./app/AppProviders";
 import { PlaceholderPage } from "./app/PlaceholderPage";
 import { LoginPage } from "./auth/LoginPage";
 import { CharacterPage } from "./features/character/CharacterPage";
+import { LibraryPage } from "./features/library/LibraryPage";
 import { TodayPage } from "./features/today/TodayPage";
 
 const pages = {
@@ -63,8 +64,9 @@ export function App() {
         <Route element={<AppShell />}>
           <Route index element={<TodayPage />} />
           <Route path="character" element={<CharacterPage />} />
+          <Route path="library" element={<LibraryPage />} />
           {Object.entries(pages)
-            .filter(([path]) => path !== "today" && path !== "character")
+            .filter(([path]) => !["today", "character", "library"].includes(path))
             .map(([path, page]) => (
               <Route key={path} path={path} element={<PlaceholderPage {...page} />} />
             ))}
