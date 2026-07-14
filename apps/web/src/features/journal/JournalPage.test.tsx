@@ -244,4 +244,41 @@ describe("JournalPage", () => {
     expect(retryOptions.params.header["Idempotency-Key"]).toBe(firstKey);
     expect(await screen.findByText("Set saved remotely.")).toBeInTheDocument();
   });
+
+  it("celebrates only achievements returned by the confirmed set response", async () => {
+    vi.spyOn(apiClient, "POST").mockResolvedValue({
+      data: {
+        set: loggedSet,
+        new_achievements: [
+          {
+            id: "achievement-1",
+            achievement_type: "personal_record",
+            exercise_id: exercise.id,
+            title: "New max load",
+            message: "Incline Press: 65 kg.",
+            achieved_at: "2026-07-13T12:00:00Z",
+            public: true,
+          },
+        ],
+        affected_records: [],
+      },
+      response: new Response(),
+    });
+    renderPage(true);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.change(await screen.findByRole("spinbutton", { name: "Weight (kg)" }), {
+      target: { value: "65" },
+    });
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Reps" }), {
+      target: { value: "8" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Log set" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Personal best!" });
+    expect(dialog).toHaveTextContent("New max load");
+    expect(dialog).toHaveTextContent("Incline Press: 65 kg.");
+    expect(screen.getByRole("button", { name: "Keep training" })).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "Keep training" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
 });
