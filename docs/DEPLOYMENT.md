@@ -48,3 +48,16 @@ After the first successful deploy:
 4. Manually run the `Deploy Pages` workflow.
 
 The live service cannot be created from an unauthenticated checkout. Render must have GitHub repository authorization and the three dashboard-only values above.
+
+## Turso
+
+Production uses the protected libSQL database named `levels-production`. Its URL and token are secrets and must never be placed in source files, workflow inputs, logs, or repository variables.
+
+In the GitHub `production` environment, configure:
+
+- `TURSO_DATABASE_URL`: the database's `libsql://` URL;
+- `TURSO_AUTH_TOKEN`: a token restricted to the production database.
+
+Add required reviewers to the environment before running **Migrate Production Database** on `main`. Enter `MIGRATE_LEVELS_PRODUCTION` when dispatching it. The workflow applies Alembic migrations, confirms the repository head, runs the idempotent seed loader, and verifies the exact catalog, split, profile, and no-deadlift invariants. Its status output contains counts and the migration revision, never credentials.
+
+Deletion protection must remain enabled on the production database. Use the Turso dashboard or scoped management tooling for token rotation; after rotation, update both the GitHub environment and Render secret before revoking the previous token.
