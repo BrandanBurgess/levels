@@ -315,3 +315,4 @@ class WaterLog(IdMixin, Base):
     )
     note: Mapped[str | None] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(default=utc_now, nullable=False)
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), unique=True)
