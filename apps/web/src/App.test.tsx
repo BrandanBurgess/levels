@@ -9,7 +9,7 @@ describe("App shell", () => {
   it("renders accessible desktop and mobile navigation", () => {
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: "Ready for Upper A" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ready for today" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Mobile navigation" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Skip to main content" })).toHaveAttribute(

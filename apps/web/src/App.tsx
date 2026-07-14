@@ -4,6 +4,7 @@ import { AppShell } from "./app/AppShell";
 import { AppProviders } from "./app/AppProviders";
 import { PlaceholderPage } from "./app/PlaceholderPage";
 import { LoginPage } from "./auth/LoginPage";
+import { TodayPage } from "./features/today/TodayPage";
 
 const pages = {
   today: {
@@ -59,7 +60,7 @@ export function App() {
       <HashRouter>
         <Routes>
         <Route element={<AppShell />}>
-          <Route index element={<PlaceholderPage {...pages.today} />} />
+          <Route index element={<TodayPage />} />
           {Object.entries(pages)
             .filter(([path]) => path !== "today")
             .map(([path, page]) => (
