@@ -226,6 +226,7 @@ a { color: inherit; }
 .session-status { display: inline-flex; margin: 0.7rem 0 1.4rem; padding: 0.28rem 0.55rem; border: 1px solid #805675; border-radius: 999px; color: #633b5d; font-size: 0.68rem; font-weight: 900; text-transform: uppercase; }
 .session-status--completed { color: #28583f; border-color: #4e8667; }
 .notes-field { display: grid; gap: 0.3rem; margin: 0 0 1rem; color: #463241; font-size: 0.74rem; font-weight: 850; }
+.draft-hint { margin: 0 0 0.8rem; color: #745b6d; font-size: 0.7rem; line-height: 1.45; }
 .notes-field textarea { width: 100%; resize: vertical; padding: 0.7rem; border: 1px solid rgb(82 54 76 / 28%); border-radius: 0.45rem; color: #281b27; background: rgb(255 250 235 / 65%); }
 .book-actions, .set-entry__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; }
 .ink-status { color: #5f3a58; font-weight: 750; }

@@ -25,6 +25,12 @@ type SetDraft = {
   pain: boolean;
 };
 
+type StoredSetDraft = {
+  values: SetDraft;
+  idempotencyKey: string;
+  updatedAt: string;
+};
+
 const emptyDraft: SetDraft = {
   setType: "working",
   load: "",
@@ -36,6 +42,40 @@ const emptyDraft: SetDraft = {
   form: "4",
   pain: false,
 };
+
+function setDraftKey(sessionId: string, itemId: string) {
+  return `levels:journal:set:${sessionId}:${itemId}`;
+}
+
+function loadSetDraft(sessionId: string, itemId: string): StoredSetDraft {
+  try {
+    const value = localStorage.getItem(setDraftKey(sessionId, itemId));
+    if (value) return JSON.parse(value) as StoredSetDraft;
+  } catch {
+    // Storage can be unavailable in hardened browser modes; the in-memory draft still works.
+  }
+  return {
+    values: emptyDraft,
+    idempotencyKey: crypto.randomUUID(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function persistSetDraft(sessionId: string, itemId: string, draft: StoredSetDraft) {
+  try {
+    localStorage.setItem(setDraftKey(sessionId, itemId), JSON.stringify(draft));
+  } catch {
+    // Keep editing available even when browser storage is blocked or full.
+  }
+}
+
+function clearSetDraft(sessionId: string, itemId: string) {
+  try {
+    localStorage.removeItem(setDraftKey(sessionId, itemId));
+  } catch {
+    // The confirmed server copy is authoritative even if storage cleanup is blocked.
+  }
+}
 
 async function loadSessions(owner: boolean) {
   const { data, error } = await apiClient.GET("/sessions", {
@@ -95,16 +135,31 @@ function SetEntry({
   measurement: MeasurementType;
   onSaved: () => Promise<void>;
 }) {
-  const [draft, setDraft] = useState<SetDraft>(emptyDraft);
+  const [restored] = useState(() => loadSetDraft(sessionId, item.id));
+  const [draft, setDraft] = useState<SetDraft>(restored.values);
+  const [idempotencyKey, setIdempotencyKey] = useState(restored.idempotencyKey);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string>();
+  const [retryAvailable, setRetryAvailable] = useState(false);
   const lastSet = item.sets.at(-1);
 
+  function updateDraft(values: SetDraft) {
+    const key = crypto.randomUUID();
+    setDraft(values);
+    setIdempotencyKey(key);
+    setRetryAvailable(false);
+    persistSetDraft(sessionId, item.id, {
+      values,
+      idempotencyKey: key,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
   function adjust(field: "load" | "reps", amount: number) {
-    setDraft((current) => ({
-      ...current,
-      [field]: String(Math.max(0, Number(current[field] || 0) + amount)),
-    }));
+    updateDraft({
+      ...draft,
+      [field]: String(Math.max(0, Number(draft[field] || 0) + amount)),
+    });
   }
 
   async function save(event?: FormEvent, duplicate?: SetLog) {
@@ -112,32 +167,42 @@ function SetEntry({
     setSaving(true);
     setMessage(undefined);
     const value = duplicate ? draftFromSet(duplicate) : draft;
-    const { data, error } = await apiClient.POST("/sessions/{session_id}/sets", {
-      params: {
-        path: { session_id: sessionId },
-        header: { "Idempotency-Key": crypto.randomUUID() },
-      },
-      body: {
-        session_exercise_id: item.id,
-        set_type: value.setType,
-        load_kg: number(value.load),
-        reps: number(value.reps),
-        rir: number(value.rir),
-        duration_seconds: number(value.duration),
-        distance_meters: number(value.distance),
-        rounds: number(value.rounds),
-        form_quality: number(value.form),
-        pain_flag: value.pain,
-      },
-    });
-    setSaving(false);
-    if (!data || error) {
-      setMessage("Set could not be saved. Check the required measurement.");
-      return;
+    try {
+      const { data, error } = await apiClient.POST("/sessions/{session_id}/sets", {
+        params: {
+          path: { session_id: sessionId },
+          header: { "Idempotency-Key": duplicate ? crypto.randomUUID() : idempotencyKey },
+        },
+        body: {
+          session_exercise_id: item.id,
+          set_type: value.setType,
+          load_kg: number(value.load),
+          reps: number(value.reps),
+          rir: number(value.rir),
+          duration_seconds: number(value.duration),
+          distance_meters: number(value.distance),
+          rounds: number(value.rounds),
+          form_quality: number(value.form),
+          pain_flag: value.pain,
+        },
+      });
+      if (!data || error) throw new Error("Set write failed");
+      clearSetDraft(sessionId, item.id);
+      setDraft(draftFromSet(data.set));
+      setIdempotencyKey(crypto.randomUUID());
+      setRetryAvailable(false);
+      setMessage(duplicate ? "Previous set duplicated." : "Set saved remotely.");
+      await onSaved();
+    } catch {
+      setRetryAvailable(!duplicate);
+      setMessage(
+        duplicate
+          ? "The duplicate was not saved. Try again when connected."
+          : "Set is safe on this device. Retry when connected.",
+      );
+    } finally {
+      setSaving(false);
     }
-    setDraft(draftFromSet(data.set));
-    setMessage(duplicate ? "Previous set duplicated." : "Set saved.");
-    await onSaved();
   }
 
   return (
@@ -148,7 +213,7 @@ function SetEntry({
             <label htmlFor={`${item.id}-load`}>Weight (kg)</label>
             <span className="stepper-input">
               <button aria-label={`Decrease ${item.display_name} weight`} onClick={() => adjust("load", -2.5)} type="button">−</button>
-              <input id={`${item.id}-load`} inputMode="decimal" min="0" onChange={(event) => setDraft({ ...draft, load: event.target.value })} required step="any" type="number" value={draft.load} />
+              <input id={`${item.id}-load`} inputMode="decimal" min="0" onChange={(event) => updateDraft({ ...draft, load: event.target.value })} required step="any" type="number" value={draft.load} />
               <button aria-label={`Increase ${item.display_name} weight`} onClick={() => adjust("load", 2.5)} type="button">+</button>
             </span>
           </div>
@@ -158,26 +223,56 @@ function SetEntry({
             <label htmlFor={`${item.id}-reps`}>Reps</label>
             <span className="stepper-input">
               <button aria-label={`Decrease ${item.display_name} reps`} onClick={() => adjust("reps", -1)} type="button">−</button>
-              <input id={`${item.id}-reps`} inputMode="numeric" min="0" onChange={(event) => setDraft({ ...draft, reps: event.target.value })} required type="number" value={draft.reps} />
+              <input id={`${item.id}-reps`} inputMode="numeric" min="0" onChange={(event) => updateDraft({ ...draft, reps: event.target.value })} required type="number" value={draft.reps} />
               <button aria-label={`Increase ${item.display_name} reps`} onClick={() => adjust("reps", 1)} type="button">+</button>
             </span>
           </div>
         ) : null}
-        {measurement === "duration" ? <label htmlFor={`${item.id}-duration`}>Time (seconds)<input id={`${item.id}-duration`} inputMode="numeric" min="0" onChange={(event) => setDraft({ ...draft, duration: event.target.value })} required type="number" value={draft.duration} /></label> : null}
-        {measurement === "distance" ? <label htmlFor={`${item.id}-distance`}>Distance (metres)<input id={`${item.id}-distance`} inputMode="decimal" min="0" onChange={(event) => setDraft({ ...draft, distance: event.target.value })} required step="any" type="number" value={draft.distance} /></label> : null}
-        {measurement === "rounds" ? <label htmlFor={`${item.id}-rounds`}>Rounds<input id={`${item.id}-rounds`} inputMode="numeric" min="0" onChange={(event) => setDraft({ ...draft, rounds: event.target.value })} required type="number" value={draft.rounds} /></label> : null}
-        <label htmlFor={`${item.id}-rir`}>RIR<input id={`${item.id}-rir`} inputMode="decimal" max="10" min="0" onChange={(event) => setDraft({ ...draft, rir: event.target.value })} step="any" type="number" value={draft.rir} /></label>
-        <label htmlFor={`${item.id}-type`}>Set type<select id={`${item.id}-type`} onChange={(event) => setDraft({ ...draft, setType: event.target.value as SetType })} value={draft.setType}><option value="warmup">Warm-up</option><option value="working">Working</option><option value="backoff">Back-off</option><option value="drop">Drop</option><option value="failure">Failure</option></select></label>
-        <label htmlFor={`${item.id}-form`}>Form (1–5)<input id={`${item.id}-form`} inputMode="numeric" max="5" min="1" onChange={(event) => setDraft({ ...draft, form: event.target.value })} type="number" value={draft.form} /></label>
-        <label className="check-field" htmlFor={`${item.id}-pain`}><input checked={draft.pain} id={`${item.id}-pain`} onChange={(event) => setDraft({ ...draft, pain: event.target.checked })} type="checkbox" /> Pain noted</label>
+        {measurement === "duration" ? <label htmlFor={`${item.id}-duration`}>Time (seconds)<input id={`${item.id}-duration`} inputMode="numeric" min="0" onChange={(event) => updateDraft({ ...draft, duration: event.target.value })} required type="number" value={draft.duration} /></label> : null}
+        {measurement === "distance" ? <label htmlFor={`${item.id}-distance`}>Distance (metres)<input id={`${item.id}-distance`} inputMode="decimal" min="0" onChange={(event) => updateDraft({ ...draft, distance: event.target.value })} required step="any" type="number" value={draft.distance} /></label> : null}
+        {measurement === "rounds" ? <label htmlFor={`${item.id}-rounds`}>Rounds<input id={`${item.id}-rounds`} inputMode="numeric" min="0" onChange={(event) => updateDraft({ ...draft, rounds: event.target.value })} required type="number" value={draft.rounds} /></label> : null}
+        <label htmlFor={`${item.id}-rir`}>RIR<input id={`${item.id}-rir`} inputMode="decimal" max="10" min="0" onChange={(event) => updateDraft({ ...draft, rir: event.target.value })} step="any" type="number" value={draft.rir} /></label>
+        <label htmlFor={`${item.id}-type`}>Set type<select id={`${item.id}-type`} onChange={(event) => updateDraft({ ...draft, setType: event.target.value as SetType })} value={draft.setType}><option value="warmup">Warm-up</option><option value="working">Working</option><option value="backoff">Back-off</option><option value="drop">Drop</option><option value="failure">Failure</option></select></label>
+        <label htmlFor={`${item.id}-form`}>Form (1–5)<input id={`${item.id}-form`} inputMode="numeric" max="5" min="1" onChange={(event) => updateDraft({ ...draft, form: event.target.value })} type="number" value={draft.form} /></label>
+        <label className="check-field" htmlFor={`${item.id}-pain`}><input checked={draft.pain} id={`${item.id}-pain`} onChange={(event) => updateDraft({ ...draft, pain: event.target.checked })} type="checkbox" /> Pain noted</label>
       </div>
       <div className="set-entry__actions">
         <button className="button button--primary" disabled={saving} type="submit">{saving ? "Saving…" : "Log set"}</button>
+        {retryAvailable ? <button className="button" disabled={saving} onClick={() => void save()} type="button">Retry save</button> : null}
         {lastSet ? <button className="button" disabled={saving} onClick={() => void save(undefined, lastSet)} type="button">Duplicate previous</button> : null}
         {message ? <span role="status">{message}</span> : null}
       </div>
     </form>
   );
+}
+
+type NotesDraft = { notesPrivate: string; notesPublic: string; updatedAt: string };
+
+function notesDraftKey(sessionId: string) {
+  return `levels:journal:notes:${sessionId}`;
+}
+
+function loadNotesDraft(session: WorkoutSession): NotesDraft {
+  try {
+    const value = localStorage.getItem(notesDraftKey(session.id));
+    if (value) return JSON.parse(value) as NotesDraft;
+  } catch {
+    // Fall back to the last confirmed server notes.
+  }
+  return {
+    notesPrivate: session.notes_private ?? "",
+    notesPublic: session.notes_public ?? "",
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function persistNotesDraft(sessionId: string, value: NotesDraft | null) {
+  try {
+    if (value) localStorage.setItem(notesDraftKey(sessionId), JSON.stringify(value));
+    else localStorage.removeItem(notesDraftKey(sessionId));
+  } catch {
+    // Keep the form usable when storage is unavailable.
+  }
 }
 
 function SessionBook({
@@ -193,10 +288,23 @@ function SessionBook({
 }) {
   const [substitutes, setSubstitutes] = useState<Record<string, string>>({});
   const [newExercise, setNewExercise] = useState("");
-  const [notesPrivate, setNotesPrivate] = useState(session.notes_private ?? "");
-  const [notesPublic, setNotesPublic] = useState(session.notes_public ?? "");
+  const [restoredNotes] = useState(() => loadNotesDraft(session));
+  const [notesPrivate, setNotesPrivate] = useState(restoredNotes.notesPrivate);
+  const [notesPublic, setNotesPublic] = useState(restoredNotes.notesPublic);
   const [message, setMessage] = useState<string>();
   const exerciseMap = new Map(exercises.map((exercise) => [exercise.id, exercise]));
+
+  function updateNotes(field: "private" | "public", value: string) {
+    const nextPrivate = field === "private" ? value : notesPrivate;
+    const nextPublic = field === "public" ? value : notesPublic;
+    setNotesPrivate(nextPrivate);
+    setNotesPublic(nextPublic);
+    persistNotesDraft(session.id, {
+      notesPrivate: nextPrivate,
+      notesPublic: nextPublic,
+      updatedAt: new Date().toISOString(),
+    });
+  }
 
   async function substitute(item: SessionExercise) {
     const exerciseId = substitutes[item.id];
@@ -223,17 +331,23 @@ function SessionBook({
   }
 
   async function saveSession(status?: "in_progress" | "completed") {
-    const { error } = await apiClient.PATCH("/sessions/{session_id}", {
-      params: { path: { session_id: session.id } },
-      body: {
-        ...(status ? { status } : {}),
-        notes_private: notesPrivate,
-        notes_public: notesPublic,
-        public_visibility: status === "completed" ? "summary" : session.public_visibility,
-      },
-    });
-    setMessage(error ? "Session changes could not be saved." : status === "completed" ? "Workout completed." : status === "in_progress" ? "Workout resumed." : "Notes saved.");
-    if (!error) await refresh();
+    try {
+      const { error } = await apiClient.PATCH("/sessions/{session_id}", {
+        params: { path: { session_id: session.id } },
+        body: {
+          ...(status ? { status } : {}),
+          notes_private: notesPrivate,
+          notes_public: notesPublic,
+          public_visibility: status === "completed" ? "summary" : session.public_visibility,
+        },
+      });
+      if (error) throw new Error("Session write failed");
+      persistNotesDraft(session.id, null);
+      setMessage(status === "completed" ? "Workout completed." : status === "in_progress" ? "Workout resumed." : "Notes saved remotely.");
+      await refresh();
+    } catch {
+      setMessage("Notes are safe on this device. Retry when connected.");
+    }
   }
 
   return (
@@ -243,8 +357,9 @@ function SessionBook({
         <p className="book-kicker">{session.session_date_local}</p>
         <h2 id="session-title">{session.title}</h2>
         <p className={`session-status session-status--${session.status}`}>{session.status.replace("_", " ")}</p>
-        <label className="notes-field">Private notes<textarea onChange={(event) => setNotesPrivate(event.target.value)} rows={5} value={notesPrivate} /></label>
-        <label className="notes-field">Public notes<textarea onChange={(event) => setNotesPublic(event.target.value)} rows={4} value={notesPublic} /></label>
+        <p className="draft-hint">Saved on this device as you type and remotely when the field loses focus.</p>
+        <label className="notes-field">Private notes<textarea onBlur={() => void saveSession()} onChange={(event) => updateNotes("private", event.target.value)} rows={5} value={notesPrivate} /></label>
+        <label className="notes-field">Public notes<textarea onBlur={() => void saveSession()} onChange={(event) => updateNotes("public", event.target.value)} rows={4} value={notesPublic} /></label>
         <div className="book-actions">
           <button className="button" onClick={() => void saveSession()} type="button">Save notes</button>
           {session.status === "completed" ? <button className="button button--primary" onClick={() => void saveSession("in_progress")} type="button">Resume workout</button> : <button className="button button--primary" onClick={() => void saveSession("completed")} type="button">Complete workout</button>}
@@ -316,7 +431,7 @@ export function JournalPage() {
       {sessionsQuery.isError || exercisesQuery.isError ? <ErrorState message="The workout journal could not be loaded." onRetry={() => void Promise.all([sessionsQuery.refetch(), exercisesQuery.refetch()])} /> : null}
       {sessions.length ? <nav aria-label="Workout sessions" className="session-tabs">{sessions.map((session) => <button aria-pressed={selected?.id === session.id} key={session.id} onClick={() => setSelectedId(session.id)} type="button"><strong>{session.title}</strong><span>{session.session_date_local} · {session.status.replace("_", " ")}</span></button>)}</nav> : null}
       {!sessionsQuery.isPending && sessions.length === 0 ? <EmptyState title={isAuthenticated ? "No sessions yet" : "No public sessions yet"}>{isAuthenticated ? "Start today’s scheduled workout to open the first page." : "Completed sessions will appear when the owner publishes them."}</EmptyState> : null}
-      {selected && exercisesQuery.data ? isAuthenticated ? <SessionBook exercises={exercisesQuery.data} refresh={refresh} session={selected} sessions={sessions} /> : <section className="public-session"><p className="book-kicker">{selected.session_date_local}</p><h2>{selected.title}</h2>{selected.exercises.map((item) => <div className="public-session__exercise" key={item.id}><h3>{item.display_name}</h3>{item.sets.map((set) => <p key={set.id}>{setSummary(set)}</p>)}</div>)}</section> : null}
+      {selected && exercisesQuery.data ? isAuthenticated ? <SessionBook exercises={exercisesQuery.data} key={selected.id} refresh={refresh} session={selected} sessions={sessions} /> : <section className="public-session"><p className="book-kicker">{selected.session_date_local}</p><h2>{selected.title}</h2>{selected.exercises.map((item) => <div className="public-session__exercise" key={item.id}><h3>{item.display_name}</h3>{item.sets.map((set) => <p key={set.id}>{setSummary(set)}</p>)}</div>)}</section> : null}
     </article>
   );
 }
