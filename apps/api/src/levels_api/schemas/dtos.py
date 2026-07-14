@@ -120,3 +120,14 @@ class AchievementDto(StrictDto):
     message: str
     achieved_at: datetime
     public: bool
+
+
+class PersonalRecordDto(StrictDto):
+    id: str
+    exercise_id: str
+    exercise_name: str
+    record_type: str
+    value_numeric: float
+    unit: str
+    reps_context: int | None
+    achieved_at: datetime

@@ -13,6 +13,7 @@ from levels_api.errors import ApiError
 from .schemas import AddSessionExercise, SessionUpdate, SetWrite, StartSession
 from .service import (
     add_or_substitute_exercise,
+    complete_session,
     create_set,
     delete_session,
     delete_set,
@@ -133,8 +134,8 @@ def post_session_exercise(session_id: str) -> tuple[Response, int]:
 @require_admin
 def post_set(session_id: str) -> tuple[Response, int]:
     with transaction() as session:
-        set_log = create_set(session, session_id, _parse(SetWrite), _idempotency_key())
-        result = set_write_payload(set_log)
+        set_log, records = create_set(session, session_id, _parse(SetWrite), _idempotency_key())
+        result = set_write_payload(set_log, records)
     return jsonify(result), 201
 
 
@@ -142,8 +143,8 @@ def post_set(session_id: str) -> tuple[Response, int]:
 @require_admin
 def patch_set(set_id: str) -> tuple[Response, int]:
     with transaction() as session:
-        set_log = update_set(session, set_id, _parse(SetWrite))
-        result = set_write_payload(set_log)
+        set_log, records = update_set(session, set_id, _parse(SetWrite))
+        result = set_write_payload(set_log, records)
     return jsonify(result), 200
 
 
@@ -153,3 +154,12 @@ def remove_set(set_id: str) -> tuple[str, int]:
     with transaction() as session:
         delete_set(session, set_id)
     return "", 204
+
+
+@session_blueprint.post("/sessions/<session_id>/complete")
+@require_admin
+def post_complete_session(session_id: str) -> tuple[Response, int]:
+    with transaction() as session:
+        workout = complete_session(session, session_id)
+        result = session_payload(session, workout, owner=True)
+    return jsonify(result), 200
