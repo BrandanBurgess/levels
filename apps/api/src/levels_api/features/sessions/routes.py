@@ -10,14 +10,20 @@ from levels_api.auth import optional_admin, require_admin
 from levels_api.database import get_db, transaction
 from levels_api.errors import ApiError
 
-from .schemas import SessionUpdate, StartSession
+from .schemas import AddSessionExercise, SessionUpdate, SetWrite, StartSession
 from .service import (
+    add_or_substitute_exercise,
+    create_set,
     delete_session,
+    delete_set,
+    exercise_payload,
     list_session_payloads,
     require_session,
     session_payload,
+    set_write_payload,
     start_session,
     update_session,
+    update_set,
 )
 
 session_blueprint = Blueprint("sessions", __name__, url_prefix="/api/v1")
@@ -104,4 +110,46 @@ def patch_session(session_id: str) -> tuple[Response, int]:
 def remove_session(session_id: str) -> tuple[str, int]:
     with transaction() as session:
         delete_session(session, session_id)
+    return "", 204
+
+
+def _idempotency_key() -> str | None:
+    key = request.headers.get("Idempotency-Key")
+    if key is not None and not 8 <= len(key) <= 128:
+        raise ApiError(400, "VALIDATION_ERROR", "Idempotency-Key must be 8 to 128 characters.")
+    return key
+
+
+@session_blueprint.post("/sessions/<session_id>/exercises")
+@require_admin
+def post_session_exercise(session_id: str) -> tuple[Response, int]:
+    with transaction() as session:
+        item = add_or_substitute_exercise(session, session_id, _parse(AddSessionExercise))
+        result = exercise_payload(item)
+    return jsonify(result), 201
+
+
+@session_blueprint.post("/sessions/<session_id>/sets")
+@require_admin
+def post_set(session_id: str) -> tuple[Response, int]:
+    with transaction() as session:
+        set_log = create_set(session, session_id, _parse(SetWrite), _idempotency_key())
+        result = set_write_payload(set_log)
+    return jsonify(result), 201
+
+
+@session_blueprint.patch("/sets/<set_id>")
+@require_admin
+def patch_set(set_id: str) -> tuple[Response, int]:
+    with transaction() as session:
+        set_log = update_set(session, set_id, _parse(SetWrite))
+        result = set_write_payload(set_log)
+    return jsonify(result), 200
+
+
+@session_blueprint.delete("/sets/<set_id>")
+@require_admin
+def remove_set(set_id: str) -> tuple[str, int]:
+    with transaction() as session:
+        delete_set(session, set_id)
     return "", 204
