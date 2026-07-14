@@ -22,6 +22,27 @@ class AdminProfileDto(PublicProfileDto):
     id: str
 
 
+class VisibilityDto(StrictDto):
+    show_height: bool
+    show_body_weight: bool
+    show_water: bool
+    show_session_summaries: bool
+    show_set_details: bool
+    show_public_notes: bool
+    show_progress_charts: bool
+    show_personal_records: bool
+    show_readiness: bool
+
+
+class SettingsDto(StrictDto):
+    active_split_id: str | None
+    default_water_goal_ml: int
+    water_quick_add_ml: list[int]
+    default_target_rir: float
+    default_load_increment_kg: float
+    visibility: VisibilityDto
+
+
 class PublicSetDto(StrictDto):
     id: str
     sequence: int
