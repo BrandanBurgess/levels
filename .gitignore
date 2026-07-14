@@ -34,6 +34,8 @@ e2e/screenshots/*.png
 !e2e/screenshots/.gitkeep
 !e2e/screenshots/desktop-public-today-1440x900.png
 !e2e/screenshots/iphone-13-public-today.png
+!e2e/screenshots/live-production-desktop-1440x900.png
+!e2e/screenshots/live-production-iphone13-390x844.png
 
 # Editors and operating systems
 .DS_Store
