@@ -103,6 +103,20 @@ def test_undo_removes_latest_entry_for_requested_local_date(app: Flask) -> None:
     assert [entry["amount_ml"] for entry in undone.get_json()["entries"]] == [250]
 
 
+def test_undo_uses_profile_local_date_without_nesting_transactions(app: Flask) -> None:
+    client = app.test_client()
+    added = client.post(
+        "/api/v1/water/today",
+        headers={**_auth(app), "Idempotency-Key": "undo-current-day"},
+        json={"amount_ml": 500},
+    )
+    assert added.status_code == 201
+
+    undone = client.post("/api/v1/water/today/undo", headers=_auth(app))
+    assert undone.status_code == 200
+    assert undone.get_json()["total_ml"] == 0
+
+
 def test_undo_empty_day_returns_not_found(app: Flask) -> None:
     response = app.test_client().post(
         "/api/v1/water/today/undo?date=2020-01-01", headers=_auth(app)

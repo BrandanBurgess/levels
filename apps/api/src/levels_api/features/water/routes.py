@@ -17,11 +17,11 @@ from .service import add_water, local_date_for_profile, undo_latest, water_day
 water_blueprint = Blueprint("water", __name__, url_prefix="/api/v1/water")
 
 
-def _requested_date() -> date:
+def _requested_date(timezone: str | None = None) -> date:
     value = request.args.get("date")
     if value is None:
-        profile = require_profile(get_db())
-        return local_date_for_profile(profile.timezone)
+        resolved_timezone = timezone or require_profile(get_db()).timezone
+        return local_date_for_profile(resolved_timezone)
     try:
         return date.fromisoformat(value)
     except ValueError as error:
@@ -70,7 +70,7 @@ def post_water() -> tuple[Response, int]:
 @water_blueprint.post("/today/undo")
 @require_admin
 def post_undo_water() -> tuple[Response, int]:
-    requested_date = _requested_date()
     with transaction() as session:
-        result = undo_latest(session, requested_date)
+        profile = require_profile(session)
+        result = undo_latest(session, _requested_date(profile.timezone))
     return jsonify(result), 200

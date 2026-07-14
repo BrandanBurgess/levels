@@ -200,6 +200,15 @@ a { color: inherit; }
 .exercise-list__name { display: grid; gap: 0.25rem; min-width: 0; }
 .exercise-list__name strong { overflow: hidden; color: var(--text-strong); font-size: 0.9rem; text-overflow: ellipsis; white-space: nowrap; }
 .exercise-list__name small, .muted-copy { color: var(--text-muted); line-height: 1.5; }
+.water-controls { display: grid; gap: 0.8rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgb(196 154 255 / 12%); }
+.water-quick-add { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; }
+.water-quick-add__button { min-width: 0; padding-inline: 0.45rem; font-size: 0.75rem; }
+.water-custom { display: grid; gap: 0.4rem; }
+.water-custom label { color: var(--text); font-size: 0.78rem; font-weight: 800; }
+.water-custom > div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 0.45rem; }
+.water-custom input { min-width: 0; padding: 0.62rem; border: 1px solid rgb(196 154 255 / 22%); border-radius: 0.6rem; color: var(--text-strong); background: var(--surface-2); }
+.water-custom span { color: var(--text-muted); font-size: 0.78rem; }
+.water-controls .form-success, .water-controls .form-error { margin: 0; font-size: 0.8rem; }
 .exercise-list__type { padding: 0.3rem 0.45rem; border-radius: 999px; color: var(--text-muted); background: var(--surface-2); font-size: 0.62rem; text-transform: capitalize; }
 .type-main, .type-power { color: var(--purple-150); background: var(--purple-850); }
 .profile-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; margin: 1rem 0 0; }
