@@ -12,6 +12,7 @@ This file records implementation decisions and the small, intentional adaptation
 6. GitHub Actions is the Pages deployment authority. The deploy workflow waits for successful `main` CI and refuses to build without the public `VITE_API_BASE_URL` repository variable.
 7. Render is represented by the committed Blueprint and production runbook. Runtime secrets are entered only in Render and are neither committed nor transmitted through the frontend.
 8. Production schema changes run through the protected GitHub Actions migration workflow, which requires an explicit confirmation input and scoped Turso environment secrets.
+9. Render's build explicitly installs the pinned `UV_VERSION` before running `uv sync`. A live deployment proved that the version environment variable selects a version but does not itself make the `uv` executable available.
 
 ## Product and verification
 
