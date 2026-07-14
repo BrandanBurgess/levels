@@ -13,6 +13,7 @@ type Exercise = components["schemas"]["Exercise"];
 type MeasurementType = Exercise["measurement_type"];
 type SetType = components["schemas"]["SetWrite"]["set_type"];
 type Achievement = components["schemas"]["Achievement"];
+type GrowthSuggestion = components["schemas"]["GrowthSuggestion"];
 
 type SetDraft = {
   setType: SetType;
@@ -109,6 +110,16 @@ function setSummary(set: SetLog) {
   if (set.duration_seconds != null) return `${set.duration_seconds} sec`;
   if (set.distance_meters != null) return `${set.distance_meters} m`;
   return `${set.rounds ?? 0} rounds`;
+}
+
+function acceptedGrowthSuggestion(exerciseId: string): GrowthSuggestion | undefined {
+  try {
+    const stored = sessionStorage.getItem(`levels:growth:accepted:${exerciseId}`);
+    if (!stored) return undefined;
+    return (JSON.parse(stored) as { suggestion: GrowthSuggestion }).suggestion;
+  } catch {
+    return undefined;
+  }
 }
 
 function draftFromSet(set: SetLog): SetDraft {
@@ -417,6 +428,7 @@ function SessionBook({
         <ol className="journal-exercises">
           {session.exercises.map((item) => {
             const catalogExercise = exerciseMap.get(item.exercise_id);
+            const acceptedGrowth = acceptedGrowthSuggestion(item.exercise_id);
             const previous = sessions.find((candidate) => candidate.id !== session.id && candidate.status === "completed" && candidate.exercises.some((exercise) => exercise.exercise_id === item.exercise_id));
             const previousItem = previous?.exercises.find((exercise) => exercise.exercise_id === item.exercise_id);
             return (
@@ -425,6 +437,7 @@ function SessionBook({
                   <div><span>{item.sequence}</span><h3>{item.display_name}</h3></div>
                   <small>{item.rep_min != null ? `${item.rep_min}–${item.rep_max ?? item.rep_min} reps` : catalogExercise?.measurement_type.replaceAll("_", " ")}</small>
                 </div>
+                {acceptedGrowth ? <p className="accepted-guidance"><strong>Growth target:</strong> {acceptedGrowth.explanation.at(-1)}</p> : null}
                 {previousItem?.sets.at(-1) ? <p className="previous-performance">Previous: {setSummary(previousItem.sets.at(-1)!)}</p> : null}
                 {item.sets.length ? <ul className="logged-sets">{item.sets.map((set) => <li key={set.id}><span>Set {set.sequence}</span><strong>{setSummary(set)}</strong><small>{set.set_type}</small></li>)}</ul> : null}
                 {session.status === "in_progress" && catalogExercise ? <SetEntry item={item} measurement={catalogExercise.measurement_type} onSaved={refresh} sessionId={session.id} /> : null}
