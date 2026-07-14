@@ -4,6 +4,7 @@ import { AppShell } from "./app/AppShell";
 import { AppProviders } from "./app/AppProviders";
 import { PlaceholderPage } from "./app/PlaceholderPage";
 import { LoginPage } from "./auth/LoginPage";
+import { CharacterPage } from "./features/character/CharacterPage";
 import { TodayPage } from "./features/today/TodayPage";
 
 const pages = {
@@ -61,8 +62,9 @@ export function App() {
         <Routes>
         <Route element={<AppShell />}>
           <Route index element={<TodayPage />} />
+          <Route path="character" element={<CharacterPage />} />
           {Object.entries(pages)
-            .filter(([path]) => path !== "today")
+            .filter(([path]) => path !== "today" && path !== "character")
             .map(([path, page]) => (
               <Route key={path} path={path} element={<PlaceholderPage {...page} />} />
             ))}

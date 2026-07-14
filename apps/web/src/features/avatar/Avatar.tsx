@@ -8,6 +8,7 @@ export interface AvatarTarget {
 
 interface AvatarProps {
   targets?: AvatarTarget[];
+  view?: "front" | "back" | "both";
 }
 
 function roleFor(regionId: string, targets: AvatarTarget[]) {
@@ -34,15 +35,16 @@ function Region({
   );
 }
 
-export function Avatar({ targets = [] }: AvatarProps) {
+export function Avatar({ targets = [], view = "both" }: AvatarProps) {
+  const viewBox = view === "front" ? "0 0 320 560" : view === "back" ? "360 0 320 560" : "0 0 680 560";
   return (
-    <figure className="avatar">
+    <figure className={`avatar avatar--${view}`} data-avatar-view={view}>
       <svg
         aria-describedby="avatar-description"
         aria-labelledby="avatar-title"
         className="avatar__art"
         role="img"
-        viewBox="0 0 680 560"
+        viewBox={viewBox}
       >
         <title id="avatar-title">Front and back muscle avatar</title>
         <desc id="avatar-description">
@@ -68,7 +70,7 @@ export function Avatar({ targets = [] }: AvatarProps) {
           </filter>
         </defs>
 
-        <g className="avatar__view" data-view="front" transform="translate(10 10)">
+        {view !== "back" ? <g className="avatar__view" data-view="front" transform="translate(10 10)">
           <text className="avatar__view-label" x="150" y="24">FRONT</text>
           <ellipse className="avatar__ground" cx="150" cy="520" rx="92" ry="12" />
 
@@ -129,9 +131,9 @@ export function Avatar({ targets = [] }: AvatarProps) {
             <path className="avatar__outline" d="M128 101c-9 14-17 24-35 30-20 9-31 28-36 56L43 325c-3 19 23 24 29 6l17-78 9 118-2 128c-2 20 25 24 31 5l23-130 23 130c6 19 33 15 31-5l-2-128 9-118 17 78c6 18 32 13 29-6l-14-138c-5-28-16-47-36-56-18-6-26-16-35-30" />
             <path className="avatar__face" d="M137 71h5m16 0h5m-20 17c5 3 9 4 14 0" />
           </g>
-        </g>
+        </g> : null}
 
-        <g className="avatar__view" data-view="back" transform="translate(370 10)">
+        {view !== "front" ? <g className="avatar__view" data-view="back" transform="translate(370 10)">
           <text className="avatar__view-label" x="150" y="24">BACK</text>
           <ellipse className="avatar__ground" cx="150" cy="520" rx="92" ry="12" />
           <g data-layer="skin">
@@ -174,7 +176,7 @@ export function Avatar({ targets = [] }: AvatarProps) {
             <path className="avatar__outline" d="M128 101c-9 14-17 24-35 30-20 9-31 28-36 56L43 325c-3 19 23 24 29 6l17-78 9 118-2 128c-2 20 25 24 31 5l23-130 23 130c6 19 33 15 31-5l-2-128 9-118 17 78c6 18 32 13 29-6l-14-138c-5-28-16-47-36-56-18-6-26-16-35-30" />
             <path className="avatar__outline" d="M150 108v180" />
           </g>
-        </g>
+        </g> : null}
       </svg>
 
       <figcaption className="avatar__caption">
