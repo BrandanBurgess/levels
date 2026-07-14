@@ -4,7 +4,7 @@
 
 The LEVELS release candidate passes all local implementation, contract, accessibility, responsive-layout, and browser-journey gates. Production release is **not complete** because Turso and Render still require external account input, so no release tag is claimed.
 
-Verification baseline: `main` commit `656bfd06d4f1eaf5ca474059553f9e7e90c455aa`, plus the LVL-1005 verification changes on `test/lvl-1005-independent-verification`. Date: 2026-07-14.
+Verification baseline: `main` commit `656bfd06d4f1eaf5ca474059553f9e7e90c455aa`, plus verified candidate commit `02bf9c62c6130eac9ac3312c86da1c87732ab63b` on `test/lvl-1005-independent-verification`. Date: 2026-07-14.
 
 ## Clean-checkout commands
 
@@ -16,8 +16,8 @@ The following were run from a separate clean Git worktree with locked dependenci
 | `make lint` | Pass; frontend ESLint and backend/e2e Ruff formatting and lint checks. |
 | `make typecheck` | Pass; web and generated client TypeScript plus API mypy. |
 | `make test` | Pass; 39 web tests, 2 generated-client tests, and 122 API tests. API statement coverage: 96%. |
-| `make e2e` | Pass; 16 Playwright journeys in 29.1 seconds. |
-| `make verify` | Pending final clean-worktree rerun on the committed verification candidate; this row is updated before merge. |
+| `make e2e` | Pass; 16 Playwright journeys in 28.2 seconds. |
+| `make verify` | Pass in 113 seconds; lint, application and e2e type checks, all tests, OpenAPI lint/generated-client drift, production build, and all browser journeys. |
 
 The browser run starts from a new SQLite database and applies every Alembic revision before seeding. Separate final-candidate verification also runs migration, seed twice, and database invariant status to prove clean setup and idempotency.
 
@@ -47,4 +47,4 @@ Responsive and accessibility evidence:
 - Render: Blueprint is ready, but the active Render MCP tool surface and authorized service are unavailable.
 - Live health, live CORS, production migration, live browser, and release-tag checks therefore remain pending and are not reported as passing.
 
-See `DEPLOYMENT_STATUS.md` for the exact actions required to complete production release and the implementation PR links.
+See `DEPLOYMENT_STATUS.md` for the exact actions required to complete production release and the implementation PR links. Final verification PR: https://github.com/BrandanBurgess/levels/pull/50.

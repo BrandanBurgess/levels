@@ -25,6 +25,7 @@ Status captured on 2026-07-14 for the LVL-1005 release candidate. No secret valu
 - Foundation and CI PRs: https://github.com/BrandanBurgess/levels/pull/2 and https://github.com/BrandanBurgess/levels/pull/3
 - Product ticket PRs: https://github.com/BrandanBurgess/levels/pull/12 through https://github.com/BrandanBurgess/levels/pull/46
 - Independent-verification fixes: https://github.com/BrandanBurgess/levels/pull/47, https://github.com/BrandanBurgess/levels/pull/48, and https://github.com/BrandanBurgess/levels/pull/49
+- Independent verification and release evidence: https://github.com/BrandanBurgess/levels/pull/50
 - Latest successful main CI at capture time: https://github.com/BrandanBurgess/levels/actions/runs/29308798820
 - Expected Pages gate failure without the API URL: https://github.com/BrandanBurgess/levels/actions/runs/29308929610
 
