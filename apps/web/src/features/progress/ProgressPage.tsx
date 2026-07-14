@@ -39,6 +39,23 @@ async function fetchProgress(owner: boolean) {
   };
 }
 
+async function downloadExport(format: "json" | "csv") {
+  const { data, error } = await apiClient.GET("/export", {
+    params: { query: { format } },
+  });
+  if (data == null || error) throw new Error("Export request failed");
+  const contents = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+  const blob = new Blob([contents], {
+    type: format === "csv" ? "text/csv;charset=utf-8" : "application/json;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `levels-export-${new Date().toISOString().slice(0, 10)}.${format}`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function recordValue(record: RecordItem) {
   const value = Number(record.value_numeric.toFixed(2));
   return `${value.toLocaleString()} ${record.unit}`;
@@ -112,6 +129,7 @@ export function ProgressPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [metric, setMetric] = useState<Metric>("estimated_1rm");
+  const [exportState, setExportState] = useState<"idle" | "working" | "success" | "error">("idle");
   const query = useQuery({ queryKey: ["progress", isAuthenticated], queryFn: () => fetchProgress(isAuthenticated) });
   const data = query.data;
 
@@ -169,6 +187,7 @@ export function ProgressPage() {
         {data.history.length ? <ConsistencyCalendar sessions={visibleSessions} /> : null}
 
         <section className="history-card" aria-labelledby="history-heading"><p className="card-label">Visible sessions</p><h2 id="history-heading">Exercise history</h2>{visibleSessions.length ? <ol>{visibleSessions.map((session) => <li key={session.id}><time dateTime={session.session_date_local}>{new Date(`${session.session_date_local}T12:00:00`).toLocaleDateString()}</time><strong>{session.title}</strong><span>{session.exercises.length ? `${session.exercises.length} exercises` : "Summary shared"}</span></li>)}</ol> : <p>No visible sessions match these filters.</p>}</section>
+        {isAuthenticated ? <section className="export-card" aria-labelledby="export-heading"><div><p className="card-label">Owner backup</p><h2 id="export-heading">Export your data</h2><p>JSON preserves the full backup structure. CSV is a spreadsheet-safe long-form copy.</p></div><div className="export-actions"><button className="button button--secondary" disabled={exportState === "working"} onClick={() => { setExportState("working"); void downloadExport("json").then(() => setExportState("success")).catch(() => setExportState("error")); }} type="button">Download JSON</button><button className="button button--secondary" disabled={exportState === "working"} onClick={() => { setExportState("working"); void downloadExport("csv").then(() => setExportState("success")).catch(() => setExportState("error")); }} type="button">Download CSV</button></div>{exportState === "success" ? <p role="status">Export ready.</p> : null}{exportState === "error" ? <p className="form-error" role="alert">The export could not be downloaded.</p> : null}</section> : null}
       </> : null}
     </article>
   );
