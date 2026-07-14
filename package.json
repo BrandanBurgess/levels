@@ -15,9 +15,10 @@
     "dev:api": "uv run --project apps/api flask --app levels_api:create_app run --port 8000 --debug",
     "dev:web": "npm --workspace @levels/web run dev",
     "build": "npm --workspace @levels/web run build",
+    "openapi:check": "redocly lint docs/levels_product_handoff/levels_product_handoff/05_OPENAPI.yaml",
     "lint": "npm run lint:web && npm run lint:api",
     "lint:web": "npm --workspace @levels/web run lint",
-    "lint:api": "uv run --project apps/api ruff check apps/api/src apps/api/tests",
+    "lint:api": "uv run --project apps/api ruff check apps/api/src apps/api/tests && uv run --project apps/api ruff format --check apps/api/src apps/api/tests",
     "typecheck": "npm run typecheck:web && npm run typecheck:api",
     "typecheck:web": "npm --workspace @levels/web run typecheck",
     "typecheck:api": "uv run --project apps/api mypy apps/api/src",
@@ -26,9 +27,10 @@
     "test:api": "uv run --project apps/api pytest apps/api/tests",
     "seed": "uv run --project apps/api python -m levels_api.seed",
     "e2e": "node -e \"console.error('Playwright is introduced by LVL-1004'); process.exit(1)\"",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run openapi:check && npm run build"
   },
   "devDependencies": {
+    "@redocly/cli": "2.39.0",
     "@vitest/coverage-v8": "4.1.10",
     "concurrently": "9.2.0",
     "vitest": "4.1.10"
