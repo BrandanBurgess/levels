@@ -186,21 +186,17 @@ test.describe("LEVELS handoff journeys", () => {
     await expect(page.locator(".record-card").filter({ hasText: "Incline Barbell Bench Press" }).first()).toBeVisible();
   });
 
-  test("09 water quick-add and undo work", async ({ page, request }) => {
-    const token = await login(page);
-    const add = await request.post(`${apiBaseUrl}/water/today`, {
-      headers: { ...authHeaders(token), "Idempotency-Key": "playwright-water-add" },
-      data: { amount_ml: 500 },
-    });
-    expect(add.status()).toBe(201);
-    const added = (await add.json()) as { local_date: string; total_ml: number };
-    expect(added.total_ml).toBe(500);
+  test("09 water quick-add and undo work", async ({ page }) => {
+    await login(page);
+    await expect(page.getByRole("heading", { name: "0 mL" })).toBeVisible();
 
-    const undo = await request.post(`${apiBaseUrl}/water/today/undo?date=${added.local_date}`, {
-      headers: authHeaders(token),
-    });
-    expect(undo.ok()).toBeTruthy();
-    expect(((await undo.json()) as { total_ml: number }).total_ml).toBe(0);
+    await page.getByRole("button", { name: "+500 mL" }).click();
+    await expect(page.getByRole("status")).toHaveText("500 mL added.");
+    await expect(page.getByRole("heading", { name: "500 mL" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Undo latest" }).click();
+    await expect(page.getByRole("status")).toHaveText("Latest water entry undone.");
+    await expect(page.getByRole("heading", { name: "0 mL" })).toBeVisible();
   });
 
   test("10 split edit persists after refresh", async ({ page }) => {

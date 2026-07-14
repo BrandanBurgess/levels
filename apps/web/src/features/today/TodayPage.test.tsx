@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { apiClient } from "../../api/client";
+import { AuthContext } from "../../auth/context";
 import { TodayPage } from "./TodayPage";
 
 const dashboard = {
@@ -60,13 +61,23 @@ const dashboard = {
   latest_achievements: [],
 };
 
-function renderPage() {
+function renderPage(isAuthenticated = false) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <TodayPage />
+      <AuthContext.Provider
+        value={{
+          ...(isAuthenticated ? { admin: { displayName: "Brandan Burgess" } } : {}),
+          isAuthenticated,
+          isSubmitting: false,
+          login: vi.fn(async () => false),
+          logout: vi.fn(),
+        }}
+      >
+        <TodayPage />
+      </AuthContext.Provider>
     </QueryClientProvider>,
   );
 }
@@ -101,5 +112,50 @@ describe("TodayPage", () => {
 
     await waitFor(() => expect(getDashboard).toHaveBeenCalledTimes(2));
     expect(await screen.findByText("Incline Dumbbell Press")).toBeInTheDocument();
+  });
+
+  it("lets the owner quick-add and undo water", async () => {
+    const ownerDashboard = {
+      ...dashboard,
+      water: {
+        local_date: "2026-07-13",
+        total_ml: 0,
+        goal_ml: 2800,
+        progress_ratio: 0,
+        entries: [],
+      },
+    };
+    vi.spyOn(apiClient, "GET").mockResolvedValue({
+      data: ownerDashboard,
+      response: new Response(),
+    });
+    const post = vi
+      .spyOn(apiClient, "POST")
+      .mockResolvedValueOnce({
+        data: {
+          ...ownerDashboard.water,
+          total_ml: 500,
+          progress_ratio: 500 / 2800,
+          entries: [
+            { id: "water-1", amount_ml: 500, occurred_at: "2026-07-13T16:00:00Z" },
+          ],
+        },
+        response: new Response(),
+      })
+      .mockResolvedValueOnce({
+        data: ownerDashboard.water,
+        response: new Response(),
+      });
+
+    renderPage(true);
+
+    expect(await screen.findByRole("heading", { name: "0 mL" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "+500 mL" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("500 mL added");
+    expect(screen.getByRole("heading", { name: "500 mL" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Undo latest" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Latest water entry undone");
+    expect(screen.getByRole("heading", { name: "0 mL" })).toBeInTheDocument();
+    expect(post).toHaveBeenCalledTimes(2);
   });
 });

@@ -1,11 +1,14 @@
 import type { components } from "@levels/api-client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, type FormEvent } from "react";
 
 import { apiClient } from "../../api/client";
+import { useAuth } from "../../auth/context";
 import { EmptyState, ErrorState, LoadingState } from "../../ui/AsyncState";
 import { Avatar } from "../avatar/Avatar";
 
 type Dashboard = components["schemas"]["PublicDashboard"];
+type WaterDay = components["schemas"]["WaterDay"];
 
 async function fetchDashboard(): Promise<Dashboard> {
   const { data, error } = await apiClient.GET("/public/dashboard");
@@ -22,7 +25,118 @@ function formatDate(value?: string) {
   }).format(new Date(`${value}T12:00:00`));
 }
 
+function WaterControls({ water }: { water: WaterDay }) {
+  const queryClient = useQueryClient();
+  const [customAmount, setCustomAmount] = useState("375");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  function publish(updated: WaterDay, successMessage: string) {
+    queryClient.setQueryData<Dashboard>(["public-dashboard"], (current) =>
+      current ? { ...current, water: updated } : current,
+    );
+    setMessage(successMessage);
+    setError("");
+  }
+
+  async function addWater(amountMl: number, source: "quick_add" | "custom") {
+    setIsSubmitting(true);
+    setMessage("");
+    setError("");
+    try {
+      const { data, error: responseError } = await apiClient.POST("/water/today", {
+        params: { header: { "Idempotency-Key": crypto.randomUUID() } },
+        body: { amount_ml: amountMl, source },
+      });
+      if (responseError || !data) throw new Error("Water update failed");
+      publish(data, `${amountMl} mL added.`);
+    } catch {
+      setError("Hydration could not be updated. Try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function undoWater() {
+    setIsSubmitting(true);
+    setMessage("");
+    setError("");
+    try {
+      const { data, error: responseError } = await apiClient.POST("/water/today/undo", {});
+      if (responseError || !data) throw new Error("Water undo failed");
+      publish(data, "Latest water entry undone.");
+    } catch {
+      setError(
+        water.entries.length === 0
+          ? "There is no water entry to undo."
+          : "The latest water entry could not be undone.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function submitCustom(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const amount = Number(customAmount);
+    if (!Number.isInteger(amount) || amount < 1 || amount > 5000) {
+      setMessage("");
+      setError("Enter a whole number from 1 to 5000 mL.");
+      return;
+    }
+    void addWater(amount, "custom");
+  }
+
+  return (
+    <div className="water-controls" aria-label="Hydration controls">
+      <div className="water-quick-add" aria-label="Quick add water">
+        {[250, 500, 750].map((amount) => (
+          <button
+            className="button water-quick-add__button"
+            disabled={isSubmitting}
+            key={amount}
+            onClick={() => void addWater(amount, "quick_add")}
+            type="button"
+          >
+            +{amount} mL
+          </button>
+        ))}
+      </div>
+      <form className="water-custom" onSubmit={submitCustom}>
+        <label htmlFor="custom-water-amount">Custom amount</label>
+        <div>
+          <input
+            disabled={isSubmitting}
+            id="custom-water-amount"
+            inputMode="numeric"
+            max="5000"
+            min="1"
+            onChange={(event) => setCustomAmount(event.target.value)}
+            step="1"
+            type="number"
+            value={customAmount}
+          />
+          <span>mL</span>
+          <button className="button" disabled={isSubmitting} type="submit">Add</button>
+        </div>
+      </form>
+      <button
+        className="button button--quiet"
+        disabled={isSubmitting || water.entries.length === 0}
+        onClick={() => void undoWater()}
+        type="button"
+      >
+        Undo latest
+      </button>
+      {message ? <p className="form-success" role="status">{message}</p> : null}
+      {error ? <p className="form-error" role="alert">{error}</p> : null}
+    </div>
+  );
+}
+
 export function TodayPage() {
+  const { isAuthenticated } = useAuth();
   const query = useQuery({ queryKey: ["public-dashboard"], queryFn: fetchDashboard });
   const dashboard = query.data;
   const scheduledDay = dashboard?.scheduled_day;
@@ -114,6 +228,7 @@ export function TodayPage() {
                 ? `${Math.round(dashboard.water.progress_ratio * 100)}% of ${dashboard.water.goal_ml} mL goal`
                 : "The owner has chosen not to publish water data."}
             </p>
+            {isAuthenticated && dashboard.water ? <WaterControls water={dashboard.water} /> : null}
           </section>
 
           <section className="today-card achievement-card" aria-labelledby="achievement-heading">
