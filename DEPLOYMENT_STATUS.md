@@ -9,11 +9,11 @@ Status captured on 2026-07-14 for the LVL-1005 release candidate. No secret valu
 | Render API | Live | https://levels-api-brandanburgess.onrender.com uses the corrected pinned-uv build, `/health`, production secrets, and exact Pages CORS origin. Root and canonical health routes both return 200 with `database: ok`. |
 | Turso database | Live and protected | `levels-production` is a default-libSQL database in group `levels`, region `aws-us-east-2`; delete protection is enabled. |
 | Production migration/seed | Complete | Protected run https://github.com/BrandanBurgess/levels/actions/runs/29320025457 applied Alembic head `a91f6028df36`, seeded idempotently, and passed invariants. Independent MCP read confirmed 25 muscle groups, 98 exercises, 2 splits, and 1 profile. |
-| Release tag | Not created | `v0.2.0` remains gated only on an authenticated live owner journey; provider secrets are deliberately unreadable to the verifying agent. |
+| Release tag | Ready to create | The authenticated desktop and iPhone owner journeys passed against production with clean browser/network audits and all temporary writes cleaned. Create `v0.2.0` after this evidence merges. |
 
 ## Remaining release action
 
-Run the authenticated owner journey against production without transmitting the password through chat. After login, verify Settings, Journal write/edit/delete, hydration add/undo, logout privacy, and that no browser/network errors occur. Create annotated tag `v0.2.0` only after this gate passes.
+Merge the final authenticated verification evidence, then create annotated tag `v0.2.0` on that exact main commit.
 
 ## Repository evidence
 

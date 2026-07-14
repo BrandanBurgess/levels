@@ -2,7 +2,7 @@
 
 ## Verdict
 
-The LEVELS release candidate passes all local implementation, contract, accessibility, responsive-layout, and browser-journey gates. Turso, Render, and GitHub Pages are live and the logged-out production experience passes desktop and iPhone verification. Release tagging remains gated only on repeating the authenticated owner journey against production without exposing its password.
+LEVELS passes all local implementation, contract, accessibility, responsive-layout, and browser-journey gates. Turso, Render, and GitHub Pages are live, and both public and authenticated production experiences pass desktop and iPhone verification. The release is ready for tag `v0.2.0` after this evidence merges.
 
 Local verification baseline: candidate `02bf9c62c6130eac9ac3312c86da1c87732ab63b`. Production verification baseline: main `ab5bbd4d0bb92c2bc93c7bf6d30d3256c53c2ef6`. Date: 2026-07-14.
 
@@ -40,6 +40,17 @@ Live production public verification at https://brandanburgess.github.io/levels/ 
 - Live desktop evidence: `e2e/screenshots/live-production-desktop-1440x900.png`.
 - Live iPhone evidence: `e2e/screenshots/live-production-iphone13-390x844.png`.
 
+Authenticated production verification also passes:
+
+- owner login succeeds without persisting the bearer token;
+- Settings writes persist and the verification value is restored;
+- a Journal session and set can be created, edited, and deleted through the browser;
+- hydration quick-add and undo succeed;
+- logout restores public privacy;
+- the iPhone More → Settings owner route remains within the 390 px viewport;
+- no console exceptions, page errors, failed requests, or 5xx responses occur;
+- temporary sessions and sets are soft-deleted, and an independent Turso query confirms zero active sessions, active sets, current records, and water logs.
+
 ## Security and privacy
 
 - Secret scanning is a protected CI check; `.env`, database files, Playwright artifacts, and authenticated screenshots are ignored.
@@ -54,6 +65,6 @@ Live production public verification at https://brandanburgess.github.io/levels/ 
 - Render: the service is live; `/health` and `/api/v1/health` return 200 with `database: ok`; public dashboard returns 200.
 - CORS: a production preflight from `https://brandanburgess.github.io` returns the exact allowed origin and expected methods/headers.
 - Browser: logged-out desktop and iPhone checks pass against the real Pages and Render URLs.
-- Pending: authenticated live owner journey and release tag only.
+- Pending: merge this final evidence and create release tag `v0.2.0` on the resulting main commit.
 
 See `DEPLOYMENT_STATUS.md` for the exact actions required to complete production release and the implementation PR links. Final verification PR: https://github.com/BrandanBurgess/levels/pull/50.
