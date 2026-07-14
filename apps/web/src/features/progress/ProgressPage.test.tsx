@@ -55,4 +55,22 @@ describe("ProgressPage", () => {
     renderPage(false, { current: [], history: [] });
     expect(await screen.findByRole("heading", { name: "No visible records" })).toBeInTheDocument();
   });
+
+  it("offers authenticated JSON export and keeps it out of the public page", async () => {
+    const { unmount } = renderPage();
+    await screen.findByRole("heading", { name: "Personal records" });
+    expect(screen.queryByRole("heading", { name: "Export your data" })).not.toBeInTheDocument();
+    unmount();
+
+    const createObjectURL = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:export");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    renderPage(true);
+    await screen.findByRole("heading", { name: "Export your data" });
+    vi.mocked(apiClient.GET).mockResolvedValueOnce({ data: { tables: {} }, response: new Response() } as never);
+    fireEvent.click(screen.getByRole("button", { name: "Download JSON" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Export ready.");
+    expect(createObjectURL).toHaveBeenCalled();
+    expect(apiClient.GET).toHaveBeenLastCalledWith("/export", { params: { query: { format: "json" } } });
+  });
 });

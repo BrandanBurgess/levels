@@ -9,6 +9,7 @@ from .cors import init_cors
 from .database import init_database
 from .errors import register_error_handlers
 from .features.exercises.routes import exercise_blueprint
+from .features.export.routes import export_blueprint
 from .features.growth.routes import growth_blueprint
 from .features.profile.routes import profile_blueprint
 from .features.records.routes import record_blueprint
@@ -51,6 +52,7 @@ def create_app(settings: Settings | None = None) -> Flask:
     app.register_blueprint(health_blueprint)
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(exercise_blueprint)
+    app.register_blueprint(export_blueprint)
     app.register_blueprint(growth_blueprint)
     app.register_blueprint(profile_blueprint)
     app.register_blueprint(record_blueprint)
