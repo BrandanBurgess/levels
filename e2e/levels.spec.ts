@@ -1,37 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type APIRequestContext, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
-const apiBaseUrl = "http://127.0.0.1:8000/api/v1";
 const e2ePassword = "levels-e2e-password";
 
-type SetLog = {
-  id: string;
-  set_type: "warmup" | "working" | "backoff" | "drop" | "failure";
-  load_kg: number | null;
-  reps: number | null;
-  rir: number | null;
-  duration_seconds: number | null;
-  distance_meters: number | null;
-  rounds: number | null;
-  bodyweight_assistance_kg: number | null;
-  form_quality: number | null;
-  pain_flag: boolean;
-  notes: string | null;
-};
-
-type SessionExercise = {
-  id: string;
-  display_name: string;
-  sets: SetLog[];
-};
-
-type WorkoutSession = {
-  id: string;
-  status: string;
-  exercises: SessionExercise[];
-};
-
-async function login(page: Page): Promise<string> {
+async function login(page: Page): Promise<void> {
   await page.goto("/#/login");
   const responsePromise = page.waitForResponse(
     (response) => response.url().endsWith("/api/v1/auth/login") && response.request().method() === "POST",
@@ -41,14 +13,8 @@ async function login(page: Page): Promise<string> {
   await page.getByRole("button", { name: "Sign in" }).click();
   const response = await responsePromise;
   expect(response.status()).toBe(200);
-  const payload = (await response.json()) as { access_token: string };
   await expect(page).toHaveURL(/#\/?$/);
   await expect(page.getByRole("link", { name: "Owner sign in" })).toHaveCount(0);
-  return payload.access_token;
-}
-
-function authHeaders(token: string) {
-  return { Authorization: `Bearer ${token}` };
 }
 
 async function openJournal(page: Page) {
@@ -73,14 +39,6 @@ async function fillInclineSet(
   await exercise.getByLabel("Form (1–5)", { exact: true }).fill("4");
   await exercise.locator(".set-entry select").selectOption(values.setType);
   await exercise.getByRole("button", { name: "Log set" }).click();
-}
-
-async function ownerSessions(request: APIRequestContext, token: string): Promise<WorkoutSession[]> {
-  const response = await request.get(`${apiBaseUrl}/sessions?public_only=false`, {
-    headers: authHeaders(token),
-  });
-  expect(response.ok()).toBeTruthy();
-  return (await response.json()) as WorkoutSession[];
 }
 
 async function assertNoCriticalAxeViolations(page: Page) {
@@ -124,38 +82,18 @@ test.describe("LEVELS handoff journeys", () => {
     await expect(inclineExercise(page).locator(".logged-sets")).toContainText("60 kg × 8");
   });
 
-  test("05 admin duplicates and edits a set", async ({ page, request }) => {
-    const token = await login(page);
+  test("05 admin duplicates and edits a set", async ({ page }) => {
+    await login(page);
     await openJournal(page);
     const exercise = inclineExercise(page);
     await exercise.getByRole("button", { name: "Duplicate previous" }).click();
     await expect(exercise.getByRole("status")).toHaveText("Previous set duplicated.");
 
-    const sessions = await ownerSessions(request, token);
-    const active = sessions.find((session) => session.status === "in_progress");
-    const incline = active?.exercises.find((item) => item.display_name === "Incline Barbell Bench Press");
-    const duplicated = incline?.sets.at(-1);
-    expect(active && incline && duplicated).toBeTruthy();
-    const response = await request.patch(`${apiBaseUrl}/sets/${duplicated!.id}`, {
-      headers: authHeaders(token),
-      data: {
-        session_exercise_id: incline!.id,
-        set_type: duplicated!.set_type,
-        load_kg: 62.5,
-        reps: duplicated!.reps,
-        rir: duplicated!.rir,
-        duration_seconds: duplicated!.duration_seconds,
-        distance_meters: duplicated!.distance_meters,
-        rounds: duplicated!.rounds,
-        bodyweight_assistance_kg: duplicated!.bodyweight_assistance_kg,
-        form_quality: duplicated!.form_quality,
-        pain_flag: duplicated!.pain_flag,
-        notes: duplicated!.notes,
-      },
-    });
-    expect(response.ok()).toBeTruthy();
-    const edited = (await response.json()) as { set: { load_kg: number } };
-    expect(edited.set.load_kg).toBe(62.5);
+    await exercise.getByRole("button", { name: "Edit set 2" }).click();
+    await exercise.getByLabel("Weight (kg)", { exact: true }).fill("62.5");
+    await exercise.getByRole("button", { name: "Save set changes" }).click();
+    await expect(exercise.getByRole("status")).toHaveText("Set changes saved.");
+    await expect(exercise.locator(".logged-sets")).toContainText("62.5 kg");
   });
 
   test("06 admin completes workout", async ({ page }) => {

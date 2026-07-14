@@ -249,8 +249,11 @@ a { color: inherit; }
 .previous-performance { margin: 0.55rem 0; font-size: 0.78rem; font-style: italic; }
 .accepted-guidance { margin: 0.55rem 0; padding: 0.55rem; border-left: 3px solid #6a3675; border-radius: 0 0.4rem 0.4rem 0; color: #5a3a53; background: rgb(109 62 113 / 9%); font-size: 0.75rem; line-height: 1.45; }
 .logged-sets { display: grid; gap: 0.25rem; margin: 0.6rem 0; padding: 0; list-style: none; }
-.logged-sets li { display: grid; grid-template-columns: 3rem 1fr auto; gap: 0.55rem; padding: 0.38rem 0.5rem; border-radius: 0.35rem; background: rgb(255 252 239 / 52%); }
+.logged-sets li { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto auto; align-items: center; gap: 0.55rem; padding: 0.38rem 0.5rem; border-radius: 0.35rem; background: rgb(255 252 239 / 52%); }
 .logged-sets span, .logged-sets small { color: #72596c; font-size: 0.7rem; text-transform: capitalize; }
+.logged-set-actions { display: flex; gap: 0.3rem; }
+.logged-set-actions button { padding: 0.25rem 0.4rem; border: 1px solid rgb(84 50 79 / 24%); border-radius: 0.3rem; color: #4f304a; background: #ead9b7; font-size: 0.66rem; font-weight: 800; cursor: pointer; }
+.logged-set-actions button:last-child { color: #7d2935; }
 .set-entry { margin-top: 0.75rem; padding: 0.7rem; border: 1px solid rgb(88 52 83 / 20%); border-radius: 0.65rem; background: rgb(255 249 229 / 58%); }
 .set-entry__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
 .set-entry label, .set-field, .substitution-control label, .add-exercise label { display: grid; gap: 0.25rem; min-width: 0; color: #4b3447; font-size: 0.68rem; font-weight: 850; }
@@ -344,6 +347,8 @@ a { color: inherit; }
 @media (max-width: 35rem) {
   .trend-heading { align-items: stretch; flex-direction: column; }
   .history-card li { grid-template-columns: 1fr; gap: 0.2rem; }
+  .logged-sets li { grid-template-columns: 3rem minmax(0, 1fr) auto; }
+  .logged-set-actions { grid-column: 2 / -1; }
 }
 .growth-card--insufficient_data::before { background: var(--text-muted); }
 .growth-card__heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
