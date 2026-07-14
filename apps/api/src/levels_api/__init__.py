@@ -2,17 +2,39 @@ from __future__ import annotations
 
 from flask import Flask
 
+from .config import Settings
+from .cors import init_cors
+from .database import init_database
+from .errors import register_error_handlers
+from .logging import configure_logging, init_request_context
+from .routes.health import health_blueprint
 
-def create_app() -> Flask:
-    """Create the LEVELS Flask application."""
+__version__ = "0.1.0"
+
+
+def create_app(settings: Settings | None = None) -> Flask:
+    """Create and configure the LEVELS Flask application."""
+    resolved_settings = settings or Settings.from_environment()
     app = Flask(__name__)
-    app.config.from_prefixed_env(prefix="LEVELS")
+    app.config.update(
+        APP_ENV=resolved_settings.app_env,
+        APP_TIMEZONE=resolved_settings.app_timezone,
+        DATABASE_URL=resolved_settings.database_url,
+        TURSO_AUTH_TOKEN=resolved_settings.turso_auth_token,
+        CORS_ALLOWED_ORIGINS=resolved_settings.cors_allowed_origins,
+        PUBLIC_WEB_ORIGIN=resolved_settings.public_web_origin,
+        LOG_LEVEL=resolved_settings.log_level,
+        API_VERSION=__version__,
+        TESTING=resolved_settings.testing,
+    )
 
-    @app.get("/")
-    def index() -> dict[str, str]:
-        return {"name": "LEVELS API", "status": "bootstrapped"}
-
+    configure_logging(app)
+    init_request_context(app)
+    init_cors(app)
+    init_database(app)
+    register_error_handlers(app)
+    app.register_blueprint(health_blueprint)
     return app
 
 
-__all__ = ["create_app"]
+__all__ = ["Settings", "__version__", "create_app"]

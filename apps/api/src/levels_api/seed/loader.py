@@ -9,9 +9,10 @@ from importlib.resources import files
 from typing import Any, cast
 from uuid import NAMESPACE_URL, uuid5
 
-from sqlalchemy import Engine, create_engine, delete, func, select
+from sqlalchemy import Engine, delete, func, select
 from sqlalchemy.orm import Session
 
+from levels_api.database import create_database_engine
 from levels_api.models import (
     AppSettings,
     Exercise,
@@ -303,7 +304,7 @@ def seed_session(session: Session) -> SeedResult:
 
 def seed_database(database_url: str | None = None) -> SeedResult:
     resolved_url = database_url or os.getenv("DATABASE_URL") or DEFAULT_DATABASE_URL
-    engine: Engine = create_engine(resolved_url)
+    engine: Engine = create_database_engine(resolved_url, os.getenv("TURSO_AUTH_TOKEN"))
     try:
         with Session(engine) as session, session.begin():
             return seed_session(session)
