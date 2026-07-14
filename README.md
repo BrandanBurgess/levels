@@ -24,7 +24,7 @@ npm run dev
 
 Open `http://localhost:5173`. The API runs at `http://localhost:8000`.
 
-Before admin login is implemented, keep the placeholder secret values in local development only. Never commit `.env`. The later auth ticket provides a no-echo password hash generator.
+Keep local secret values in `.env` only and never commit that file. Generate an Argon2 owner-password hash without echoing the password with `uv run --project apps/api python -m levels_api.scripts.hash_password`; use a separate random JWT secret of at least 32 characters.
 
 ## Commands
 
@@ -40,7 +40,7 @@ Before admin login is implemented, keep the placeholder secret values in local d
 | Browser tests | `npm run e2e` | `make e2e` |
 | Full local gate | `npm run verify` | `make verify` |
 
-`make e2e` becomes a real Playwright journey in LVL-1004. Database migrations and seeding are introduced by LVL-102 and LVL-103.
+`make e2e` runs the complete Playwright journey suite, including 375×812 mobile, iPhone 13 (390×844), and 1440×900 desktop verification. The iPhone check also audits browser errors, failed requests, 5xx responses, horizontal overflow, mobile navigation, and owner settings controls.
 
 ## Optional Compose workflow
 
