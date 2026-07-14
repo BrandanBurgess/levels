@@ -17,8 +17,14 @@ def list_record_payloads(
 ) -> list[dict[str, object]]:
     profile = require_profile(session)
     assert profile.visibility is not None
-    if not owner and not profile.visibility.show_personal_records:
-        return []
+    if not owner:
+        visible = (
+            profile.visibility.show_personal_records
+            if current_only
+            else profile.visibility.show_progress_charts
+        )
+        if not visible:
+            return []
     return [
         serialize_personal_record(record)
         for record in repository.records(

@@ -285,6 +285,53 @@ a { color: inherit; }
 .growth-card { position: relative; overflow: hidden; padding: clamp(1rem, 3vw, 1.4rem); border: 1px solid rgb(196 154 255 / 15%); border-radius: 1rem; background: linear-gradient(145deg, rgb(33 21 47 / 95%), rgb(14 9 21 / 98%)); box-shadow: 0 1rem 3rem rgb(0 0 0 / 22%); }
 .growth-card::before { position: absolute; inset: 0 auto 0 0; width: 3px; content: ''; background: var(--purple-500); }
 .growth-card--no_progression::before, .growth-card--maintain::before { background: var(--warning); }
+
+.progress-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.75rem; margin-top: 2rem; padding: 1rem; border: 1px solid rgb(196 154 255 / 14%); border-radius: 1rem; background: var(--surface-1); }
+.progress-filters label, .trend-heading label { display: grid; gap: 0.35rem; color: var(--text-muted); font-size: 0.72rem; font-weight: 750; }
+.progress-filters select, .progress-filters input, .trend-heading select { min-width: 0; min-height: 2.75rem; padding: 0.6rem; border: 1px solid rgb(196 154 255 / 22%); border-radius: 0.6rem; color: var(--text-strong); background: var(--surface-2); }
+.record-section, .trend-section, .consistency-card, .history-card { margin-top: 1rem; padding: clamp(1rem, 3vw, 1.5rem); border: 1px solid rgb(196 154 255 / 15%); border-radius: 1.2rem; background: linear-gradient(145deg, rgb(33 21 47 / 90%), rgb(14 9 21 / 96%)); }
+.record-section h2, .trend-section h2, .consistency-card h2, .history-card h2 { margin: 0; color: var(--text-strong); }
+.record-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.7rem; margin-top: 1rem; }
+.record-card { display: grid; gap: 0.35rem; padding: 1rem; border: 1px solid rgb(196 154 255 / 16%); border-radius: 0.85rem; background: rgb(7 5 11 / 48%); }
+.record-card span, .record-card small { color: var(--text-muted); }
+.record-card strong { color: var(--purple-150); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.record-card em { color: var(--warning); font-size: 0.72rem; font-style: normal; }
+.rep-range-records { margin-top: 1rem; }
+.rep-range-records h3 { margin: 0 0 0.6rem; color: var(--text); font-size: 0.92rem; }
+.rep-range-records dl { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; }
+.rep-range-records dl div { display: flex; gap: 0.45rem; padding: 0.5rem 0.65rem; border: 1px solid rgb(196 154 255 / 14%); border-radius: 999px; background: rgb(7 5 11 / 35%); font-size: 0.75rem; }
+.rep-range-records dt { color: var(--text-muted); }
+.rep-range-records dd { margin: 0; color: var(--text-strong); font-weight: 750; }
+.trend-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.progress-chart { margin: 1rem 0 0; }
+.progress-chart figcaption { display: grid; gap: 0.35rem; }
+.progress-chart figcaption > span { color: var(--purple-300); font-size: 0.78rem; font-weight: 850; text-transform: uppercase; }
+.progress-chart figcaption > strong { max-width: 50rem; color: var(--text); line-height: 1.5; }
+.progress-chart figcaption small { color: var(--warning); }
+.progress-chart svg { width: 100%; height: min(18rem, 45vw); margin-top: 0.8rem; border-radius: 0.8rem; background: linear-gradient(180deg, rgb(139 61 255 / 10%), transparent); }
+.progress-chart line { stroke: rgb(196 154 255 / 20%); stroke-width: 1; }
+.progress-chart polyline { fill: none; stroke: var(--purple-300); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.progress-chart circle { fill: var(--text-strong); stroke: var(--purple-600); stroke-width: 1.5; }
+.progress-chart__empty { margin-top: 1rem; padding: 2rem; border: 1px dashed rgb(196 154 255 / 20%); border-radius: 0.8rem; color: var(--text-muted); text-align: center; }
+.chart-values { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.45rem; margin: 0.8rem 0 0; padding: 0; list-style: none; }
+.chart-values li { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.55rem; border-radius: 0.5rem; color: var(--text-muted); background: rgb(7 5 11 / 35%); font-size: 0.75rem; }
+.chart-values span { color: var(--text-strong); font-weight: 750; }
+.consistency-card > p:not(.card-label) { color: var(--text-muted); }
+.consistency-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.35rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.consistency-grid li { min-width: 0; aspect-ratio: 1; border: 1px solid rgb(196 154 255 / 13%); border-radius: 0.45rem; background: rgb(7 5 11 / 45%); }
+.consistency-grid li.is-trained { border-color: var(--purple-300); background: var(--purple-700); }
+.consistency-grid time { display: grid; width: 100%; height: 100%; place-items: center; padding: 0.2rem; }
+.consistency-grid span { font-size: clamp(0.42rem, 1.4vw, 0.65rem); }
+.consistency-grid strong { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.history-card > p:last-child { color: var(--text-muted); }
+.history-card ol { display: grid; gap: 0.5rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.history-card li { display: grid; grid-template-columns: minmax(6rem, auto) 1fr auto; gap: 0.75rem; align-items: center; padding: 0.75rem; border-bottom: 1px solid rgb(196 154 255 / 12%); }
+.history-card time, .history-card span { color: var(--text-muted); font-size: 0.78rem; }
+
+@media (max-width: 35rem) {
+  .trend-heading { align-items: stretch; flex-direction: column; }
+  .history-card li { grid-template-columns: 1fr; gap: 0.2rem; }
+}
 .growth-card--insufficient_data::before { background: var(--text-muted); }
 .growth-card__heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .growth-card__heading h2 { margin: 0; color: var(--text-strong); font-size: clamp(1.2rem, 4vw, 1.65rem); }
