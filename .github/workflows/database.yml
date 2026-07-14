@@ -1,0 +1,60 @@
+name: Migrate Production Database
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type MIGRATE_LEVELS_PRODUCTION to migrate and seed Turso
+        required: true
+        type: string
+
+concurrency:
+  group: levels-production-database
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  migrate-and-seed:
+    name: migrate-and-seed
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+      TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+    steps:
+      - name: Require explicit production confirmation
+        shell: bash
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "MIGRATE_LEVELS_PRODUCTION"
+      - name: Validate secret configuration
+        shell: bash
+        run: |
+          test -n "$DATABASE_URL"
+          test -n "$TURSO_AUTH_TOKEN"
+          case "$DATABASE_URL" in
+            libsql://*) ;;
+            *) exit 1 ;;
+          esac
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv sync --project apps/api --frozen --no-dev
+      - name: Apply migrations
+        run: uv run --project apps/api alembic -c apps/api/alembic.ini upgrade head
+      - name: Confirm migration head
+        run: uv run --project apps/api alembic -c apps/api/alembic.ini current --check-heads
+      - name: Seed idempotently
+        run: uv run --project apps/api python -m levels_api.seed
+      - name: Verify production data
+        run: uv run --project apps/api python -m levels_api.scripts.database_status
