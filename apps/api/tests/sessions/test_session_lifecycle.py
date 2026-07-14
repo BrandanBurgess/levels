@@ -125,7 +125,11 @@ def test_add_and_idempotently_log_update_and_soft_delete_set(app: Flask) -> None
     repeated = client.post(f"/api/v1/sessions/{session['id']}/sets", json=write, headers=headers)
     assert first.status_code == repeated.status_code == 201
     assert first.get_json()["set"]["id"] == repeated.get_json()["set"]["id"]
-    assert first.get_json()["new_achievements"] == []
+    assert {item["title"] for item in first.get_json()["new_achievements"]} == {
+        "New max load",
+        "New rep record",
+        "New estimated 1RM",
+    }
 
     set_id = first.get_json()["set"]["id"]
     write.update({"load_kg": 75, "reps": 7, "sequence": 1})

@@ -5,6 +5,7 @@ from typing import Any
 
 from levels_api.models import (
     Achievement,
+    PersonalRecord,
     Profile,
     SessionExercise,
     SetLog,
@@ -19,6 +20,7 @@ from .dtos import (
     AdminSessionExerciseDto,
     AdminSetDto,
     AdminWorkoutSessionDto,
+    PersonalRecordDto,
     PublicProfileDto,
     PublicSessionExerciseDto,
     PublicSetDto,
@@ -241,3 +243,18 @@ def serialize_public_achievements(achievements: list[Achievement]) -> list[JsonO
         for achievement in achievements
         if achievement.public
     ]
+
+
+def serialize_personal_record(record: PersonalRecord) -> JsonObject:
+    return _dump(
+        PersonalRecordDto(
+            id=record.id,
+            exercise_id=record.exercise_id,
+            exercise_name=record.exercise.name,
+            record_type=record.record_type.value,
+            value_numeric=float(record.value_numeric),
+            unit=record.unit,
+            reps_context=record.reps_context,
+            achieved_at=record.achieved_at,
+        )
+    )

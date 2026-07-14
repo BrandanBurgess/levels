@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from levels_api.errors import ApiError
 from levels_api.features.profile.service import require_profile
+from levels_api.features.records.engine import RecordResult, rebuild_records
 from levels_api.features.water.service import local_date_for_profile
 from levels_api.models import (
     MeasurementType,
@@ -99,12 +100,18 @@ def update_session(session: Session, session_id: str, write: SessionUpdate) -> W
             datetime.now(UTC) if workout.status == SessionStatus.COMPLETED else None
         )
     session.flush()
+    if write.status is not None:
+        for exercise_id in {item.exercise_id for item in workout.exercises}:
+            rebuild_records(session, exercise_id)
     return workout
 
 
 def delete_session(session: Session, session_id: str) -> None:
     workout = require_session(session, session_id)
     workout.deleted_at = datetime.now(UTC)
+    session.flush()
+    for exercise_id in {item.exercise_id for item in workout.exercises}:
+        rebuild_records(session, exercise_id)
 
 
 def session_payload(session: Session, workout: WorkoutSession, *, owner: bool) -> dict[str, object]:
@@ -262,7 +269,7 @@ def _apply_set_write(set_log: SetLog, write: SetWrite) -> None:
 
 def create_set(
     session: Session, session_id: str, write: SetWrite, idempotency_key: str | None
-) -> SetLog:
+) -> tuple[SetLog, RecordResult]:
     workout = require_session(session, session_id)
     _require_mutable(workout)
     if idempotency_key:
@@ -272,7 +279,7 @@ def create_set(
                 raise ApiError(
                     409, "IDEMPOTENCY_CONFLICT", "That idempotency key is already in use."
                 )
-            return existing
+            return existing, rebuild_records(session, existing.session_exercise.exercise_id)
     item = _require_session_exercise(session, workout, write.session_exercise_id)
     _validate_measurement(item, write)
     sequence = write.sequence or max((set_log.sequence for set_log in item.sets), default=0) + 1
@@ -288,10 +295,10 @@ def create_set(
     _apply_set_write(set_log, write)
     session.add(set_log)
     session.flush()
-    return set_log
+    return set_log, rebuild_records(session, item.exercise_id)
 
 
-def update_set(session: Session, set_id: str, write: SetWrite) -> SetLog:
+def update_set(session: Session, set_id: str, write: SetWrite) -> tuple[SetLog, RecordResult]:
     set_log = repository.set_by_id(session, set_id)
     if set_log is None:
         raise ApiError(404, "NOT_FOUND", "The requested set was not found.")
@@ -307,20 +314,40 @@ def update_set(session: Session, set_id: str, write: SetWrite) -> SetLog:
         set_log.sequence = write.sequence
     _apply_set_write(set_log, write)
     session.flush()
-    return set_log
+    return set_log, rebuild_records(session, set_log.session_exercise.exercise_id)
 
 
-def delete_set(session: Session, set_id: str) -> None:
+def delete_set(session: Session, set_id: str) -> RecordResult:
     set_log = repository.set_by_id(session, set_id)
     if set_log is None:
         raise ApiError(404, "NOT_FOUND", "The requested set was not found.")
     _require_mutable(set_log.session_exercise.workout_session)
     set_log.deleted_at = datetime.now(UTC)
+    session.flush()
+    return rebuild_records(session, set_log.session_exercise.exercise_id)
 
 
-def set_write_payload(set_log: SetLog) -> dict[str, object]:
+def set_write_payload(set_log: SetLog, result: RecordResult) -> dict[str, object]:
+    from levels_api.schemas.serializers import (
+        serialize_personal_record,
+        serialize_public_achievements,
+    )
+
     return {
         "set": serialize_admin_set(set_log),
-        "new_achievements": [],
-        "affected_records": [],
+        "new_achievements": serialize_public_achievements(result.new_achievements),
+        "affected_records": [
+            serialize_personal_record(record) for record in result.current_records
+        ],
     }
+
+
+def complete_session(session: Session, session_id: str) -> WorkoutSession:
+    workout = require_session(session, session_id)
+    if workout.status != SessionStatus.COMPLETED:
+        workout.status = SessionStatus.COMPLETED
+        workout.completed_at = datetime.now(UTC)
+        session.flush()
+        for exercise_id in {item.exercise_id for item in workout.exercises}:
+            rebuild_records(session, exercise_id)
+    return workout

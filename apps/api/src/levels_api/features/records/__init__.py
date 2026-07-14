@@ -1,0 +1,1 @@
+"""Deterministic personal-record evaluation."""
