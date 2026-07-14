@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "../../api/client";
 import { EmptyState, ErrorState, LoadingState } from "../../ui/AsyncState";
+import { Avatar } from "../avatar/Avatar";
 
 type Dashboard = components["schemas"]["PublicDashboard"];
-type MuscleTarget = components["schemas"]["MuscleTarget"];
 
 async function fetchDashboard(): Promise<Dashboard> {
   const { data, error } = await apiClient.GET("/public/dashboard");
@@ -20,21 +20,6 @@ function formatDate(value?: string) {
     month: "long",
     day: "numeric",
   }).format(new Date(`${value}T12:00:00`));
-}
-
-function MuscleLegend({ targets }: { targets: MuscleTarget[] }) {
-  if (targets.length === 0) return <p className="muted-copy">Recovery day · no planned targets.</p>;
-  return (
-    <ul aria-label="Muscles targeted today" className="muscle-targets">
-      {targets.map((target) => (
-        <li className={`muscle-chip muscle-chip--${target.role}`} key={target.slug}>
-          <span aria-hidden="true" className="muscle-chip__dot" />
-          <span>{target.display_name}</span>
-          <small>{target.role}</small>
-        </li>
-      ))}
-    </ul>
-  );
 }
 
 export function TodayPage() {
@@ -69,14 +54,14 @@ export function TodayPage() {
         <div className="today-grid">
           <section className="today-hero" aria-labelledby="target-heading">
             <div className="today-hero__aura" aria-hidden="true" />
-            <div className="today-hero__figure" aria-hidden="true">
-              <span className="today-hero__head" />
-              <span className="today-hero__body" />
-            </div>
+            <Avatar targets={dashboard.muscle_targets.map((target) => ({
+              displayName: target.display_name,
+              regionIds: target.svg_region_ids,
+              role: target.role,
+            }))} />
             <div className="today-hero__content">
               <p className="card-label">Current focus</p>
               <h2 id="target-heading">Muscle targets</h2>
-              <MuscleLegend targets={dashboard.muscle_targets} />
             </div>
           </section>
 
