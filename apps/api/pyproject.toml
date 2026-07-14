@@ -5,6 +5,7 @@ description = "Flask API for LEVELS"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
+  "alembic==1.18.5",
   "flask==3.1.1",
   "gunicorn==23.0.0",
   "python-dotenv==1.1.1",
