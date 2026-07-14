@@ -1,0 +1,38 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+apps/web/.env
+apps/web/.env.*
+!apps/web/.env.example
+
+# JavaScript
+node_modules/
+dist/
+coverage/
+.coverage
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local data and test artifacts
+*.db
+*.db-shm
+*.db-wal
+playwright-report/
+test-results/
+e2e/screenshots/*.png
+!e2e/screenshots/.gitkeep
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
