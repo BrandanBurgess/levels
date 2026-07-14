@@ -3,7 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "generate": "openapi-typescript ../../docs/levels_product_handoff/levels_product_handoff/05_OPENAPI.yaml -o src/schema.ts",
+    "check:generated": "node scripts/check-generated.mjs",
+    "typecheck": "tsc --noEmit --pretty false",
+    "test": "vitest run"
+  },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.8.3",
+    "vitest": "4.1.10"
   }
 }

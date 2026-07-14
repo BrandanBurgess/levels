@@ -90,6 +90,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck:web
+      - run: npm run typecheck:client
 
   frontend-tests:
     name: frontend-tests
@@ -102,6 +103,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:web
+      - run: npm run test:client
       - uses: actions/upload-artifact@v7
         if: always()
         with:
