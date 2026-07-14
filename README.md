@@ -62,6 +62,10 @@ Compose persists the local SQLite database in a named volume. Production never u
 - `scripts`: repository automation
 - `.github/workflows`: CI and deployments (LVL-003 onward)
 
+## Production deployment
+
+Provider configuration and the Pages workflow contract are documented in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). The frontend deploys only after successful `main` CI and requires the public `VITE_API_BASE_URL` repository variable; backend and database secrets never enter the frontend build.
+
 ## Git workflow
 
 All work follows `docs/levels_product_handoff/levels_product_handoff/18_GIT_WORKFLOW.md`: one ticket branch, Conventional Commits, pull request, required checks, squash merge, and branch deletion. Do not work directly on `main`.
