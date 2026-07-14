@@ -87,17 +87,28 @@ def test_settings_update_controls_public_profile_immediately(app: Flask) -> None
         "/api/v1/settings",
         headers=_auth(app),
         json={
+            "week_starts_on": 0,
             "default_water_goal_ml": 3200,
             "water_quick_add_ml": [300, 600],
             "default_target_rir": 1.5,
             "default_load_increment_kg": 2.5,
+            "reduced_motion_override": True,
             "visibility": {"show_height": False, "show_body_weight": True},
         },
     )
 
     assert response.status_code == 200
+    assert response.get_json()["week_starts_on"] == 0
     assert response.get_json()["default_water_goal_ml"] == 3200
+    assert response.get_json()["reduced_motion_override"] is True
     assert response.get_json()["visibility"]["show_body_weight"] is True
+    system_motion = client.patch(
+        "/api/v1/settings",
+        headers=_auth(app),
+        json={"reduced_motion_override": None},
+    )
+    assert system_motion.status_code == 200
+    assert system_motion.get_json()["reduced_motion_override"] is None
     public = client.get("/api/v1/public/profile").get_json()
     assert "height_cm" not in public
     assert public["body_weight_kg"] == 79.38
@@ -123,6 +134,7 @@ def test_active_split_must_exist(app: Flask) -> None:
         ("profile", {"timezone": "Not/A_Timezone"}, "timezone"),
         ("profile", {"unexpected": True}, "unexpected"),
         ("settings", {"default_water_goal_ml": 100}, "default_water_goal_ml"),
+        ("settings", {"week_starts_on": 7}, "week_starts_on"),
         ("settings", {"water_quick_add_ml": []}, "water_quick_add_ml"),
         ("settings", {"visibility": {"show_water": None}}, "show_water"),
     ],

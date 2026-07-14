@@ -429,18 +429,22 @@ export interface components {
         };
         Settings: {
             active_split_id?: string | null;
+            week_starts_on: number;
             default_water_goal_ml: number;
             water_quick_add_ml: number[];
             default_target_rir?: number;
             default_load_increment_kg?: number;
+            reduced_motion_override: boolean | null;
             visibility: components["schemas"]["Visibility"];
         };
         SettingsUpdate: {
             active_split_id?: string | null;
+            week_starts_on?: number;
             default_water_goal_ml?: number;
             water_quick_add_ml?: number[];
             default_target_rir?: number;
             default_load_increment_kg?: number;
+            reduced_motion_override?: boolean | null;
             visibility?: components["schemas"]["Visibility"];
         };
         MuscleTarget: {

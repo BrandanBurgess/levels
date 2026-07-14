@@ -64,6 +64,7 @@ def update_settings(session: Session, profile: Profile, update: SettingsUpdate) 
             )
         settings.active_split_id = update.active_split_id
     for field in (
+        "week_starts_on",
         "default_water_goal_ml",
         "water_quick_add_ml",
         "default_target_rir",
@@ -74,6 +75,8 @@ def update_settings(session: Session, profile: Profile, update: SettingsUpdate) 
             if value is None:
                 raise ApiError(400, "VALIDATION_ERROR", f"{field} cannot be null.")
             setattr(settings, field, value)
+    if "reduced_motion_override" in fields:
+        settings.reduced_motion_override = update.reduced_motion_override
     if "visibility" in fields:
         if update.visibility is None:
             raise ApiError(400, "VALIDATION_ERROR", "Visibility cannot be null.")

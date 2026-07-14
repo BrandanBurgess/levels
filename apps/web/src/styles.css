@@ -343,6 +343,25 @@ a { color: inherit; }
 .export-card h2 { margin: 0; color: var(--text-strong); }
 .export-card p { margin: 0.5rem 0 0; color: var(--text-muted); }
 .export-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+.settings-form { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.settings-card, .settings-signin { padding: clamp(1rem, 3vw, 1.5rem); border: 1px solid rgb(196 154 255 / 16%); border-radius: 1.15rem; background: linear-gradient(145deg, rgb(33 21 47 / 92%), rgb(14 9 21 / 96%)); }
+.settings-card h2, .settings-signin h2 { margin: 0 0 1rem; color: var(--text-strong); font-size: 1.2rem; }
+.settings-signin { max-width: 38rem; margin-top: 1.5rem; }
+.settings-signin p { margin: 0 0 1rem; color: var(--text-muted); }
+.settings-fields { display: grid; gap: 0.75rem; }
+.settings-fields label, .settings-single-field { display: grid; gap: 0.35rem; color: var(--text); font-size: 0.76rem; font-weight: 800; }
+.settings-fields input, .settings-fields select, .settings-single-field select { min-width: 0; width: 100%; min-height: 2.75rem; padding: 0.62rem; border: 1px solid rgb(196 154 255 / 23%); border-radius: 0.6rem; color: var(--text-strong); background: var(--surface-2); }
+.visibility-grid { display: grid; gap: 0.55rem; }
+.visibility-option { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.7rem; align-items: start; padding: 0.75rem; border: 1px solid rgb(196 154 255 / 12%); border-radius: 0.7rem; background: rgb(7 5 11 / 36%); cursor: pointer; }
+.visibility-option input { width: 1.1rem; height: 1.1rem; margin-top: 0.12rem; accent-color: var(--purple-500); }
+.visibility-option span { display: grid; gap: 0.2rem; }
+.visibility-option strong { color: var(--text-strong); font-size: 0.82rem; }
+.visibility-option small { color: var(--text-muted); line-height: 1.4; }
+.settings-save { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem; }
+.settings-save p { margin: 0; }
+.settings-tools { margin-top: 1rem; }
+.settings-tool-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+.button--danger { color: #ffd6dc; border-color: rgb(255 126 145 / 42%); background: rgb(126 34 49 / 42%); }
 
 @media (max-width: 35rem) {
   .trend-heading { align-items: stretch; flex-direction: column; }
@@ -381,6 +400,9 @@ a { color: inherit; }
   .journal-page--right { border-radius: 0 0.7rem 0.7rem 0; box-shadow: inset 1.2rem 0 2.2rem rgb(68 42 54 / 9%); }
   .growth-heading { grid-template-columns: 1fr auto; align-items: end; }
   .growth-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .settings-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .settings-card--wide { grid-column: 1 / -1; }
+  .visibility-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (min-width: 86rem) {
@@ -392,3 +414,6 @@ a { color: inherit; }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   .celebration-confetti { display: none; }
 }
+
+html[data-reduced-motion='true'] *, html[data-reduced-motion='true'] *::before, html[data-reduced-motion='true'] *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+html[data-reduced-motion='true'] .celebration-confetti { display: none; }
