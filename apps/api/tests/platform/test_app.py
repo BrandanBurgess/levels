@@ -51,6 +51,9 @@ def test_health_reports_degraded_database_without_leaking_details(tmp_path: Path
         "version": "0.1.0",
         "database": "degraded",
     }
+    provider = app.test_client().get("/health")
+    assert provider.status_code == 503
+    assert provider.get_json()["database"] == "degraded"
 
 
 def test_request_ids_are_validated_and_added_to_errors(app: Flask) -> None:

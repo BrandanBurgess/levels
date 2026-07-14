@@ -31,4 +31,5 @@ def api_health() -> tuple[Response, int]:
 
 @health_blueprint.get("/health")
 def provider_health() -> tuple[Response, int]:
-    return jsonify(_health_payload()), 200
+    payload = _health_payload()
+    return jsonify(payload), 200 if payload["database"] == "ok" else 503

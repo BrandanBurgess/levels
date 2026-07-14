@@ -27,3 +27,24 @@ npm run build
 ```
 
 The generated `apps/web/dist/index.html` asset paths must begin with `/levels/`. Replace the example API URL only through environment/provider configuration.
+
+## Render
+
+The root [`render.yaml`](../render.yaml) defines one free Python web service in Ohio. It installs the locked API environment with uv, starts the Flask factory under Gunicorn, deploys only after GitHub checks pass, and checks `/health`. The provider health route returns 503 if Turso is unreachable.
+
+Create the service from **Render Dashboard → Blueprints → New Blueprint Instance**, connect `BrandanBurgess/levels`, and apply the root Blueprint. During the initial apply, provide these values only in Render:
+
+- `DATABASE_URL`: the Turso `libsql://` database URL;
+- `TURSO_AUTH_TOKEN`: a database token scoped for this service;
+- `ADMIN_PASSWORD_HASH`: an Argon2 hash generated locally with `uv run --project apps/api python -m levels_api.scripts.hash_password`.
+
+Render generates `JWT_SECRET_KEY`. Do not replace it with a committed value. The Blueprint supplies the non-secret production mode, Toronto timezone, exact Pages CORS origin, Python version, and uv version.
+
+After the first successful deploy:
+
+1. Record the service’s exact `https://…onrender.com` URL.
+2. Verify `/health` returns HTTP 200 with `database: ok`.
+3. Set GitHub’s `VITE_API_BASE_URL` repository variable to `<Render URL>/api/v1`.
+4. Manually run the `Deploy Pages` workflow.
+
+The live service cannot be created from an unauthenticated checkout. Render must have GitHub repository authorization and the three dashboard-only values above.

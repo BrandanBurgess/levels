@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: levels-api-brandanburgess
+    runtime: python
+    plan: free
+    region: ohio
+    rootDir: apps/api
+    buildCommand: uv sync --frozen --no-dev
+    startCommand: uv run --frozen --no-dev gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --access-logfile - --error-logfile - "levels_api:create_app()"
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    numInstances: 1
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_TIMEZONE
+        value: America/Toronto
+      - key: LOG_LEVEL
+        value: INFO
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: UV_VERSION
+        value: 0.11.28
+      - key: PUBLIC_WEB_ORIGIN
+        value: https://brandanburgess.github.io
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://brandanburgess.github.io
+      - key: ADMIN_USERNAME
+        value: brandan
+      - key: DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
