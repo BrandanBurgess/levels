@@ -174,5 +174,22 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
       - run: npm ci
+      - run: uv sync --project apps/api --frozen --all-groups
+      - run: npx playwright install --with-deps chromium
       - run: npm run e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-failures
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: error
+          retention-days: 14
