@@ -120,6 +120,14 @@ def _admin_set(set_log: SetLog) -> AdminSetDto:
     return AdminSetDto(**public.model_dump(), notes=set_log.notes)
 
 
+def serialize_admin_set(set_log: SetLog) -> JsonObject:
+    return _dump(_admin_set(set_log))
+
+
+def serialize_admin_session_exercise(session_exercise: SessionExercise) -> JsonObject:
+    return _dump(_admin_exercise(session_exercise))
+
+
 def _public_exercise(
     session_exercise: SessionExercise, *, include_sets: bool
 ) -> PublicSessionExerciseDto:
@@ -136,7 +144,11 @@ def _public_exercise(
             if session_exercise.target_rir_snapshot is not None
             else None
         ),
-        sets=[_public_set(set_log) for set_log in session_exercise.sets] if include_sets else [],
+        sets=[
+            _public_set(set_log) for set_log in session_exercise.sets if set_log.deleted_at is None
+        ]
+        if include_sets
+        else [],
     )
 
 
@@ -146,7 +158,9 @@ def _admin_exercise(session_exercise: SessionExercise) -> AdminSessionExerciseDt
     return AdminSessionExerciseDto(
         **values,
         substitution_reason=session_exercise.substitution_reason,
-        sets=[_admin_set(set_log) for set_log in session_exercise.sets],
+        sets=[
+            _admin_set(set_log) for set_log in session_exercise.sets if set_log.deleted_at is None
+        ],
     )
 
 

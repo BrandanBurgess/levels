@@ -51,6 +51,10 @@ def test_session_mutations_require_owner_authentication(app: Flask) -> None:
     assert client.post("/api/v1/sessions", json={"title": "Solo"}).status_code == 401
     assert client.patch("/api/v1/sessions/nope", json={"title": "Nope"}).status_code == 401
     assert client.delete("/api/v1/sessions/nope").status_code == 401
+    assert client.post("/api/v1/sessions/nope/exercises", json={}).status_code == 401
+    assert client.post("/api/v1/sessions/nope/sets", json={}).status_code == 401
+    assert client.patch("/api/v1/sets/nope", json={}).status_code == 401
+    assert client.delete("/api/v1/sets/nope").status_code == 401
 
 
 def test_start_from_template_snapshots_exercises_and_is_idempotent(app: Flask) -> None:
@@ -66,6 +70,150 @@ def test_start_from_template_snapshots_exercises_and_is_idempotent(app: Flask) -
     assert first.get_json()["title"] == "Upper A — Incline + Back"
     assert first.get_json()["status"] == "in_progress"
     assert first.get_json()["exercises"][1]["display_name"] == "Incline Barbell Bench Press"
+
+
+def test_substitution_changes_only_the_session_snapshot(app: Flask) -> None:
+    client = app.test_client()
+    original_split = client.get("/api/v1/splits").get_json()[0]
+    started = client.post(
+        "/api/v1/sessions",
+        json={"split_day_id": original_split["days"][0]["id"]},
+        headers=_auth(app),
+    ).get_json()
+    replaced = started["exercises"][1]
+
+    response = client.post(
+        f"/api/v1/sessions/{started['id']}/exercises",
+        json={
+            "exercise_id": "incline_dumbbell_press",
+            "replace_session_exercise_id": replaced["id"],
+            "substitution_reason": "Rack was occupied",
+        },
+        headers=_auth(app),
+    )
+
+    assert response.status_code == 201
+    assert response.get_json()["display_name"] == "Incline Dumbbell Press"
+    assert response.get_json()["substitution_reason"] == "Rack was occupied"
+    unchanged_split = client.get("/api/v1/splits").get_json()[0]
+    assert unchanged_split["days"][0]["items"][1]["exercise"]["id"] == "incline_barbell_bench_press"
+
+
+def test_add_and_idempotently_log_update_and_soft_delete_set(app: Flask) -> None:
+    client = app.test_client()
+    session = client.post(
+        "/api/v1/sessions", json={"title": "Set mechanics"}, headers=_auth(app)
+    ).get_json()
+    added = client.post(
+        f"/api/v1/sessions/{session['id']}/exercises",
+        json={"exercise_id": "incline_barbell_bench_press"},
+        headers=_auth(app),
+    ).get_json()
+    write = {
+        "session_exercise_id": added["id"],
+        "set_type": "working",
+        "load_kg": 72.5,
+        "reps": 8,
+        "rir": 2,
+        "form_quality": 4,
+        "pain_flag": False,
+        "notes": "Controlled tempo",
+    }
+    headers = {**_auth(app), "Idempotency-Key": "journal-set-0001"}
+
+    first = client.post(f"/api/v1/sessions/{session['id']}/sets", json=write, headers=headers)
+    repeated = client.post(f"/api/v1/sessions/{session['id']}/sets", json=write, headers=headers)
+    assert first.status_code == repeated.status_code == 201
+    assert first.get_json()["set"]["id"] == repeated.get_json()["set"]["id"]
+    assert first.get_json()["new_achievements"] == []
+
+    set_id = first.get_json()["set"]["id"]
+    write.update({"load_kg": 75, "reps": 7, "sequence": 1})
+    updated = client.patch(f"/api/v1/sets/{set_id}", json=write, headers=_auth(app))
+    assert updated.status_code == 200
+    assert updated.get_json()["set"]["load_kg"] == 75
+    assert updated.get_json()["set"]["notes"] == "Controlled tempo"
+
+    assert client.delete(f"/api/v1/sets/{set_id}", headers=_auth(app)).status_code == 204
+    detail = client.get(f"/api/v1/sessions/{session['id']}", headers=_auth(app))
+    assert detail.get_json()["exercises"][0]["sets"] == []
+    assert client.patch(f"/api/v1/sets/{set_id}", json=write, headers=_auth(app)).status_code == 404
+
+
+def test_set_measurement_validation_and_sequence_conflicts(app: Flask) -> None:
+    client = app.test_client()
+    session = client.post(
+        "/api/v1/sessions", json={"title": "Measurement validation"}, headers=_auth(app)
+    ).get_json()
+    plank = client.post(
+        f"/api/v1/sessions/{session['id']}/exercises",
+        json={"exercise_id": "plank"},
+        headers=_auth(app),
+    ).get_json()
+    invalid = client.post(
+        f"/api/v1/sessions/{session['id']}/sets",
+        json={
+            "session_exercise_id": plank["id"],
+            "set_type": "working",
+            "reps": 30,
+        },
+        headers=_auth(app),
+    )
+    assert invalid.status_code == 400
+    assert "duration_seconds" in invalid.get_json()["error"]["message"]
+
+    valid_write = {
+        "session_exercise_id": plank["id"],
+        "sequence": 1,
+        "set_type": "working",
+        "duration_seconds": 45,
+    }
+    assert (
+        client.post(
+            f"/api/v1/sessions/{session['id']}/sets",
+            json=valid_write,
+            headers=_auth(app),
+        ).status_code
+        == 201
+    )
+    conflict = client.post(
+        f"/api/v1/sessions/{session['id']}/sets",
+        json=valid_write,
+        headers=_auth(app),
+    )
+    assert conflict.status_code == 400
+
+
+def test_substitution_refuses_to_relabel_existing_set_history(app: Flask) -> None:
+    client = app.test_client()
+    session = client.post(
+        "/api/v1/sessions", json={"title": "History safety"}, headers=_auth(app)
+    ).get_json()
+    item = client.post(
+        f"/api/v1/sessions/{session['id']}/exercises",
+        json={"exercise_id": "incline_barbell_bench_press"},
+        headers=_auth(app),
+    ).get_json()
+    client.post(
+        f"/api/v1/sessions/{session['id']}/sets",
+        json={
+            "session_exercise_id": item["id"],
+            "set_type": "working",
+            "load_kg": 60,
+            "reps": 10,
+        },
+        headers=_auth(app),
+    )
+    substitution = client.post(
+        f"/api/v1/sessions/{session['id']}/exercises",
+        json={
+            "exercise_id": "incline_dumbbell_press",
+            "replace_session_exercise_id": item["id"],
+        },
+        headers=_auth(app),
+    )
+    assert substitution.status_code == 409
+    assert substitution.get_json()["error"]["code"] == "EXERCISE_HAS_SETS"
 
 
 def test_complete_resume_and_public_summary_visibility(app: Flask) -> None:
