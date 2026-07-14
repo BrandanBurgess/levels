@@ -33,7 +33,7 @@ markupsafe==3.0.3
     #   jinja2
     #   mako
     #   werkzeug
-mypy==1.16.1
+mypy==2.3.0
 mypy-extensions==1.1.0
     # via mypy
 packaging==26.2
