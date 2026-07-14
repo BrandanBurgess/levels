@@ -180,6 +180,7 @@ class WorkoutSession(IdMixin, TimestampMixin, Base):
     notes_private: Mapped[str | None] = mapped_column(Text)
     notes_public: Mapped[str | None] = mapped_column(Text)
     deleted_at: Mapped[datetime | None]
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), unique=True)
 
     split_day: Mapped[SplitDay | None] = relationship(back_populates="sessions")
     exercises: Mapped[list[SessionExercise]] = relationship(
