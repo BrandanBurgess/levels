@@ -110,17 +110,30 @@ def test_record_history_and_boolean_validation(app: Flask) -> None:
     assert invalid.get_json()["error"]["code"] == "VALIDATION_ERROR"
 
 
-def test_private_sources_and_global_visibility_do_not_leak_publicly(app: Flask) -> None:
+def test_private_sources_do_not_leak_publicly(app: Flask) -> None:
     _create_record(app, visibility="private")
     client = app.test_client()
 
     assert client.get("/api/v1/records").get_json() == []
+    assert client.get("/api/v1/records?current_only=false").get_json() == []
     assert client.get("/api/v1/records", headers=_auth(app)).get_json()
+
+
+def test_record_and_chart_visibility_are_independent(app: Flask) -> None:
+    _create_record(app, visibility="full")
+    client = app.test_client()
 
     with app.app_context(), Session(get_engine()) as session, session.begin():
         visibility = session.scalar(select(VisibilitySettings))
         assert visibility is not None
         visibility.show_personal_records = False
+    assert client.get("/api/v1/records").get_json() == []
+    assert client.get("/api/v1/records?current_only=false").get_json()
+
+    with app.app_context(), Session(get_engine()) as session, session.begin():
+        visibility = session.scalar(select(VisibilitySettings))
+        assert visibility is not None
+        visibility.show_progress_charts = False
     assert client.get("/api/v1/records?current_only=false").get_json() == []
     assert client.get("/api/v1/records?current_only=false", headers=_auth(app)).get_json()
 
