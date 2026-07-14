@@ -5,19 +5,15 @@ Status captured on 2026-07-14 for the LVL-1005 release candidate. No secret valu
 | Component | Status | Evidence / next gate |
 | --- | --- | --- |
 | GitHub repository | Ready | `main` is protected with the ten required CI checks, squash merge only, and no direct implementation commits. |
-| GitHub Pages configuration | Configured, not deployed | Workflow-based Pages is enabled at https://brandanburgess.github.io/levels/. The deploy run for main `656bfd06d4f1eaf5ca474059553f9e7e90c455aa` correctly failed because `VITE_API_BASE_URL` is not set. |
-| Render API | Service allocated; secrets and corrected build pending | Render MCP created `levels-api-brandanburgess` at https://levels-api-brandanburgess.onrender.com from exact main commit `c162a97b0a96c1877bf7341fb5faaf20afb5eca7`. Its first build proved uv must be explicitly installed; the fix is tracked in the LVL-1005 Render blocker PR. Turso and owner-auth secrets are still intentionally absent. |
-| Turso database | Workflow ready, external input blocked | Turso MCP is connected and returned an empty database list. Database creation requires the account's exact group name; the production application token must then be placed directly in Render and the protected GitHub environment. |
-| Production migration/seed | Not run | The protected workflow is committed, but it cannot run until the Turso database URL/token exist. Local clean-database migration, repeat seed, and invariant checks are covered in `VERIFICATION_REPORT.md`. |
-| Release tag | Not created | `v0.2.0` remains gated on healthy Render, Turso, Pages, and live browser verification. Tagging an incomplete deployment would misstate release status. |
+| GitHub Pages | Live | https://brandanburgess.github.io/levels/ deployed from main `ab5bbd4d0bb92c2bc93c7bf6d30d3256c53c2ef6` by successful run https://github.com/BrandanBurgess/levels/actions/runs/29320166354. |
+| Render API | Live | https://levels-api-brandanburgess.onrender.com uses the corrected pinned-uv build, `/health`, production secrets, and exact Pages CORS origin. Root and canonical health routes both return 200 with `database: ok`. |
+| Turso database | Live and protected | `levels-production` is a default-libSQL database in group `levels`, region `aws-us-east-2`; delete protection is enabled. |
+| Production migration/seed | Complete | Protected run https://github.com/BrandanBurgess/levels/actions/runs/29320025457 applied Alembic head `a91f6028df36`, seeded idempotently, and passed invariants. Independent MCP read confirmed 25 muscle groups, 98 exercises, 2 splits, and 1 profile. |
+| Release tag | Not created | `v0.2.0` remains gated only on an authenticated live owner journey; provider secrets are deliberately unreadable to the verifying agent. |
 
-## Required external actions
+## Remaining release action
 
-1. Provide or select the Turso group name that should own `levels-production`, then create a database-scoped token without posting it in chat.
-2. In the allocated Render service, apply the corrected Blueprint build command and set `/health` as the health-check path. The current Render MCP can create but cannot edit these service fields.
-3. Enter `DATABASE_URL`, `TURSO_AUTH_TOKEN`, `ADMIN_PASSWORD_HASH`, and the generated `JWT_SECRET_KEY` directly in Render. Add only the Turso URL/token to the protected GitHub `production` environment for migration.
-4. Run **Migrate Production Database** with the documented confirmation, verify both health endpoints, then set the non-secret repository variable `VITE_API_BASE_URL` to the Render API origin.
-5. Let the Pages workflow deploy, repeat the browser suite against the live URLs, and only then create annotated tag `v0.2.0`.
+Run the authenticated owner journey against production without transmitting the password through chat. After login, verify Settings, Journal write/edit/delete, hydration add/undo, logout privacy, and that no browser/network errors occur. Create annotated tag `v0.2.0` only after this gate passes.
 
 ## Repository evidence
 
@@ -26,7 +22,8 @@ Status captured on 2026-07-14 for the LVL-1005 release candidate. No secret valu
 - Product ticket PRs: https://github.com/BrandanBurgess/levels/pull/12 through https://github.com/BrandanBurgess/levels/pull/46
 - Independent-verification fixes: https://github.com/BrandanBurgess/levels/pull/47, https://github.com/BrandanBurgess/levels/pull/48, and https://github.com/BrandanBurgess/levels/pull/49
 - Independent verification and release evidence: https://github.com/BrandanBurgess/levels/pull/50
-- Latest successful main CI at capture time: https://github.com/BrandanBurgess/levels/actions/runs/29308798820
-- Expected Pages gate failure without the API URL: https://github.com/BrandanBurgess/levels/actions/runs/29308929610
+- Render uv bootstrap fix: https://github.com/BrandanBurgess/levels/pull/51
+- Production migration and seed: https://github.com/BrandanBurgess/levels/actions/runs/29320025457
+- Production Pages deployment: https://github.com/BrandanBurgess/levels/actions/runs/29320166354
 
 Dependabot PRs #4–#11 are automated dependency proposals and are not implementation tickets.

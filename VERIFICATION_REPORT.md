@@ -2,9 +2,9 @@
 
 ## Verdict
 
-The LEVELS release candidate passes all local implementation, contract, accessibility, responsive-layout, and browser-journey gates. Production release is **not complete** because Turso and Render still require external account input, so no release tag is claimed.
+The LEVELS release candidate passes all local implementation, contract, accessibility, responsive-layout, and browser-journey gates. Turso, Render, and GitHub Pages are live and the logged-out production experience passes desktop and iPhone verification. Release tagging remains gated only on repeating the authenticated owner journey against production without exposing its password.
 
-Verification baseline: `main` commit `656bfd06d4f1eaf5ca474059553f9e7e90c455aa`, plus verified candidate commit `02bf9c62c6130eac9ac3312c86da1c87732ab63b` on `test/lvl-1005-independent-verification`. Date: 2026-07-14.
+Local verification baseline: candidate `02bf9c62c6130eac9ac3312c86da1c87732ab63b`. Production verification baseline: main `ab5bbd4d0bb92c2bc93c7bf6d30d3256c53c2ef6`. Date: 2026-07-14.
 
 ## Clean-checkout commands
 
@@ -33,6 +33,13 @@ Responsive and accessibility evidence:
 - Public desktop evidence: `e2e/screenshots/desktop-public-today-1440x900.png`.
 - Public iPhone evidence: `e2e/screenshots/iphone-13-public-today.png`.
 
+Live production public verification at https://brandanburgess.github.io/levels/ also passes:
+
+- 1440×900: document and Render dashboard API responses are 200, desktop navigation is visible, horizontal overflow is zero, and there are no critical axe violations, console exceptions, page errors, failed requests, or 5xx responses.
+- iPhone 13 at 390×844: document and Render dashboard API responses are 200, mobile navigation is visible, horizontal overflow is zero, and the same browser/network/accessibility audits are clean.
+- Live desktop evidence: `e2e/screenshots/live-production-desktop-1440x900.png`.
+- Live iPhone evidence: `e2e/screenshots/live-production-iphone13-390x844.png`.
+
 ## Security and privacy
 
 - Secret scanning is a protected CI check; `.env`, database files, Playwright artifacts, and authenticated screenshots are ignored.
@@ -42,9 +49,11 @@ Responsive and accessibility evidence:
 
 ## Deployment audit
 
-- GitHub: configuration and required checks are active; Pages is workflow-enabled. Deployment is intentionally gated because no live API origin exists yet.
-- Turso: connected MCP returns zero databases. Production database creation is blocked on the account group name and subsequent database-scoped token handling.
-- Render: Blueprint is ready, but the active Render MCP tool surface and authorized service are unavailable.
-- Live health, live CORS, production migration, live browser, and release-tag checks therefore remain pending and are not reported as passing.
+- GitHub: Pages deployed successfully from main and uses the public Render `/api/v1` origin.
+- Turso: `levels-production` is migrated to `a91f6028df36`, seeded, independently count-verified, and delete-protected.
+- Render: the service is live; `/health` and `/api/v1/health` return 200 with `database: ok`; public dashboard returns 200.
+- CORS: a production preflight from `https://brandanburgess.github.io` returns the exact allowed origin and expected methods/headers.
+- Browser: logged-out desktop and iPhone checks pass against the real Pages and Render URLs.
+- Pending: authenticated live owner journey and release tag only.
 
 See `DEPLOYMENT_STATUS.md` for the exact actions required to complete production release and the implementation PR links. Final verification PR: https://github.com/BrandanBurgess/levels/pull/50.
