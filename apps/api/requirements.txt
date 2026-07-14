@@ -9,6 +9,8 @@ colorama==0.4.6 ; sys_platform == 'win32'
     # via click
 flask==3.1.1
     # via levels-api
+greenlet==3.5.3 ; platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64'
+    # via sqlalchemy
 gunicorn==23.0.0
     # via levels-api
 itsdangerous==2.2.0
@@ -24,5 +26,9 @@ packaging==26.2
     # via gunicorn
 python-dotenv==1.1.1
     # via levels-api
+sqlalchemy==2.0.51
+    # via levels-api
+typing-extensions==4.16.0
+    # via sqlalchemy
 werkzeug==3.1.8
     # via flask

@@ -13,6 +13,8 @@ coverage==7.15.1
     # via pytest-cov
 flask==3.1.1
     # via levels-api
+greenlet==3.5.3 ; platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64'
+    # via sqlalchemy
 gunicorn==23.0.0
     # via levels-api
 iniconfig==2.3.0
@@ -47,7 +49,11 @@ pytest-cov==6.2.1
 python-dotenv==1.1.1
     # via levels-api
 ruff==0.12.2
+sqlalchemy==2.0.51
+    # via levels-api
 typing-extensions==4.16.0
-    # via mypy
+    # via
+    #   mypy
+    #   sqlalchemy
 werkzeug==3.1.8
     # via flask
