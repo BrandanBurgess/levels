@@ -1,0 +1,320 @@
+from __future__ import annotations
+
+import json
+import os
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from decimal import Decimal
+from importlib.resources import files
+from typing import Any, cast
+from uuid import NAMESPACE_URL, uuid5
+
+from sqlalchemy import Engine, create_engine, delete, func, select
+from sqlalchemy.orm import Session
+
+from levels_api.models import (
+    AppSettings,
+    Exercise,
+    ExerciseMuscle,
+    MeasurementType,
+    MuscleGroup,
+    MuscleRole,
+    PreferredUnits,
+    Profile,
+    Split,
+    SplitDay,
+    TemplateAlternative,
+    TemplateItemType,
+    VisibilitySettings,
+    WorkoutTemplateItem,
+)
+
+DEFAULT_DATABASE_URL = "sqlite+pysqlite:///./levels-dev.db"
+PROFILE_KEY = "brandan"
+
+SVG_REGIONS: dict[str, list[str]] = {
+    "upper_chest": ["chest_upper"],
+    "mid_chest": ["chest_mid"],
+    "lower_chest": ["chest_lower"],
+    "front_delts": ["delts_front"],
+    "side_delts": ["delts_side"],
+    "rear_delts": ["delts_rear"],
+    "lats": ["lats"],
+    "upper_back": ["upper_back"],
+    "traps": ["traps"],
+    "spinal_erectors": ["spinal_erectors"],
+    "biceps": ["biceps"],
+    "brachialis": ["brachialis"],
+    "forearms": ["forearms"],
+    "triceps": ["triceps"],
+    "abs": ["abs"],
+    "obliques": ["obliques"],
+    "hip_flexors": ["hip_flexors"],
+    "glutes": ["glutes"],
+    "abductors": ["abductors"],
+    "quads": ["quads"],
+    "hamstrings": ["hamstrings"],
+    "adductors": ["adductors"],
+    "calves": ["calves"],
+    "cardiovascular": [],
+    "full_body": [],
+}
+
+
+@dataclass(frozen=True)
+class SeedResult:
+    muscle_groups: int
+    exercises: int
+    splits: int
+    profile_id: str
+    active_split_slug: str
+
+
+def _stable_id(kind: str, key: str) -> str:
+    return str(uuid5(NAMESPACE_URL, f"https://levels.app/seed/{kind}/{key}"))
+
+
+def _load_json(name: str) -> dict[str, Any]:
+    resource = files("levels_api.seed.data").joinpath(name)
+    return cast(dict[str, Any], json.loads(resource.read_text(encoding="utf-8")))
+
+
+def _seed_muscle_groups(session: Session, catalog: dict[str, Any]) -> None:
+    for raw in cast(list[dict[str, Any]], catalog["muscle_groups"]):
+        slug = str(raw["slug"])
+        muscle = session.scalar(select(MuscleGroup).where(MuscleGroup.slug == slug))
+        if muscle is None:
+            muscle = MuscleGroup(id=str(raw["id"]), slug=slug)
+            session.add(muscle)
+        muscle.display_name = str(raw["display_name"])
+        muscle.body_region = str(raw["body_region"])
+        muscle.svg_region_ids = SVG_REGIONS[slug]
+        muscle.highlightable = bool(muscle.svg_region_ids)
+
+
+def _seed_exercises(session: Session, catalog: dict[str, Any]) -> None:
+    session.flush()
+    session.execute(delete(ExerciseMuscle))
+
+    for raw in cast(list[dict[str, Any]], catalog["exercises"]):
+        slug = str(raw["slug"])
+        exercise = session.scalar(select(Exercise).where(Exercise.slug == slug))
+        if exercise is None:
+            exercise = Exercise(id=str(raw["id"]), slug=slug)
+            session.add(exercise)
+
+        exercise.name = str(raw["name"])
+        exercise.aliases = [str(alias) for alias in cast(list[str], raw["aliases"])]
+        exercise.variation_group = str(raw["variation_group"])
+        exercise.movement_pattern = str(raw["movement_pattern"])
+        exercise.equipment = str(raw["equipment"])
+        exercise.measurement_type = MeasurementType(str(raw["measurement_type"]))
+        exercise.compound = bool(raw["compound"])
+        exercise.unilateral = bool(raw["unilateral"])
+        exercise.default_rep_min = cast(int | None, raw["default_rep_min"])
+        exercise.default_rep_max = cast(int | None, raw["default_rep_max"])
+        exercise.default_rest_seconds = cast(int | None, raw["default_rest_seconds"])
+        exercise.progression_increment_kg = None
+        exercise.automatic_progression_enabled = bool(raw["automatic_progression_enabled"])
+        exercise.metadata_json = {
+            "seed_schema_version": catalog["schema_version"],
+            "style_tags": cast(list[str], raw["style_tags"]),
+        }
+        exercise.archived_at = datetime(1970, 1, 1, tzinfo=UTC) if bool(raw["archived"]) else None
+
+    session.flush()
+    for raw in cast(list[dict[str, Any]], catalog["exercises"]):
+        for role, contribution, field in (
+            (MuscleRole.PRIMARY, Decimal("1.000"), "primary_muscles"),
+            (MuscleRole.SECONDARY, Decimal("0.450"), "secondary_muscles"),
+        ):
+            for muscle_id in cast(list[str], raw[field]):
+                session.add(
+                    ExerciseMuscle(
+                        exercise_id=str(raw["id"]),
+                        muscle_group_id=muscle_id,
+                        role=role,
+                        contribution=contribution,
+                    )
+                )
+
+
+def _seed_profile(session: Session, data: dict[str, Any]) -> tuple[Profile, AppSettings]:
+    raw_profile = cast(dict[str, Any], data["profile"])
+    profile = session.scalar(select(Profile).limit(1))
+    if profile is None:
+        profile = Profile(id=_stable_id("profile", PROFILE_KEY))
+        session.add(profile)
+
+    profile.display_name = str(raw_profile["display_name"])
+    profile.height_cm = int(raw_profile["height_cm"])
+    profile.body_weight_kg = Decimal(str(raw_profile["body_weight_kg"]))
+    profile.preferred_units = PreferredUnits(str(raw_profile["preferred_units"]))
+    profile.timezone = str(raw_profile["timezone"])
+    profile.avatar_variant = "brandan-original-v1"
+    session.flush()
+
+    visibility = session.scalar(
+        select(VisibilitySettings).where(VisibilitySettings.profile_id == profile.id)
+    )
+    if visibility is None:
+        visibility = VisibilitySettings(
+            id=_stable_id("visibility", PROFILE_KEY),
+            profile_id=profile.id,
+            show_height=True,
+            show_body_weight=False,
+            show_water=False,
+            show_session_summaries=True,
+            show_set_details=False,
+            show_public_notes=False,
+            show_progress_charts=True,
+            show_personal_records=True,
+            show_readiness=False,
+        )
+        session.add(visibility)
+
+    raw_settings = cast(dict[str, Any], data["settings"])
+    settings = session.scalar(select(AppSettings).where(AppSettings.profile_id == profile.id))
+    if settings is None:
+        settings = AppSettings(id=_stable_id("settings", PROFILE_KEY), profile_id=profile.id)
+        session.add(settings)
+    settings.week_starts_on = 1
+    settings.default_water_goal_ml = int(raw_settings["default_water_goal_ml"])
+    settings.water_quick_add_ml = [
+        int(amount) for amount in cast(list[int], raw_settings["water_quick_add_ml"])
+    ]
+    settings.primary_muscle_weight = Decimal("1.0")
+    settings.secondary_muscle_weight = Decimal("0.45")
+    settings.default_target_rir = Decimal(str(raw_settings["default_target_rir"]))
+    settings.default_load_increment_kg = Decimal(str(raw_settings["default_load_increment_kg"]))
+    return profile, settings
+
+
+def _items_for_day(raw_day: dict[str, Any]) -> list[dict[str, Any]]:
+    items = raw_day.get("items")
+    if items is not None:
+        return cast(list[dict[str, Any]], items)
+    modes = cast(dict[str, list[dict[str, Any]]], raw_day["modes"])
+    return modes["conditioning"]
+
+
+def _recommended_weekday(is_active: bool, sequence: int) -> int | None:
+    if not is_active:
+        return None
+    return {1: 0, 2: 1, 3: 3, 4: 4, 5: 5}.get(sequence)
+
+
+def _seed_template_items(
+    session: Session, split: Split, day: SplitDay, raw_day: dict[str, Any]
+) -> None:
+    for sequence, raw in enumerate(_items_for_day(raw_day), start=1):
+        item_id = _stable_id("template-item", f"{split.slug}:{day.sequence}:{sequence}")
+        item = session.get(WorkoutTemplateItem, item_id)
+        if item is None:
+            item = WorkoutTemplateItem(id=item_id, split_day_id=day.id, sequence=sequence)
+            session.add(item)
+        item.exercise_id = str(raw["exercise_id"])
+        item.item_type = TemplateItemType(str(raw["item_type"]))
+        item.sets = int(raw["sets"])
+        item.rep_min = cast(int | None, raw["rep_min"])
+        item.rep_max = cast(int | None, raw["rep_max"])
+        item.duration_seconds = None
+        item.distance_meters = None
+        item.rest_seconds = cast(int | None, raw["rest_seconds"])
+        target_rir = raw["target_rir"]
+        item.target_rir = Decimal(str(target_rir)) if target_rir is not None else None
+        item.superset_group = cast(str | None, raw["superset_group"])
+        item.notes = cast(str | None, raw["notes"])
+        item.optional = bool(raw["optional"])
+        session.flush()
+
+        session.execute(
+            delete(TemplateAlternative).where(TemplateAlternative.template_item_id == item.id)
+        )
+        for alternative_sequence, exercise_id in enumerate(
+            cast(list[str], raw["alternatives"]), start=1
+        ):
+            session.add(
+                TemplateAlternative(
+                    template_item_id=item.id,
+                    exercise_id=exercise_id,
+                    sequence=alternative_sequence,
+                )
+            )
+
+
+def _seed_splits(session: Session, data: dict[str, Any]) -> Split:
+    active_split: Split | None = None
+    for display_order, raw_split in enumerate(cast(list[dict[str, Any]], data["splits"]), start=1):
+        slug = str(raw_split["slug"])
+        split = session.scalar(select(Split).where(Split.slug == slug))
+        if split is None:
+            split = Split(id=_stable_id("split", slug), slug=slug)
+            session.add(split)
+        split.name = str(raw_split["name"])
+        split.description = str(raw_split["description"])
+        split.is_active = bool(raw_split["is_active"])
+        split.is_seeded = True
+        split.display_order = display_order
+        split.archived_at = None
+        session.flush()
+
+        for raw_day in cast(list[dict[str, Any]], raw_split["days"]):
+            sequence = int(raw_day["sequence"])
+            day_id = _stable_id("split-day", f"{slug}:{sequence}")
+            day = session.get(SplitDay, day_id)
+            if day is None:
+                day = SplitDay(id=day_id, split_id=split.id, sequence=sequence)
+                session.add(day)
+            day.name = str(raw_day["name"])
+            day.day_type = str(raw_day["day_type"])
+            day.recommended_weekday = _recommended_weekday(split.is_active, sequence)
+            day.description = None
+            day.is_optional = bool(raw_day.get("is_optional", False))
+            session.flush()
+            _seed_template_items(session, split, day, raw_day)
+
+        if split.is_active:
+            active_split = split
+
+    if active_split is None:
+        raise ValueError("Seed data must contain exactly one active split")
+    return active_split
+
+
+def seed_session(session: Session) -> SeedResult:
+    catalog = _load_json("exercise_catalog.json")
+    split_data = _load_json("seed_splits.json")
+    _seed_muscle_groups(session, catalog)
+    _seed_exercises(session, catalog)
+    profile, settings = _seed_profile(session, split_data)
+    active_split = _seed_splits(session, split_data)
+    settings.active_split_id = active_split.id
+    session.flush()
+
+    return SeedResult(
+        muscle_groups=session.scalar(select(func.count()).select_from(MuscleGroup)) or 0,
+        exercises=session.scalar(select(func.count()).select_from(Exercise)) or 0,
+        splits=session.scalar(select(func.count()).select_from(Split)) or 0,
+        profile_id=profile.id,
+        active_split_slug=active_split.slug,
+    )
+
+
+def seed_database(database_url: str | None = None) -> SeedResult:
+    resolved_url = database_url or os.getenv("DATABASE_URL") or DEFAULT_DATABASE_URL
+    engine: Engine = create_engine(resolved_url)
+    try:
+        with Session(engine) as session, session.begin():
+            return seed_session(session)
+    finally:
+        engine.dispose()
+
+
+def main() -> None:
+    result = seed_database()
+    print(
+        "Seed complete: "
+        f"{result.muscle_groups} muscle groups, {result.exercises} exercises, "
+        f"{result.splits} splits; active split={result.active_split_slug}"
+    )
