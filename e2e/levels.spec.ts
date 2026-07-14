@@ -193,6 +193,48 @@ test.describe("LEVELS handoff journeys", () => {
     });
   });
 
+  test("12b iPhone view at 390×844", async ({ page }) => {
+    const browserErrors: string[] = [];
+    const failedRequests: string[] = [];
+    const serverErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") browserErrors.push(message.text());
+    });
+    page.on("pageerror", (error) => browserErrors.push(error.message));
+    page.on("requestfailed", (request) => {
+      failedRequests.push(`${request.method()} ${request.url()}: ${request.failure()?.errorText ?? "unknown"}`);
+    });
+    page.on("response", (response) => {
+      if (response.status() >= 500) serverErrors.push(`${response.status()} ${response.url()}`);
+    });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: /Ready for Upper A/ })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Mobile navigation" })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await page.screenshot({
+      fullPage: true,
+      path: "e2e/screenshots/iphone-13-public-today.png",
+    });
+
+    await login(page);
+    await page
+      .getByRole("navigation", { name: "Mobile navigation" })
+      .getByRole("link", { name: "More" })
+      .click();
+    await page.getByRole("link", { name: "Settings" }).first().click();
+    const waterGoal = page.getByLabel("Daily water goal (mL)");
+    await expect(waterGoal).toBeVisible();
+    const bounds = await waterGoal.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+    expect(browserErrors).toEqual([]);
+    expect(failedRequests).toEqual([]);
+    expect(serverErrors).toEqual([]);
+  });
+
   test("13 desktop at 1440×900", async ({ page }, testInfo: TestInfo) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     const routes = ["/", "/#/character", "/#/journal", "/#/growth", "/#/splits", "/#/settings"];
@@ -202,6 +244,10 @@ test.describe("LEVELS handoff journeys", () => {
       await assertNoCriticalAxeViolations(page);
     }
     await page.goto("/");
+    await page.screenshot({
+      fullPage: true,
+      path: "e2e/screenshots/desktop-public-today-1440x900.png",
+    });
     await expect(page.locator(".desktop-sidebar")).toBeVisible();
     await testInfo.attach("desktop-today-1440x900", {
       body: await page.screenshot({ fullPage: true }),
