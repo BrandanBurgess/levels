@@ -194,6 +194,7 @@ function SetEntry({
   const [message, setMessage] = useState<string>();
   const [retryAvailable, setRetryAvailable] = useState(false);
   const [celebration, setCelebration] = useState<Achievement[]>([]);
+  const [editingSet, setEditingSet] = useState<SetLog>();
   const lastSet = item.sets.at(-1);
 
   function updateDraft(values: SetDraft) {
@@ -221,30 +222,39 @@ function SetEntry({
     setMessage(undefined);
     const value = duplicate ? draftFromSet(duplicate) : draft;
     try {
-      const { data, error } = await apiClient.POST("/sessions/{session_id}/sets", {
-        params: {
-          path: { session_id: sessionId },
-          header: { "Idempotency-Key": duplicate ? crypto.randomUUID() : idempotencyKey },
-        },
-        body: {
-          session_exercise_id: item.id,
-          set_type: value.setType,
-          load_kg: number(value.load),
-          reps: number(value.reps),
-          rir: number(value.rir),
-          duration_seconds: number(value.duration),
-          distance_meters: number(value.distance),
-          rounds: number(value.rounds),
-          form_quality: number(value.form),
-          pain_flag: value.pain,
-        },
-      });
+      const body = {
+        session_exercise_id: item.id,
+        set_type: value.setType,
+        load_kg: number(value.load),
+        reps: number(value.reps),
+        rir: number(value.rir),
+        duration_seconds: number(value.duration),
+        distance_meters: number(value.distance),
+        rounds: number(value.rounds),
+        form_quality: number(value.form),
+        pain_flag: value.pain,
+      };
+      const { data, error } = editingSet && !duplicate
+        ? await apiClient.PATCH("/sets/{set_id}", {
+            params: { path: { set_id: editingSet.id } },
+            body,
+          })
+        : await apiClient.POST("/sessions/{session_id}/sets", {
+            params: {
+              path: { session_id: sessionId },
+              header: { "Idempotency-Key": duplicate ? crypto.randomUUID() : idempotencyKey },
+            },
+            body,
+          });
       if (!data || error) throw new Error("Set write failed");
       clearSetDraft(sessionId, item.id);
       setDraft(draftFromSet(data.set));
       setIdempotencyKey(crypto.randomUUID());
       setRetryAvailable(false);
-      setMessage(duplicate ? "Previous set duplicated." : "Set saved remotely.");
+      setMessage(
+        duplicate ? "Previous set duplicated." : editingSet ? "Set changes saved." : "Set saved remotely.",
+      );
+      setEditingSet(undefined);
       if (data.new_achievements.length) setCelebration(data.new_achievements);
       await onSaved();
     } catch {
@@ -259,8 +269,72 @@ function SetEntry({
     }
   }
 
+  function startEditing(set: SetLog) {
+    setEditingSet(set);
+    setDraft(draftFromSet(set));
+    setRetryAvailable(false);
+    setMessage(`Editing set ${set.sequence}.`);
+  }
+
+  function cancelEditing() {
+    setEditingSet(undefined);
+    setDraft(lastSet ? draftFromSet(lastSet) : emptyDraft);
+    setRetryAvailable(false);
+    setMessage("Set edit cancelled.");
+    clearSetDraft(sessionId, item.id);
+  }
+
+  async function deleteSet(set: SetLog) {
+    if (!window.confirm(`Delete set ${set.sequence}? This cannot be undone.`)) return;
+    setSaving(true);
+    setMessage(undefined);
+    try {
+      const { error, response } = await apiClient.DELETE("/sets/{set_id}", {
+        params: { path: { set_id: set.id } },
+      });
+      if (error || !response.ok) throw new Error("Set delete failed");
+      if (editingSet?.id === set.id) setEditingSet(undefined);
+      setMessage(`Set ${set.sequence} deleted.`);
+      await onSaved();
+    } catch {
+      setMessage(`Set ${set.sequence} could not be deleted.`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <form className="set-entry" onSubmit={(event) => void save(event)}>
+    <>
+      {item.sets.length ? (
+        <ul className="logged-sets">
+          {item.sets.map((set) => (
+            <li key={set.id}>
+              <span>Set {set.sequence}</span>
+              <strong>{setSummary(set)}</strong>
+              <small>{set.set_type}</small>
+              <span className="logged-set-actions">
+                <button
+                  aria-label={`Edit set ${set.sequence}`}
+                  disabled={saving}
+                  onClick={() => startEditing(set)}
+                  type="button"
+                >
+                  Edit
+                </button>
+                <button
+                  aria-label={`Delete set ${set.sequence}`}
+                  disabled={saving}
+                  onClick={() => void deleteSet(set)}
+                  type="button"
+                >
+                  Delete
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <form className="set-entry" onSubmit={(event) => void save(event)}>
       <div className="set-entry__fields">
         {measurement === "load_reps" ? (
           <div className="set-field">
@@ -291,15 +365,17 @@ function SetEntry({
         <label className="check-field" htmlFor={`${item.id}-pain`}><input checked={draft.pain} id={`${item.id}-pain`} onChange={(event) => updateDraft({ ...draft, pain: event.target.checked })} type="checkbox" /> Pain noted</label>
       </div>
       <div className="set-entry__actions">
-        <button className="button button--primary" disabled={saving} type="submit">{saving ? "Saving…" : "Log set"}</button>
+        <button className="button button--primary" disabled={saving} type="submit">{saving ? "Saving…" : editingSet ? "Save set changes" : "Log set"}</button>
+        {editingSet ? <button className="button" disabled={saving} onClick={cancelEditing} type="button">Cancel edit</button> : null}
         {retryAvailable ? <button className="button" disabled={saving} onClick={() => void save()} type="button">Retry save</button> : null}
-        {lastSet ? <button className="button" disabled={saving} onClick={() => void save(undefined, lastSet)} type="button">Duplicate previous</button> : null}
+        {lastSet && !editingSet ? <button className="button" disabled={saving} onClick={() => void save(undefined, lastSet)} type="button">Duplicate previous</button> : null}
         {message ? <span role="status">{message}</span> : null}
       </div>
       {celebration.length ? (
         <RecordCelebration achievements={celebration} onDismiss={() => setCelebration([])} />
       ) : null}
-    </form>
+      </form>
+    </>
   );
 }
 
@@ -439,7 +515,7 @@ function SessionBook({
                 </div>
                 {acceptedGrowth ? <p className="accepted-guidance"><strong>Growth target:</strong> {acceptedGrowth.explanation.at(-1)}</p> : null}
                 {previousItem?.sets.at(-1) ? <p className="previous-performance">Previous: {setSummary(previousItem.sets.at(-1)!)}</p> : null}
-                {item.sets.length ? <ul className="logged-sets">{item.sets.map((set) => <li key={set.id}><span>Set {set.sequence}</span><strong>{setSummary(set)}</strong><small>{set.set_type}</small></li>)}</ul> : null}
+                {item.sets.length && session.status !== "in_progress" ? <ul className="logged-sets">{item.sets.map((set) => <li key={set.id}><span>Set {set.sequence}</span><strong>{setSummary(set)}</strong><small>{set.set_type}</small></li>)}</ul> : null}
                 {session.status === "in_progress" && catalogExercise ? <SetEntry item={item} measurement={catalogExercise.measurement_type} onSaved={refresh} sessionId={session.id} /> : null}
                 {session.status === "in_progress" ? <div className="substitution-control"><label htmlFor={`substitute-${item.id}`}>Substitute exercise</label><select id={`substitute-${item.id}`} onChange={(event) => setSubstitutes({ ...substitutes, [item.id]: event.target.value })} value={substitutes[item.id] ?? ""}><option value="">Choose movement</option>{exercises.filter((exercise) => exercise.id !== item.exercise_id).map((exercise) => <option key={exercise.id} value={exercise.id}>{exercise.name}</option>)}</select><button className="button" onClick={() => void substitute(item)} type="button">Substitute</button></div> : null}
               </li>

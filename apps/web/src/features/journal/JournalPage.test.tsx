@@ -118,6 +118,7 @@ describe("JournalPage", () => {
     expect(await screen.findByRole("heading", { name: "Upper A" })).toBeInTheDocument();
     expect(screen.getByText("60 kg × 8")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Log set" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit set 1" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Private notes")).not.toBeInTheDocument();
   });
 
@@ -172,6 +173,46 @@ describe("JournalPage", () => {
     expect(post.mock.calls[1]?.[1]).toEqual(
       expect.objectContaining({ body: expect.objectContaining({ load_kg: 60, reps: 8 }) }),
     );
+  });
+
+  it("edits and deletes logged sets through owner controls", async () => {
+    const editedSet = { ...loggedSet, load_kg: 62.5 };
+    const patch = vi.spyOn(apiClient, "PATCH").mockResolvedValue({
+      data: { set: editedSet, new_achievements: [], affected_records: [] },
+      response: new Response(),
+    });
+    const remove = vi.spyOn(apiClient, "DELETE").mockResolvedValue({
+      data: undefined,
+      response: new Response(null, { status: 204 }),
+    });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderPage(true);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Edit set 1" }));
+    expect(screen.getByRole("spinbutton", { name: "Weight (kg)" })).toHaveValue(60);
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (kg)" }), {
+      target: { value: "62.5" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save set changes" }));
+
+    await waitFor(() =>
+      expect(patch).toHaveBeenCalledWith(
+        "/sets/{set_id}",
+        expect.objectContaining({
+          params: { path: { set_id: "set-1" } },
+          body: expect.objectContaining({ load_kg: 62.5, reps: 8 }),
+        }),
+      ),
+    );
+    expect(await screen.findByText("Set changes saved.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete set 1" }));
+    await waitFor(() =>
+      expect(remove).toHaveBeenCalledWith("/sets/{set_id}", {
+        params: { path: { set_id: "set-1" } },
+      }),
+    );
+    expect(await screen.findByText("Set 1 deleted.")).toBeInTheDocument();
   });
 
   it("exposes session-only substitution and completion controls", async () => {
