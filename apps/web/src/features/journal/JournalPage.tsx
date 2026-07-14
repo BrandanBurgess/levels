@@ -1,6 +1,6 @@
 import type { components } from "@levels/api-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiClient } from "../../api/client";
 import { useAuth } from "../../auth/context";
@@ -12,6 +12,7 @@ type SetLog = components["schemas"]["SetLog"];
 type Exercise = components["schemas"]["Exercise"];
 type MeasurementType = Exercise["measurement_type"];
 type SetType = components["schemas"]["SetWrite"]["set_type"];
+type Achievement = components["schemas"]["Achievement"];
 
 type SetDraft = {
   setType: SetType;
@@ -124,6 +125,46 @@ function draftFromSet(set: SetLog): SetDraft {
   };
 }
 
+function RecordCelebration({
+  achievements,
+  onDismiss,
+}: {
+  achievements: Achievement[];
+  onDismiss: () => void;
+}) {
+  const closeButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => closeButton.current?.focus(), []);
+  return (
+    <div className="celebration-backdrop" role="presentation">
+      <section
+        aria-labelledby="celebration-title"
+        aria-modal="true"
+        className="record-celebration"
+        role="dialog"
+      >
+        <div aria-hidden="true" className="celebration-confetti">
+          {Array.from({ length: 12 }, (_, index) => <i key={index} />)}
+        </div>
+        <p className="book-kicker">SERVER CONFIRMED</p>
+        <h2 id="celebration-title">
+          {achievements.length === 1 ? "Personal best!" : `${achievements.length} personal bests!`}
+        </h2>
+        <ul>
+          {achievements.map((achievement) => (
+            <li key={achievement.id}>
+              <strong>{achievement.title}</strong>
+              <span>{achievement.message}</span>
+            </li>
+          ))}
+        </ul>
+        <button className="button button--primary" onClick={onDismiss} ref={closeButton} type="button">
+          Keep training
+        </button>
+      </section>
+    </div>
+  );
+}
+
 function SetEntry({
   sessionId,
   item,
@@ -141,6 +182,7 @@ function SetEntry({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string>();
   const [retryAvailable, setRetryAvailable] = useState(false);
+  const [celebration, setCelebration] = useState<Achievement[]>([]);
   const lastSet = item.sets.at(-1);
 
   function updateDraft(values: SetDraft) {
@@ -192,6 +234,7 @@ function SetEntry({
       setIdempotencyKey(crypto.randomUUID());
       setRetryAvailable(false);
       setMessage(duplicate ? "Previous set duplicated." : "Set saved remotely.");
+      if (data.new_achievements.length) setCelebration(data.new_achievements);
       await onSaved();
     } catch {
       setRetryAvailable(!duplicate);
@@ -242,6 +285,9 @@ function SetEntry({
         {lastSet ? <button className="button" disabled={saving} onClick={() => void save(undefined, lastSet)} type="button">Duplicate previous</button> : null}
         {message ? <span role="status">{message}</span> : null}
       </div>
+      {celebration.length ? (
+        <RecordCelebration achievements={celebration} onDismiss={() => setCelebration([])} />
+      ) : null}
     </form>
   );
 }
