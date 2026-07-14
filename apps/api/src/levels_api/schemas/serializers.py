@@ -23,6 +23,8 @@ from .dtos import (
     PublicSessionExerciseDto,
     PublicSetDto,
     PublicWorkoutSessionDto,
+    SettingsDto,
+    VisibilityDto,
     WaterDayDto,
     WaterEntryDto,
 )
@@ -63,6 +65,33 @@ def serialize_admin_profile(profile: Profile) -> JsonObject:
             preferred_units=profile.preferred_units.value,
             timezone=profile.timezone,
             avatar_variant=profile.avatar_variant,
+        )
+    )
+
+
+def serialize_settings(profile: Profile) -> JsonObject:
+    if profile.settings is None or profile.visibility is None:
+        raise ValueError("Profile settings and visibility must be loaded")
+    settings = profile.settings
+    visibility = profile.visibility
+    return _dump(
+        SettingsDto(
+            active_split_id=settings.active_split_id,
+            default_water_goal_ml=settings.default_water_goal_ml,
+            water_quick_add_ml=settings.water_quick_add_ml,
+            default_target_rir=float(settings.default_target_rir),
+            default_load_increment_kg=float(settings.default_load_increment_kg),
+            visibility=VisibilityDto(
+                show_height=visibility.show_height,
+                show_body_weight=visibility.show_body_weight,
+                show_water=visibility.show_water,
+                show_session_summaries=visibility.show_session_summaries,
+                show_set_details=visibility.show_set_details,
+                show_public_notes=visibility.show_public_notes,
+                show_progress_charts=visibility.show_progress_charts,
+                show_personal_records=visibility.show_personal_records,
+                show_readiness=visibility.show_readiness,
+            ),
         )
     )
 
