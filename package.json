@@ -1,0 +1,36 @@
+{
+  "name": "levels",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "apps/web",
+    "packages/api-client"
+  ],
+  "scripts": {
+    "bootstrap": "npm ci && uv sync --project apps/api --all-groups",
+    "dev": "concurrently -k -n api,web -c magenta,cyan \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "uv run --project apps/api flask --app levels_api:create_app run --port 8000 --debug",
+    "dev:web": "npm --workspace @levels/web run dev",
+    "build": "npm --workspace @levels/web run build",
+    "lint": "npm run lint:web && npm run lint:api",
+    "lint:web": "npm --workspace @levels/web run lint",
+    "lint:api": "uv run --project apps/api ruff check apps/api/src apps/api/tests",
+    "typecheck": "npm run typecheck:web && npm run typecheck:api",
+    "typecheck:web": "npm --workspace @levels/web run typecheck",
+    "typecheck:api": "uv run --project apps/api mypy apps/api/src",
+    "test": "npm run test:web && npm run test:api",
+    "test:web": "npm --workspace @levels/web run test",
+    "test:api": "uv run --project apps/api pytest apps/api/tests",
+    "seed": "uv run --project apps/api python -m levels_api.seed",
+    "e2e": "node -e \"console.error('Playwright is introduced by LVL-1004'); process.exit(1)\"",
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "4.1.10",
+    "concurrently": "9.2.0",
+    "vitest": "4.1.10"
+  }
+}
