@@ -1,0 +1,83 @@
+{
+  "product": "LEVELS",
+  "revision": "2026-07-13-feature-branching-conventional-commits",
+  "generated_at_utc": "2026-07-14T00:30:00.220816+00:00",
+  "files": [
+    {
+      "name": "00_README_HANDOFF.md",
+      "bytes": 2879
+    },
+    {
+      "name": "01_PRD.md",
+      "bytes": 9105
+    },
+    {
+      "name": "02_UX_DESIGN_SYSTEM.md",
+      "bytes": 3989
+    },
+    {
+      "name": "03_TECHNICAL_ARCHITECTURE.md",
+      "bytes": 4698
+    },
+    {
+      "name": "04_DATA_MODEL.md",
+      "bytes": 5041
+    },
+    {
+      "name": "05_OPENAPI.yaml",
+      "bytes": 34612
+    },
+    {
+      "name": "06_ACCEPTANCE_CRITERIA.md",
+      "bytes": 4522
+    },
+    {
+      "name": "07_TEST_AND_QA_PLAN.md",
+      "bytes": 2876
+    },
+    {
+      "name": "08_AGENT_IMPLEMENTATION_PLAYBOOK.md",
+      "bytes": 3770
+    },
+    {
+      "name": "09_CODEX_MASTER_PROMPT.md",
+      "bytes": 3962
+    },
+    {
+      "name": "10_BACKLOG.md",
+      "bytes": 2263
+    },
+    {
+      "name": "11_SECURITY_PRIVACY.md",
+      "bytes": 2589
+    },
+    {
+      "name": "12_DEPLOYMENT_RUNBOOK.md",
+      "bytes": 2902
+    },
+    {
+      "name": "13_EXERCISE_CATALOG.json",
+      "bytes": 71500
+    },
+    {
+      "name": "14_SEED_SPLITS.json",
+      "bytes": 34446
+    },
+    {
+      "name": "15_ARCHITECTURE_DECISIONS.md",
+      "bytes": 1991
+    },
+    {
+      "name": "16_DB_SCHEMA.sql",
+      "bytes": 10745
+    },
+    {
+      "name": "17_REFERENCES.md",
+      "bytes": 1048
+    },
+    {
+      "name": "18_GIT_WORKFLOW.md",
+      "bytes": 8240
+    }
+  ]
+}

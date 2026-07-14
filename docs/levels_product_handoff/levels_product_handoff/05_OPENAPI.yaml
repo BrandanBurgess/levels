@@ -1,0 +1,1084 @@
+openapi: 3.1.0
+info:
+  title: LEVELS API
+  version: 1.0.0
+  description: Public workout showcase and single-owner workout tracking API.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local
+tags:
+  - name: Health
+  - name: Auth
+  - name: Public
+  - name: Profile
+  - name: Exercises
+  - name: Splits
+  - name: Sessions
+  - name: Water
+  - name: Progress
+  - name: Growth
+security: []
+paths:
+  /health:
+    get:
+      tags: [Health]
+      operationId: getHealth
+      responses:
+        "200":
+          description: Healthy service.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /public/dashboard:
+    get:
+      tags: [Public]
+      operationId: getPublicDashboard
+      parameters:
+        - $ref: "#/components/parameters/LocalDate"
+      responses:
+        "200":
+          description: Public dashboard.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicDashboard"
+
+  /public/profile:
+    get:
+      tags: [Public]
+      operationId: getPublicProfile
+      responses:
+        "200":
+          description: Public profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfile"
+
+  /profile:
+    get:
+      tags: [Profile]
+      operationId: getProfile
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Owner profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Profile]
+      operationId: updateProfile
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /settings:
+    get:
+      tags: [Profile]
+      operationId: getSettings
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Profile]
+      operationId: updateSettings
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /exercises:
+    get:
+      tags: [Exercises]
+      operationId: listExercises
+      parameters:
+        - {name: q, in: query, schema: {type: string}}
+        - {name: primary_muscle, in: query, schema: {type: string}}
+        - {name: secondary_muscle, in: query, schema: {type: string}}
+        - {name: body_region, in: query, schema: {type: string}}
+        - {name: movement_pattern, in: query, schema: {type: string}}
+        - {name: equipment, in: query, schema: {type: string}}
+        - {name: unilateral, in: query, schema: {type: boolean}}
+        - {name: include_archived, in: query, schema: {type: boolean, default: false}}
+      responses:
+        "200":
+          description: Exercise list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/Exercise"}
+    post:
+      tags: [Exercises]
+      operationId: createExercise
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ExerciseWrite"}
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Exercise"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /exercises/{exercise_id}:
+    parameters:
+      - $ref: "#/components/parameters/ExerciseId"
+    get:
+      tags: [Exercises]
+      operationId: getExercise
+      responses:
+        "200":
+          description: Exercise.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Exercise"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Exercises]
+      operationId: updateExercise
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ExerciseWrite"}
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Exercise"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    delete:
+      tags: [Exercises]
+      operationId: archiveExercise
+      security: [{bearerAuth: []}]
+      responses:
+        "204": {description: Archived.}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /splits:
+    get:
+      tags: [Splits]
+      operationId: listSplits
+      responses:
+        "200":
+          description: Splits.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/Split"}
+    post:
+      tags: [Splits]
+      operationId: createSplit
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SplitWrite"}
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Split"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /splits/{split_id}:
+    parameters:
+      - $ref: "#/components/parameters/SplitId"
+    get:
+      tags: [Splits]
+      operationId: getSplit
+      responses:
+        "200":
+          description: Split.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Split"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Splits]
+      operationId: updateSplit
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SplitWrite"}
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Split"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+    delete:
+      tags: [Splits]
+      operationId: archiveSplit
+      security: [{bearerAuth: []}]
+      responses:
+        "204": {description: Archived.}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /splits/{split_id}/activate:
+    post:
+      tags: [Splits]
+      operationId: activateSplit
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/SplitId"
+      responses:
+        "200":
+          description: Activated split.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Split"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /sessions:
+    get:
+      tags: [Sessions]
+      operationId: listSessions
+      parameters:
+        - {name: from, in: query, schema: {type: string, format: date}}
+        - {name: to, in: query, schema: {type: string, format: date}}
+        - {name: exercise_id, in: query, schema: {type: string}}
+        - {name: public_only, in: query, schema: {type: boolean, default: true}}
+      responses:
+        "200":
+          description: Sessions, filtered by visibility.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/WorkoutSession"}
+    post:
+      tags: [Sessions]
+      operationId: startSession
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/StartSession"}
+      responses:
+        "201":
+          description: Started session.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkoutSession"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /sessions/{session_id}:
+    parameters:
+      - $ref: "#/components/parameters/SessionId"
+    get:
+      tags: [Sessions]
+      operationId: getSession
+      responses:
+        "200":
+          description: Session, filtered by visibility.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkoutSession"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Sessions]
+      operationId: updateSession
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SessionUpdate"}
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkoutSession"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+    delete:
+      tags: [Sessions]
+      operationId: deleteSession
+      security: [{bearerAuth: []}]
+      responses:
+        "204": {description: Soft deleted.}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /sessions/{session_id}/exercises:
+    post:
+      tags: [Sessions]
+      operationId: addOrSubstituteSessionExercise
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/AddSessionExercise"}
+      responses:
+        "201":
+          description: Added/substituted.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/SessionExercise"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /sessions/{session_id}/sets:
+    post:
+      tags: [Sessions]
+      operationId: createSet
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SetWrite"}
+      responses:
+        "201":
+          description: Set and record result.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/SetWriteResponse"}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /sets/{set_id}:
+    parameters:
+      - $ref: "#/components/parameters/SetId"
+    patch:
+      tags: [Sessions]
+      operationId: updateSet
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SetWrite"}
+      responses:
+        "200":
+          description: Updated set and affected records.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/SetWriteResponse"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+    delete:
+      tags: [Sessions]
+      operationId: deleteSet
+      security: [{bearerAuth: []}]
+      responses:
+        "204": {description: Deleted and records rebuilt.}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /sessions/{session_id}/complete:
+    post:
+      tags: [Sessions]
+      operationId: completeSession
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Completed session.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkoutSession"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /water/today:
+    get:
+      tags: [Water]
+      operationId: getWaterToday
+      parameters:
+        - $ref: "#/components/parameters/LocalDate"
+      responses:
+        "200":
+          description: Visible daily hydration.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WaterDay"}
+    post:
+      tags: [Water]
+      operationId: addWater
+      security: [{bearerAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/WaterWrite"}
+      responses:
+        "201":
+          description: Added.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WaterDay"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /water/today/undo:
+    post:
+      tags: [Water]
+      operationId: undoWater
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Latest entry removed.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WaterDay"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /records:
+    get:
+      tags: [Progress]
+      operationId: listRecords
+      parameters:
+        - {name: exercise_id, in: query, schema: {type: string}}
+        - {name: current_only, in: query, schema: {type: boolean, default: true}}
+      responses:
+        "200":
+          description: Visible records.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/PersonalRecord"}
+
+  /growth/suggestions:
+    get:
+      tags: [Growth]
+      operationId: getGrowthSuggestions
+      parameters:
+        - $ref: "#/components/parameters/LocalDate"
+        - {name: split_day_id, in: query, schema: {type: string}}
+      responses:
+        "200":
+          description: Explainable suggestions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/GrowthSuggestion"}
+
+  /export:
+    get:
+      tags: [Progress]
+      operationId: exportData
+      security: [{bearerAuth: []}]
+      parameters:
+        - name: format
+          in: query
+          required: true
+          schema: {type: string, enum: [json, csv]}
+      responses:
+        "200":
+          description: Export.
+          content:
+            application/json:
+              schema: {type: object}
+            text/csv:
+              schema: {type: string}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    LocalDate:
+      name: date
+      in: query
+      schema: {type: string, format: date}
+    ExerciseId:
+      name: exercise_id
+      in: path
+      required: true
+      schema: {type: string}
+    SplitId:
+      name: split_id
+      in: path
+      required: true
+      schema: {type: string}
+    SessionId:
+      name: session_id
+      in: path
+      required: true
+      schema: {type: string}
+    SetId:
+      name: set_id
+      in: path
+      required: true
+      schema: {type: string}
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: {type: string, minLength: 8, maxLength: 128}
+
+  responses:
+    BadRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ErrorResponse"}
+    Unauthorized:
+      description: Authentication required or invalid.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ErrorResponse"}
+    NotFound:
+      description: Not found.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ErrorResponse"}
+    TooManyRequests:
+      description: Rate limited.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ErrorResponse"}
+
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, version]
+      properties:
+        status: {type: string, enum: [ok]}
+        version: {type: string}
+        database: {type: string, enum: [ok, degraded]}
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: {type: string}
+            message: {type: string}
+            field_errors:
+              type: object
+              additionalProperties: {type: string}
+            request_id: {type: string}
+
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username: {type: string, minLength: 1, maxLength: 100}
+        password: {type: string, minLength: 1, maxLength: 500}
+
+    LoginResponse:
+      type: object
+      required: [access_token, expires_in_seconds, admin]
+      properties:
+        access_token: {type: string}
+        expires_in_seconds: {type: integer}
+        admin:
+          type: object
+          required: [display_name]
+          properties:
+            display_name: {type: string}
+
+    PublicProfile:
+      type: object
+      required: [display_name, preferred_units, timezone, avatar_variant]
+      properties:
+        display_name: {type: string}
+        height_cm: {type: [integer, "null"]}
+        body_weight_kg: {type: [number, "null"]}
+        preferred_units: {type: string, enum: [imperial, metric]}
+        timezone: {type: string}
+        avatar_variant: {type: string}
+
+    AdminProfile:
+      allOf:
+        - {$ref: "#/components/schemas/PublicProfile"}
+        - type: object
+          required: [id]
+          properties:
+            id: {type: string}
+
+    ProfileUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        display_name: {type: string, minLength: 1, maxLength: 100}
+        height_cm: {type: [integer, "null"], minimum: 100, maximum: 250}
+        body_weight_kg: {type: [number, "null"], minimum: 20, maximum: 400}
+        preferred_units: {type: string, enum: [imperial, metric]}
+        timezone: {type: string}
+
+    Visibility:
+      type: object
+      properties:
+        show_height: {type: boolean}
+        show_body_weight: {type: boolean}
+        show_water: {type: boolean}
+        show_session_summaries: {type: boolean}
+        show_set_details: {type: boolean}
+        show_public_notes: {type: boolean}
+        show_progress_charts: {type: boolean}
+        show_personal_records: {type: boolean}
+        show_readiness: {type: boolean}
+
+    Settings:
+      type: object
+      required: [default_water_goal_ml, water_quick_add_ml, visibility]
+      properties:
+        active_split_id: {type: [string, "null"]}
+        default_water_goal_ml: {type: integer}
+        water_quick_add_ml:
+          type: array
+          items: {type: integer}
+        default_target_rir: {type: number}
+        default_load_increment_kg: {type: number}
+        visibility: {$ref: "#/components/schemas/Visibility"}
+
+    SettingsUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        active_split_id: {type: [string, "null"]}
+        default_water_goal_ml: {type: integer, minimum: 250, maximum: 10000}
+        water_quick_add_ml:
+          type: array
+          minItems: 1
+          maxItems: 6
+          items: {type: integer, minimum: 1, maximum: 5000}
+        default_target_rir: {type: number, minimum: 0, maximum: 10}
+        default_load_increment_kg: {type: number, exclusiveMinimum: 0}
+        visibility: {$ref: "#/components/schemas/Visibility"}
+
+    MuscleTarget:
+      type: object
+      required: [slug, display_name, role, intensity, svg_region_ids]
+      properties:
+        slug: {type: string}
+        display_name: {type: string}
+        role: {type: string, enum: [primary, secondary, stabilizer]}
+        intensity: {type: number, minimum: 0, maximum: 1}
+        svg_region_ids:
+          type: array
+          items: {type: string}
+
+    Exercise:
+      type: object
+      required: [id, slug, name, aliases, variation_group, movement_pattern, equipment, measurement_type, compound, unilateral, automatic_progression_enabled, muscle_targets]
+      properties:
+        id: {type: string}
+        slug: {type: string}
+        name: {type: string}
+        aliases: {type: array, items: {type: string}}
+        variation_group: {type: string}
+        movement_pattern: {type: string}
+        equipment: {type: string}
+        measurement_type: {type: string, enum: [load_reps, bodyweight_reps, duration, distance, rounds]}
+        compound: {type: boolean}
+        unilateral: {type: boolean}
+        default_rep_min: {type: [integer, "null"]}
+        default_rep_max: {type: [integer, "null"]}
+        default_rest_seconds: {type: [integer, "null"]}
+        automatic_progression_enabled: {type: boolean}
+        muscle_targets:
+          type: array
+          items: {$ref: "#/components/schemas/MuscleTarget"}
+
+    ExerciseWrite:
+      type: object
+      additionalProperties: false
+      required: [name, slug, variation_group, movement_pattern, equipment, measurement_type, muscle_targets]
+      properties:
+        name: {type: string}
+        slug: {type: string, pattern: "^[a-z0-9]+(?:_[a-z0-9]+)*$"}
+        aliases: {type: array, items: {type: string}}
+        variation_group: {type: string}
+        movement_pattern: {type: string}
+        equipment: {type: string}
+        measurement_type: {type: string, enum: [load_reps, bodyweight_reps, duration, distance, rounds]}
+        compound: {type: boolean}
+        unilateral: {type: boolean}
+        default_rep_min: {type: [integer, "null"]}
+        default_rep_max: {type: [integer, "null"]}
+        default_rest_seconds: {type: [integer, "null"]}
+        automatic_progression_enabled: {type: boolean}
+        muscle_targets:
+          type: array
+          minItems: 1
+          items: {$ref: "#/components/schemas/MuscleTarget"}
+
+    TemplateItem:
+      type: object
+      required: [id, exercise, sequence, item_type, sets, optional]
+      properties:
+        id: {type: string}
+        exercise: {$ref: "#/components/schemas/Exercise"}
+        sequence: {type: integer}
+        item_type: {type: string, enum: [activation, power, main, accessory, core, conditioning]}
+        sets: {type: integer}
+        rep_min: {type: [integer, "null"]}
+        rep_max: {type: [integer, "null"]}
+        rest_seconds: {type: [integer, "null"]}
+        target_rir: {type: [number, "null"]}
+        superset_group: {type: [string, "null"]}
+        notes: {type: [string, "null"]}
+        optional: {type: boolean}
+        alternatives:
+          type: array
+          items: {$ref: "#/components/schemas/Exercise"}
+
+    SplitDay:
+      type: object
+      required: [id, name, day_type, sequence, is_optional, items]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        day_type: {type: string}
+        sequence: {type: integer}
+        is_optional: {type: boolean}
+        items:
+          type: array
+          items: {$ref: "#/components/schemas/TemplateItem"}
+
+    Split:
+      type: object
+      required: [id, name, slug, is_active, days]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        slug: {type: string}
+        description: {type: [string, "null"]}
+        is_active: {type: boolean}
+        days:
+          type: array
+          items: {$ref: "#/components/schemas/SplitDay"}
+
+    SplitWrite:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string}
+        slug: {type: string}
+        description: {type: [string, "null"]}
+        days:
+          type: array
+          items:
+            type: object
+            required: [name, day_type, sequence, is_optional, items]
+            properties:
+              id: {type: [string, "null"]}
+              name: {type: string}
+              day_type: {type: string}
+              sequence: {type: integer}
+              is_optional: {type: boolean}
+              items:
+                type: array
+                items:
+                  type: object
+                  required: [exercise_id, sequence, item_type, sets]
+                  properties:
+                    id: {type: [string, "null"]}
+                    exercise_id: {type: string}
+                    sequence: {type: integer}
+                    item_type: {type: string}
+                    sets: {type: integer}
+                    rep_min: {type: [integer, "null"]}
+                    rep_max: {type: [integer, "null"]}
+                    rest_seconds: {type: [integer, "null"]}
+                    target_rir: {type: [number, "null"]}
+                    optional: {type: boolean}
+                    alternative_exercise_ids: {type: array, items: {type: string}}
+
+    SetLog:
+      type: object
+      required: [id, sequence, set_type, completed_at, pain_flag]
+      properties:
+        id: {type: string}
+        sequence: {type: integer}
+        set_type: {type: string, enum: [warmup, working, backoff, drop, failure]}
+        load_kg: {type: [number, "null"]}
+        reps: {type: [integer, "null"]}
+        rir: {type: [number, "null"]}
+        duration_seconds: {type: [integer, "null"]}
+        distance_meters: {type: [number, "null"]}
+        rounds: {type: [integer, "null"]}
+        form_quality: {type: [integer, "null"]}
+        pain_flag: {type: boolean}
+        completed_at: {type: string, format: date-time}
+        notes: {type: [string, "null"]}
+
+    SessionExercise:
+      type: object
+      required: [id, exercise_id, display_name, sequence, sets]
+      properties:
+        id: {type: string}
+        exercise_id: {type: string}
+        display_name: {type: string}
+        variation_group: {type: string}
+        sequence: {type: integer}
+        rep_min: {type: [integer, "null"]}
+        rep_max: {type: [integer, "null"]}
+        target_rir: {type: [number, "null"]}
+        substitution_reason: {type: [string, "null"]}
+        sets:
+          type: array
+          items: {$ref: "#/components/schemas/SetLog"}
+
+    WorkoutSession:
+      type: object
+      required: [id, session_date_local, started_at, status, title, public_visibility, exercises]
+      properties:
+        id: {type: string}
+        split_day_id: {type: [string, "null"]}
+        session_date_local: {type: string, format: date}
+        started_at: {type: string, format: date-time}
+        completed_at: {type: [string, "null"], format: date-time}
+        status: {type: string, enum: [draft, in_progress, completed, cancelled]}
+        title: {type: string}
+        public_visibility: {type: string, enum: [private, summary, full]}
+        perceived_effort: {type: [integer, "null"]}
+        notes_public: {type: [string, "null"]}
+        notes_private: {type: [string, "null"]}
+        exercises:
+          type: array
+          items: {$ref: "#/components/schemas/SessionExercise"}
+
+    StartSession:
+      type: object
+      additionalProperties: false
+      properties:
+        split_day_id: {type: [string, "null"]}
+        title: {type: [string, "null"]}
+        date: {type: [string, "null"], format: date}
+      anyOf:
+        - required: [split_day_id]
+        - required: [title]
+
+    SessionUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        title: {type: string}
+        public_visibility: {type: string, enum: [private, summary, full]}
+        perceived_effort: {type: [integer, "null"], minimum: 1, maximum: 10}
+        notes_private: {type: [string, "null"]}
+        notes_public: {type: [string, "null"]}
+
+    AddSessionExercise:
+      type: object
+      additionalProperties: false
+      required: [exercise_id]
+      properties:
+        exercise_id: {type: string}
+        replace_session_exercise_id: {type: [string, "null"]}
+        substitution_reason: {type: [string, "null"]}
+        sequence: {type: [integer, "null"]}
+
+    SetWrite:
+      type: object
+      additionalProperties: false
+      required: [session_exercise_id, set_type]
+      properties:
+        session_exercise_id: {type: string}
+        sequence: {type: [integer, "null"], minimum: 1}
+        set_type: {type: string, enum: [warmup, working, backoff, drop, failure]}
+        load_kg: {type: [number, "null"], minimum: 0}
+        reps: {type: [integer, "null"], minimum: 0, maximum: 100}
+        rir: {type: [number, "null"], minimum: 0, maximum: 10}
+        duration_seconds: {type: [integer, "null"], minimum: 0}
+        distance_meters: {type: [number, "null"], minimum: 0}
+        rounds: {type: [integer, "null"], minimum: 0}
+        bodyweight_assistance_kg: {type: [number, "null"]}
+        form_quality: {type: [integer, "null"], minimum: 1, maximum: 5}
+        pain_flag: {type: boolean, default: false}
+        notes: {type: [string, "null"], maxLength: 2000}
+
+    SetWriteResponse:
+      type: object
+      required: [set, new_achievements, affected_records]
+      properties:
+        set: {$ref: "#/components/schemas/SetLog"}
+        new_achievements:
+          type: array
+          items: {$ref: "#/components/schemas/Achievement"}
+        affected_records:
+          type: array
+          items: {$ref: "#/components/schemas/PersonalRecord"}
+
+    Achievement:
+      type: object
+      required: [id, achievement_type, title, message, achieved_at, public]
+      properties:
+        id: {type: string}
+        achievement_type: {type: string}
+        exercise_id: {type: [string, "null"]}
+        title: {type: string}
+        message: {type: string}
+        achieved_at: {type: string, format: date-time}
+        public: {type: boolean}
+
+    PersonalRecord:
+      type: object
+      required: [id, exercise_id, record_type, value_numeric, unit, achieved_at]
+      properties:
+        id: {type: string}
+        exercise_id: {type: string}
+        exercise_name: {type: string}
+        record_type: {type: string, enum: [max_load, reps_at_load, estimated_1rm, session_volume, duration, distance, rounds]}
+        value_numeric: {type: number}
+        unit: {type: string}
+        reps_context: {type: [integer, "null"]}
+        achieved_at: {type: string, format: date-time}
+
+    WaterWrite:
+      type: object
+      additionalProperties: false
+      required: [amount_ml]
+      properties:
+        amount_ml: {type: integer, minimum: 1, maximum: 5000}
+        occurred_at: {type: [string, "null"], format: date-time}
+        source: {type: string, enum: [quick_add, custom], default: custom}
+        note: {type: [string, "null"], maxLength: 500}
+
+    WaterDay:
+      type: object
+      required: [local_date, total_ml, goal_ml, progress_ratio, entries]
+      properties:
+        local_date: {type: string, format: date}
+        total_ml: {type: integer}
+        goal_ml: {type: integer}
+        progress_ratio: {type: number, minimum: 0}
+        entries:
+          type: array
+          items:
+            type: object
+            required: [id, amount_ml, occurred_at]
+            properties:
+              id: {type: string}
+              amount_ml: {type: integer}
+              occurred_at: {type: string, format: date-time}
+
+    GrowthSuggestion:
+      type: object
+      required: [exercise_id, exercise_name, suggestion_type, confidence, explanation, source_session_ids]
+      properties:
+        exercise_id: {type: string}
+        exercise_name: {type: string}
+        suggestion_type: {type: string, enum: [insufficient_data, increase_load, add_rep, repeat_load, maintain, reduce_volume, easier_variation, no_progression]}
+        suggested_delta: {type: [number, "null"]}
+        delta_unit: {type: [string, "null"]}
+        confidence: {type: string, enum: [insufficient, low, medium, high]}
+        explanation: {type: array, items: {type: string}}
+        source_session_ids: {type: array, items: {type: string}}
+
+    PublicDashboard:
+      type: object
+      required: [date, profile, muscle_targets, latest_achievements]
+      properties:
+        date: {type: string, format: date}
+        profile: {$ref: "#/components/schemas/PublicProfile"}
+        scheduled_day:
+          anyOf:
+            - {$ref: "#/components/schemas/SplitDay"}
+            - {type: "null"}
+        active_session:
+          anyOf:
+            - {$ref: "#/components/schemas/WorkoutSession"}
+            - {type: "null"}
+        muscle_targets:
+          type: array
+          items: {$ref: "#/components/schemas/MuscleTarget"}
+        water:
+          anyOf:
+            - {$ref: "#/components/schemas/WaterDay"}
+            - {type: "null"}
+        latest_achievements:
+          type: array
+          items: {$ref: "#/components/schemas/Achievement"}
