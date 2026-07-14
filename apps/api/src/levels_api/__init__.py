@@ -9,6 +9,7 @@ from .cors import init_cors
 from .database import init_database
 from .errors import register_error_handlers
 from .features.profile.routes import profile_blueprint
+from .features.today.routes import today_blueprint
 from .features.water.routes import water_blueprint
 from .logging import configure_logging, init_request_context
 from .routes.health import health_blueprint
@@ -45,6 +46,7 @@ def create_app(settings: Settings | None = None) -> Flask:
     app.register_blueprint(health_blueprint)
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(profile_blueprint)
+    app.register_blueprint(today_blueprint)
     app.register_blueprint(water_blueprint)
     return app
 
