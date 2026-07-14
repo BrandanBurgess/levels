@@ -125,10 +125,20 @@ describe("TodayPage", () => {
         entries: [],
       },
     };
-    vi.spyOn(apiClient, "GET").mockResolvedValue({
-      data: ownerDashboard,
-      response: new Response(),
-    });
+    vi.spyOn(apiClient, "GET").mockImplementation(async (path) =>
+      path === "/settings"
+        ? {
+            data: {
+              week_starts_on: 1,
+              default_water_goal_ml: 2800,
+              water_quick_add_ml: [250, 500, 750],
+              reduced_motion_override: null,
+              visibility: {},
+            },
+            response: new Response(),
+          }
+        : { data: ownerDashboard, response: new Response() },
+    );
     const post = vi
       .spyOn(apiClient, "POST")
       .mockResolvedValueOnce({

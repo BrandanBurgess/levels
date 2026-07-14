@@ -9,10 +9,17 @@ import { Avatar } from "../avatar/Avatar";
 
 type Dashboard = components["schemas"]["PublicDashboard"];
 type WaterDay = components["schemas"]["WaterDay"];
+type Settings = components["schemas"]["Settings"];
 
 async function fetchDashboard(): Promise<Dashboard> {
   const { data, error } = await apiClient.GET("/public/dashboard");
   if (error || !data) throw new Error("Dashboard request failed");
+  return data;
+}
+
+async function fetchSettings(): Promise<Settings> {
+  const { data, error } = await apiClient.GET("/settings");
+  if (error || !data) throw new Error("Settings request failed");
   return data;
 }
 
@@ -25,7 +32,7 @@ function formatDate(value?: string) {
   }).format(new Date(`${value}T12:00:00`));
 }
 
-function WaterControls({ water }: { water: WaterDay }) {
+function WaterControls({ quickAdds, water }: { quickAdds: number[]; water: WaterDay }) {
   const queryClient = useQueryClient();
   const [customAmount, setCustomAmount] = useState("375");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,7 +98,7 @@ function WaterControls({ water }: { water: WaterDay }) {
   return (
     <div className="water-controls" aria-label="Hydration controls">
       <div className="water-quick-add" aria-label="Quick add water">
-        {[250, 500, 750].map((amount) => (
+        {quickAdds.map((amount) => (
           <button
             className="button water-quick-add__button"
             disabled={isSubmitting}
@@ -138,6 +145,11 @@ function WaterControls({ water }: { water: WaterDay }) {
 export function TodayPage() {
   const { isAuthenticated } = useAuth();
   const query = useQuery({ queryKey: ["public-dashboard"], queryFn: fetchDashboard });
+  const settingsQuery = useQuery({
+    queryKey: ["settings"],
+    queryFn: fetchSettings,
+    enabled: isAuthenticated,
+  });
   const dashboard = query.data;
   const scheduledDay = dashboard?.scheduled_day;
 
@@ -228,7 +240,12 @@ export function TodayPage() {
                 ? `${Math.round(dashboard.water.progress_ratio * 100)}% of ${dashboard.water.goal_ml} mL goal`
                 : "The owner has chosen not to publish water data."}
             </p>
-            {isAuthenticated && dashboard.water ? <WaterControls water={dashboard.water} /> : null}
+            {isAuthenticated && dashboard.water ? (
+              <WaterControls
+                quickAdds={settingsQuery.data?.water_quick_add_ml ?? [250, 500, 750]}
+                water={dashboard.water}
+              />
+            ) : null}
           </section>
 
           <section className="today-card achievement-card" aria-labelledby="achievement-heading">

@@ -36,10 +36,12 @@ class VisibilityDto(StrictDto):
 
 class SettingsDto(StrictDto):
     active_split_id: str | None
+    week_starts_on: int
     default_water_goal_ml: int
     water_quick_add_ml: list[int]
     default_target_rir: float
     default_load_increment_kg: float
+    reduced_motion_override: bool | None
     visibility: VisibilityDto
 
 

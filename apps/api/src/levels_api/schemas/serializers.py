@@ -79,10 +79,12 @@ def serialize_settings(profile: Profile) -> JsonObject:
     return _dump(
         SettingsDto(
             active_split_id=settings.active_split_id,
+            week_starts_on=settings.week_starts_on,
             default_water_goal_ml=settings.default_water_goal_ml,
             water_quick_add_ml=settings.water_quick_add_ml,
             default_target_rir=float(settings.default_target_rir),
             default_load_increment_kg=float(settings.default_load_increment_kg),
+            reduced_motion_override=settings.reduced_motion_override,
             visibility=VisibilityDto(
                 show_height=visibility.show_height,
                 show_body_weight=visibility.show_body_weight,

@@ -710,15 +710,17 @@ components:
 
     Settings:
       type: object
-      required: [default_water_goal_ml, water_quick_add_ml, visibility]
+      required: [week_starts_on, default_water_goal_ml, water_quick_add_ml, reduced_motion_override, visibility]
       properties:
         active_split_id: {type: [string, "null"]}
+        week_starts_on: {type: integer, minimum: 0, maximum: 6}
         default_water_goal_ml: {type: integer}
         water_quick_add_ml:
           type: array
           items: {type: integer}
         default_target_rir: {type: number}
         default_load_increment_kg: {type: number}
+        reduced_motion_override: {type: [boolean, "null"]}
         visibility: {$ref: "#/components/schemas/Visibility"}
 
     SettingsUpdate:
@@ -726,6 +728,7 @@ components:
       additionalProperties: false
       properties:
         active_split_id: {type: [string, "null"]}
+        week_starts_on: {type: integer, minimum: 0, maximum: 6}
         default_water_goal_ml: {type: integer, minimum: 250, maximum: 10000}
         water_quick_add_ml:
           type: array
@@ -734,6 +737,7 @@ components:
           items: {type: integer, minimum: 1, maximum: 5000}
         default_target_rir: {type: number, minimum: 0, maximum: 10}
         default_load_increment_kg: {type: number, exclusiveMinimum: 0}
+        reduced_motion_override: {type: [boolean, "null"]}
         visibility: {$ref: "#/components/schemas/Visibility"}
 
     MuscleTarget:

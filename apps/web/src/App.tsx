@@ -9,6 +9,7 @@ import { LibraryPage } from "./features/library/LibraryPage";
 import { JournalPage } from "./features/journal/JournalPage";
 import { GrowthPage } from "./features/growth/GrowthPage";
 import { ProgressPage } from "./features/progress/ProgressPage";
+import { SettingsPage } from "./features/settings/SettingsPage";
 import { SplitsPage } from "./features/splits/SplitsPage";
 import { TodayPage } from "./features/today/TodayPage";
 
@@ -73,8 +74,9 @@ export function App() {
           <Route path="character" element={<CharacterPage />} />
           <Route path="library" element={<LibraryPage />} />
           <Route path="splits" element={<SplitsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
           {Object.entries(pages)
-            .filter(([path]) => !["today", "growth", "journal", "character", "progress", "library", "splits"].includes(path))
+            .filter(([path]) => !["today", "growth", "journal", "character", "progress", "library", "splits", "settings"].includes(path))
             .map(([path, page]) => (
               <Route key={path} path={path} element={<PlaceholderPage {...page} />} />
             ))}

@@ -137,14 +137,28 @@ test.describe("LEVELS handoff journeys", () => {
     await expect(page.getByRole("heading", { name: "0 mL" })).toBeVisible();
   });
 
-  test("10 split edit persists after refresh", async ({ page }) => {
+  test("10 split and settings edits persist after refresh", async ({ page }) => {
     await login(page);
     await page.getByRole("link", { name: "Splits" }).first().click();
     await page.getByRole("button", { name: /Move Lower A.*up/ }).click();
     await page.getByRole("button", { name: "Save order" }).click();
     await expect(page.getByRole("status")).toHaveText("Split changes saved.");
+
+    await page.getByRole("link", { name: "Settings" }).first().click();
+    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+    await page.getByLabel("Daily water goal (mL)").fill("3000");
+    await page.getByLabel("Quick-add amounts (mL, comma-separated)").fill("300, 600");
+    await page.getByRole("button", { name: "Save settings" }).click();
+    await expect(page.getByRole("status")).toHaveText("Settings saved.");
+
+    await page.getByRole("link", { name: "Splits" }).first().click();
     await page.reload();
     await expect(page.locator(".split-day h3").first()).toContainText("Lower A");
+
+    await login(page);
+    await page.getByRole("link", { name: "Settings" }).first().click();
+    await expect(page.getByLabel("Daily water goal (mL)")).toHaveValue("3000");
+    await expect(page.getByLabel("Quick-add amounts (mL, comma-separated)")).toHaveValue("300, 600");
   });
 
   test("11 public visitor sees only configured fields", async ({ page }) => {

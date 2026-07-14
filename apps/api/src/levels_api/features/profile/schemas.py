@@ -34,6 +34,7 @@ class VisibilityUpdate(PatchModel):
 
 class SettingsUpdate(PatchModel):
     active_split_id: str | None = None
+    week_starts_on: Annotated[int, Field(ge=0, le=6)] | None = None
     default_water_goal_ml: Annotated[int, Field(ge=250, le=10000)] | None = None
     water_quick_add_ml: (
         Annotated[list[Annotated[int, Field(ge=1, le=5000)]], Field(min_length=1, max_length=6)]
@@ -41,4 +42,5 @@ class SettingsUpdate(PatchModel):
     ) = None
     default_target_rir: Annotated[Decimal, Field(ge=0, le=10)] | None = None
     default_load_increment_kg: Annotated[Decimal, Field(gt=0)] | None = None
+    reduced_motion_override: bool | None = None
     visibility: VisibilityUpdate | None = None
