@@ -10,6 +10,7 @@ from .database import init_database
 from .errors import register_error_handlers
 from .features.exercises.routes import exercise_blueprint
 from .features.profile.routes import profile_blueprint
+from .features.sessions.routes import session_blueprint
 from .features.splits.routes import split_blueprint
 from .features.today.routes import today_blueprint
 from .features.water.routes import water_blueprint
@@ -49,6 +50,7 @@ def create_app(settings: Settings | None = None) -> Flask:
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(exercise_blueprint)
     app.register_blueprint(profile_blueprint)
+    app.register_blueprint(session_blueprint)
     app.register_blueprint(split_blueprint)
     app.register_blueprint(today_blueprint)
     app.register_blueprint(water_blueprint)

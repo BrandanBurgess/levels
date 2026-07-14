@@ -598,6 +598,8 @@ export interface components {
             date?: string | null;
         } | unknown | unknown;
         SessionUpdate: {
+            /** @enum {string} */
+            status?: "in_progress" | "completed" | "cancelled";
             title?: string;
             /** @enum {string} */
             public_visibility?: "private" | "summary" | "full";
