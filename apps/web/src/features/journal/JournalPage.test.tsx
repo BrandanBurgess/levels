@@ -100,7 +100,10 @@ function renderPage(isAuthenticated: boolean, sessions: WorkoutSession[] = [acti
   );
 }
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  localStorage.clear();
+  vi.restoreAllMocks();
+});
 
 describe("JournalPage", () => {
   it("shows a privacy-safe completed public journal", async () => {
@@ -189,5 +192,56 @@ describe("JournalPage", () => {
       expect.objectContaining({ body: expect.objectContaining({ status: "completed" }) }),
     );
     expect(post).not.toHaveBeenCalled();
+  });
+
+  it("restores the latest local set and notes draft after a refresh", async () => {
+    const first = renderPage(true);
+
+    fireEvent.change(await screen.findByRole("spinbutton", { name: "Weight (kg)" }), {
+      target: { value: "82.5" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Private notes" }), {
+      target: { value: "Keep shoulder packed" },
+    });
+    first.unmount();
+    renderPage(true);
+
+    expect(await screen.findByRole("spinbutton", { name: "Weight (kg)" })).toHaveValue(82.5);
+    expect(screen.getByRole("textbox", { name: "Private notes" })).toHaveValue(
+      "Keep shoulder packed",
+    );
+  });
+
+  it("keeps a failed write local and retries explicitly with the same key", async () => {
+    const post = vi
+      .spyOn(apiClient, "POST")
+      .mockRejectedValueOnce(new TypeError("offline"))
+      .mockResolvedValueOnce({
+        data: { set: loggedSet, new_achievements: [], affected_records: [] },
+        response: new Response(),
+      });
+    renderPage(true);
+    fireEvent.change(await screen.findByRole("spinbutton", { name: "Weight (kg)" }), {
+      target: { value: "65" },
+    });
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Reps" }), {
+      target: { value: "8" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Log set" }));
+    expect(await screen.findByText("Set is safe on this device. Retry when connected.")).toBeInTheDocument();
+    expect(post).toHaveBeenCalledTimes(1);
+    const firstOptions = post.mock.calls[0]?.[1] as unknown as {
+      params: { header: { "Idempotency-Key": string } };
+    };
+    const firstKey = firstOptions.params.header["Idempotency-Key"];
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry save" }));
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+    const retryOptions = post.mock.calls[1]?.[1] as unknown as {
+      params: { header: { "Idempotency-Key": string } };
+    };
+    expect(retryOptions.params.header["Idempotency-Key"]).toBe(firstKey);
+    expect(await screen.findByText("Set saved remotely.")).toBeInTheDocument();
   });
 });
