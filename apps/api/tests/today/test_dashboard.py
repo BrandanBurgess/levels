@@ -81,6 +81,12 @@ def test_monday_dashboard_composes_schedule_targets_and_achievement(app: Flask) 
     assert targets["upper_chest"]["role"] == "primary"
     assert targets["upper_chest"]["intensity"] == 1.0
     assert targets["mid_chest"]["role"] == "secondary"
+    assert targets["lats"]["role"] == "primary"
+    assert targets["upper_back"]["role"] == "primary"
+    assert targets["side_delts"]["role"] == "primary"
+    assert targets["biceps"]["role"] == "primary"
+    assert targets["triceps"]["role"] == "primary"
+    assert targets["front_delts"]["role"] == "secondary"
     assert dashboard["water"] is None
     assert dashboard["latest_achievements"][0]["title"] == "New incline record"
 

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Any, cast
+from typing import cast
 
 from sqlalchemy.orm import Session
 
 from levels_api.features.profile.service import require_profile
 from levels_api.features.water.service import water_day
-from levels_api.models import Exercise, MuscleRole, SplitDay, WorkoutTemplateItem
+from levels_api.models import Exercise, ExerciseMuscle, MuscleRole, SplitDay, WorkoutTemplateItem
 from levels_api.schemas import (
     serialize_admin_session,
     serialize_public_achievements,
@@ -18,7 +18,7 @@ from levels_api.schemas import (
 from . import repository
 
 
-def _muscle_target(link: Any) -> dict[str, object]:
+def _muscle_target(link: ExerciseMuscle) -> dict[str, object]:
     muscle = link.muscle_group
     return {
         "slug": muscle.slug,
@@ -83,7 +83,7 @@ def serialize_scheduled_day(day: SplitDay | None) -> dict[str, object] | None:
 def aggregate_muscle_targets(day: SplitDay | None) -> list[dict[str, object]]:
     if day is None:
         return []
-    strongest: dict[str, Any] = {}
+    strongest: dict[str, ExerciseMuscle] = {}
     rank = {MuscleRole.STABILIZER: 0, MuscleRole.SECONDARY: 1, MuscleRole.PRIMARY: 2}
     for item in day.items:
         for link in item.exercise.muscle_links:
