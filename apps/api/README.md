@@ -13,3 +13,12 @@ The canonical health route is `GET /api/v1/health`; `GET /health` is the
 equivalent provider probe. Local SQLite is the default. Production accepts a
 `libsql://` Turso `DATABASE_URL` plus `TURSO_AUTH_TOKEN`. CORS is an exact,
 comma-separated origin allow-list and never uses credentialed wildcard access.
+
+Generate the owner password hash locally with a no-echo prompt:
+
+```powershell
+uv run --project apps/api python -m levels_api.scripts.hash_password
+```
+
+Store only the printed Argon2id hash in `ADMIN_PASSWORD_HASH`. The API exposes
+login only; logout clears the in-memory bearer token in the browser.
