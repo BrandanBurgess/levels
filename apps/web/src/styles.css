@@ -169,6 +169,24 @@ a { color: inherit; }
 .exercise-facts dt { color: var(--text-muted); }
 .exercise-facts dd { margin: 0; text-transform: capitalize; }
 .alternative-list { margin: 0; padding-left: 1.2rem; color: var(--text-muted); }
+.splits-layout { display: grid; gap: 1rem; }
+.split-picker { display: grid; align-content: start; gap: 0.55rem; }
+.split-picker > button { display: grid; gap: 0.25rem; padding: 0.85rem; border: 1px solid rgb(196 154 255 / 14%); border-radius: 0.75rem; color: var(--text); text-align: left; background: var(--surface-1); cursor: pointer; }
+.split-picker > button[aria-pressed='true'] { border-color: var(--purple-400); background: var(--purple-950); }
+.split-picker span { color: var(--text-muted); font-size: 0.72rem; }
+.new-split { display: grid; gap: 0.45rem; padding: 0.8rem; border: 1px dashed rgb(196 154 255 / 25%); border-radius: 0.75rem; }
+.new-split input { min-width: 0; padding: 0.6rem; border: 1px solid rgb(196 154 255 / 22%); border-radius: 0.55rem; color: var(--text); background: var(--surface-2); }
+.split-detail { min-width: 0; padding: 1rem; border: 1px solid rgb(196 154 255 / 15%); border-radius: 1rem; background: rgb(20 13 29 / 75%); }
+.split-detail h2, .split-day h3 { margin: 0; }
+.split-days { display: grid; gap: 0.8rem; margin-top: 1rem; }
+.split-day { padding: 0.9rem; border: 1px solid rgb(196 154 255 / 12%); border-radius: 0.8rem; background: var(--surface-1); }
+.template-items { display: grid; margin: 0.7rem 0; padding: 0; list-style: none; }
+.template-items li { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.7rem 0; border-top: 1px solid rgb(196 154 255 / 10%); }
+.template-items li > div:first-child { display: grid; gap: 0.2rem; }
+.template-items span, .template-items small { color: var(--text-muted); }
+.reorder-controls { display: flex; gap: 0.3rem; }
+.reorder-controls button { width: 2rem; height: 2rem; border: 1px solid rgb(196 154 255 / 20%); border-radius: 0.45rem; color: var(--text); background: var(--surface-2); }
+.split-editor-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; margin-top: 1rem; }
 .muscle-targets { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.9rem 0 0; padding: 0; list-style: none; }
 .muscle-chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.42rem 0.55rem; border: 1px solid rgb(196 154 255 / 18%); border-radius: 999px; color: var(--text); background: var(--surface-1); font-size: 0.75rem; }
 .muscle-chip small { color: var(--text-muted); text-transform: capitalize; }
@@ -199,6 +217,7 @@ a { color: inherit; }
   .character-layout { grid-template-columns: minmax(0, 1.7fr) minmax(16rem, 0.7fr); }
   .library-layout { grid-template-columns: minmax(0, 1.4fr) minmax(19rem, 0.6fr); }
   .exercise-detail { position: sticky; top: 1rem; }
+  .splits-layout { grid-template-columns: minmax(12rem, 0.35fr) minmax(0, 1.65fr); }
 }
 
 @media (min-width: 86rem) {
