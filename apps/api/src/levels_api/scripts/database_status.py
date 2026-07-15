@@ -41,20 +41,21 @@ def verify_database(engine: Engine) -> DatabaseStatus:
 
     if revision is None:
         raise RuntimeError("Database has no Alembic revision")
-    if (muscle_groups, exercises, splits, profiles) != (25, 98, 4, 2):
+    if muscle_groups != 25 or exercises != 98 or splits < 2 or profiles < 1:
         raise RuntimeError(
             "Seed verification failed: expected 25 muscle groups, 98 exercises, "
-            "4 tenant-owned splits, and 2 profiles"
+            "and a populated fictional demo tenant"
         )
-    if bootstrap_user is None or demo_user is None or not demo_user.is_demo:
-        raise RuntimeError("Seed verification failed: missing bootstrap or demo tenant")
+    if demo_user is None or not demo_user.is_demo:
+        raise RuntimeError("Seed verification failed: missing fictional demo tenant")
     tenant_active_splits = {split.user_id: split for split in active_splits}
-    if len(active_splits) != 2 or len(tenant_active_splits) != 2:
+    if len(active_splits) != len(tenant_active_splits):
         raise RuntimeError("Seed verification failed: expected one active split per tenant")
-    bootstrap_active_split = tenant_active_splits.get(bootstrap_user.id)
+    verified_user = bootstrap_user or demo_user
+    verified_active_split = tenant_active_splits.get(verified_user.id)
     if (
-        bootstrap_active_split is None
-        or bootstrap_active_split.slug != "brandan-athletic-upper-lower"
+        verified_active_split is None
+        or verified_active_split.slug != "brandan-athletic-upper-lower"
     ):
         raise RuntimeError("Seed verification failed: unexpected active split")
     searchable_catalog = " ".join(
@@ -69,7 +70,7 @@ def verify_database(engine: Engine) -> DatabaseStatus:
         exercises=exercises,
         splits=splits,
         profiles=profiles,
-        active_split_slug=bootstrap_active_split.slug,
+        active_split_slug=verified_active_split.slug,
     )
 
 

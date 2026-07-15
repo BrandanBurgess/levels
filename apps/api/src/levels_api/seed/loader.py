@@ -467,9 +467,10 @@ def seed_database(database_url: str | None = None) -> SeedResult:
     engine: Engine = create_database_engine(resolved_url, os.getenv("TURSO_AUTH_TOKEN"))
     try:
         with Session(engine) as session, session.begin():
-            result = seed_session(session)
-            seed_demo_session(session)
-            return result
+            # The deployment seed owns the shared catalog and fictional demo only.
+            # Existing/bootstrap members are migrated or register independently and
+            # must never be created or rewritten as a side effect of production seed.
+            return seed_demo_session(session)
     finally:
         engine.dispose()
 
