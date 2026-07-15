@@ -1,0 +1,39 @@
+.landing-page { min-height: 100vh; overflow: hidden; background: radial-gradient(circle at 78% 22%, rgb(116 48 215 / 25%), transparent 31rem), var(--bg-0); }
+.landing-header { display: flex; width: min(100% - 2rem, 78rem); min-height: 5rem; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 auto; }
+.landing-brand { display: inline-flex; align-items: center; gap: 0.65rem; color: var(--text-strong); font-weight: 900; letter-spacing: 0.15em; text-decoration: none; }
+.landing-brand span { display: grid; width: 2.3rem; height: 2.3rem; place-items: center; border: 1px solid var(--purple-400); border-radius: 0.7rem 0.25rem; background: linear-gradient(145deg, var(--purple-700), var(--purple-950)); }
+.landing-header nav { display: flex; align-items: center; gap: 0.5rem; }
+.landing-header nav a { padding: 0.55rem 0.7rem; color: var(--text); font-size: 0.82rem; font-weight: 800; text-decoration: none; }
+.landing-header nav .landing-header__create { display: none; border: 1px solid rgb(196 154 255 / 28%); border-radius: 0.65rem; }
+.landing-hero { display: grid; width: min(100% - 2rem, 78rem); gap: 2rem; align-items: center; margin: clamp(2rem, 8vh, 6rem) auto 0; }
+.landing-hero__copy { position: relative; z-index: 2; }
+.landing-eyebrow { color: var(--purple-300); font-size: 0.74rem; font-weight: 900; letter-spacing: 0.2em; }
+.landing-hero h1 { max-width: 13ch; margin: 0.7rem 0 1.2rem; color: var(--text-strong); font-size: clamp(3rem, 10vw, 6.6rem); line-height: 0.94; letter-spacing: -0.065em; }
+.landing-hero__copy > p:not(.landing-eyebrow) { max-width: 43rem; color: var(--text-muted); font-size: clamp(1rem, 2vw, 1.22rem); line-height: 1.7; }
+.landing-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin: 1.8rem 0 1rem; }
+.landing-button { min-height: 3.2rem; padding: 0.85rem 1.2rem; border: 1px solid rgb(196 154 255 / 30%); border-radius: 0.75rem; color: var(--text-strong); font-weight: 850; text-decoration: none; }
+.landing-button--primary { border-color: transparent; background: linear-gradient(135deg, var(--purple-500), var(--purple-700)); box-shadow: 0 0.9rem 2.4rem rgb(116 48 215 / 30%); }
+.landing-text-link { padding: 0.65rem; color: var(--purple-150); font-weight: 800; }
+.landing-hero__copy small { color: var(--text-muted); }
+.landing-visual { position: relative; display: grid; min-height: 22rem; place-items: center; isolation: isolate; }
+.landing-visual__aura { position: absolute; z-index: -1; width: min(85vw, 30rem); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgb(139 61 255 / 35%), transparent 67%); }
+.landing-level { position: absolute; display: grid; width: clamp(4rem, 16vw, 6rem); aspect-ratio: 1; place-items: center; align-content: center; border: 1px solid rgb(196 154 255 / 25%); border-radius: 1.1rem 0.4rem; color: var(--text-muted); background: rgb(23 16 32 / 86%); }
+.landing-level span { font-size: 0.54rem; font-weight: 850; letter-spacing: 0.13em; }
+.landing-level strong { color: var(--text-strong); font-size: 1.7rem; }
+.landing-level--1 { --x: 1; translate: -7rem 5rem; }
+.landing-level--2 { --x: 2; translate: -3.5rem 1.5rem; }
+.landing-level--3 { --x: 3; z-index: 2; width: clamp(5.4rem, 20vw, 8rem); border-color: var(--purple-300); color: var(--purple-300); background: linear-gradient(145deg, var(--purple-700), var(--purple-950)); box-shadow: 0 0 3rem rgb(139 61 255 / 38%); }
+.landing-level--4 { --x: 4; translate: 3.5rem 1.5rem; }
+.landing-level--5 { --x: 5; translate: 7rem 5rem; }
+.landing-benefits { display: grid; width: min(100% - 2rem, 78rem); gap: 0.8rem; margin: clamp(3rem, 8vh, 7rem) auto 0; padding-bottom: 3rem; }
+.landing-benefits article { padding: 1.25rem; border-top: 1px solid rgb(196 154 255 / 20%); }
+.landing-benefits span { color: var(--purple-300); font-size: 0.68rem; font-weight: 900; }
+.landing-benefits h2 { margin: 1rem 0 0.5rem; color: var(--text-strong); font-size: 1.1rem; }
+.landing-benefits p { margin: 0; color: var(--text-muted); line-height: 1.55; }
+
+@media (min-width: 36rem) { .landing-header nav .landing-header__create { display: inline-flex; } }
+@media (min-width: 54rem) {
+  .landing-hero { grid-template-columns: minmax(0, 1.1fr) minmax(22rem, 0.9fr); }
+  .landing-visual { min-height: 34rem; }
+  .landing-benefits { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

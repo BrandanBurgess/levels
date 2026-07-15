@@ -1,4 +1,17 @@
+import { useId, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
+
+import { DEFAULT_AVATAR_APPEARANCE, type AuraTier, type AvatarAppearance } from "./appearance";
+import {
+  AVATAR_REGION_LABELS,
+  BACK_REGION_IDS,
+  FRONT_REGION_IDS,
+  isAvatarRegionId,
+  type AvatarRegionId,
+} from "./regions";
+import "./Avatar.css";
+
 export type AvatarHighlightRole = "primary" | "secondary" | "stabilizer";
+export type { AuraTier, AvatarAppearance } from "./appearance";
 
 export interface AvatarTarget {
   displayName: string;
@@ -6,194 +19,329 @@ export interface AvatarTarget {
   role: AvatarHighlightRole;
 }
 
-interface AvatarProps {
+export interface AvatarProps {
+  appearance?: AvatarAppearance;
+  auraTier?: AuraTier;
+  reducedMotion?: boolean;
   targets?: AvatarTarget[];
   view?: "front" | "back" | "both";
 }
 
-function roleFor(regionId: string, targets: AvatarTarget[]) {
-  const roles = targets.filter((target) => target.regionIds.includes(regionId)).map((target) => target.role);
-  if (roles.includes("primary")) return "primary";
-  if (roles.includes("secondary")) return "secondary";
-  if (roles.includes("stabilizer")) return "stabilizer";
-  return "idle";
+type RegionShape = { d: string };
+type RegionDefinition = { id: AvatarRegionId; shapes: RegionShape[] };
+type ResolvedTarget = { displayNames: string[]; role: AvatarHighlightRole };
+
+const ROLE_PRIORITY: Record<AvatarHighlightRole, number> = {
+  primary: 3,
+  secondary: 2,
+  stabilizer: 1,
+};
+
+const FRONT_REGIONS: RegionDefinition[] = [
+  { id: "delts_front", shapes: [{ d: "M102 137c10-13 19-17 28-15l-8 35-21 12z" }, { d: "M198 137c-10-13-19-17-28-15l8 35 21 12z" }] },
+  { id: "delts_side", shapes: [{ d: "M91 143c8-10 13-12 20-13l-10 39-14-3z" }, { d: "M209 143c-8-10-13-12-20-13l10 39 14-3z" }] },
+  { id: "chest_upper", shapes: [{ d: "M126 123c8-7 15-10 23-10v30h-28z" }, { d: "M174 123c-8-7-15-10-23-10v30h28z" }] },
+  { id: "chest_mid", shapes: [{ d: "M121 146h28v31l-31-4z" }, { d: "M179 146h-28v31l31-4z" }] },
+  { id: "chest_lower", shapes: [{ d: "M118 176l31 4v22c-13-1-24-7-34-16z" }, { d: "M182 176l-31 4v22c13-1 24-7 34-16z" }] },
+  { id: "biceps", shapes: [{ d: "M83 174c8-7 16-7 22 0l-8 55-20-4z" }, { d: "M217 174c-8-7-16-7-22 0l8 55 20-4z" }] },
+  { id: "brachialis", shapes: [{ d: "M77 224l20 5-7 23-18-5z" }, { d: "M223 224l-20 5 7 23 18-5z" }] },
+  { id: "forearms", shapes: [{ d: "M71 249l19 5-17 71-23-5z" }, { d: "M229 249l-19 5 17 71 23-5z" }] },
+  { id: "abs", shapes: [{ d: "M136 205h13v88h-18l-5-74z" }, { d: "M164 205h-13v88h18l5-74z" }] },
+  { id: "obliques", shapes: [{ d: "M113 196l12 20 5 75-19-16z" }, { d: "M187 196l-12 20-5 75 19-16z" }] },
+  { id: "hip_flexors", shapes: [{ d: "M115 278l34 17-1 35-39-7z" }, { d: "M185 278l-34 17 1 35 39-7z" }] },
+  { id: "abductors", shapes: [{ d: "M106 331l37 4-8 65-36-10z" }, { d: "M194 331l-37 4 8 65 36-10z" }] },
+  { id: "quads", shapes: [{ d: "M103 350l39-8-11 119-38-4z" }, { d: "M197 350l-39-8 11 119 38-4z" }] },
+  { id: "adductors", shapes: [{ d: "M142 345h7l-4 105-17-37z" }, { d: "M158 345h-7l4 105 17-37z" }] },
+  { id: "calves", shapes: [{ d: "M96 458l35 6-8 43h-26z" }, { d: "M204 458l-35 6 8 43h26z" }] },
+];
+
+const BACK_REGIONS: RegionDefinition[] = [
+  { id: "traps", shapes: [{ d: "M129 105l20 15-20 38-21-22z" }, { d: "M171 105l-20 15 20 38 21-22z" }] },
+  { id: "delts_rear", shapes: [{ d: "M103 134c11-12 20-14 29-11l-8 38-25 8z" }, { d: "M197 134c-11-12-20-14-29-11l8 38 25 8z" }] },
+  { id: "upper_back", shapes: [{ d: "M127 135l22-12v61l-36-17z" }, { d: "M173 135l-22-12v61l36-17z" }] },
+  { id: "lats", shapes: [{ d: "M112 170l37 17-9 79-32-33z" }, { d: "M188 170l-37 17 9 79 32-33z" }] },
+  { id: "spinal_erectors", shapes: [{ d: "M140 184h9v106l-18-8z" }, { d: "M160 184h-9v106l18-8z" }] },
+  { id: "triceps", shapes: [{ d: "M82 170c8-7 17-7 23 0l-8 68-22-5z" }, { d: "M218 170c-8-7-17-7-23 0l8 68 22-5z" }] },
+  { id: "forearms", shapes: [{ d: "M74 239l23 5-24 81-23-5z" }, { d: "M226 239l-23 5 24 81 23-5z" }] },
+  { id: "glutes", shapes: [{ d: "M108 291l41 4v49l-45-8z" }, { d: "M192 291l-41 4v49l45-8z" }] },
+  { id: "hamstrings", shapes: [{ d: "M103 345l40 3-12 111-38-3z" }, { d: "M197 345l-40 3 12 111 38-3z" }] },
+  { id: "calves", shapes: [{ d: "M96 458l35 6-8 43h-26z" }, { d: "M204 458l-35 6 8 43h26z" }] },
+];
+
+function resolveTargets(targets: AvatarTarget[]) {
+  const resolved = new Map<AvatarRegionId, ResolvedTarget>();
+  for (const target of targets) {
+    for (const regionId of target.regionIds) {
+      if (!isAvatarRegionId(regionId)) continue;
+      const current = resolved.get(regionId);
+      const displayNames = current?.displayNames.includes(target.displayName)
+        ? current.displayNames
+        : [...(current?.displayNames ?? []), target.displayName];
+      const role = !current || ROLE_PRIORITY[target.role] > ROLE_PRIORITY[current.role]
+        ? target.role
+        : current.role;
+      resolved.set(regionId, { displayNames, role });
+    }
+  }
+  return resolved;
 }
 
-function Region({
-  id,
+function onRegionKeyDown(event: KeyboardEvent<SVGGElement>, select: () => void) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    select();
+  }
+}
+
+function MuscleRegions({
+  definitions,
+  interactiveRegionIds,
+  onSelect,
   targets,
-  ...shape
-}: React.SVGProps<SVGPathElement> & { id: string; targets: AvatarTarget[] }) {
+}: {
+  definitions: RegionDefinition[];
+  interactiveRegionIds: ReadonlySet<AvatarRegionId>;
+  onSelect: (regionId: AvatarRegionId) => void;
+  targets: Map<AvatarRegionId, ResolvedTarget>;
+}) {
   return (
-    <path
-      {...shape}
-      aria-hidden="true"
-      className={`avatar-region avatar-region--${roleFor(id, targets)}`}
-      data-muscle-id={id}
-      vectorEffect="non-scaling-stroke"
-    />
+    <g data-layer="muscle-regions">
+      {definitions.map(({ id, shapes }) => {
+        const target = targets.get(id);
+        const interactive = Boolean(target) && interactiveRegionIds.has(id);
+        const select = () => onSelect(id);
+        return (
+          <g
+            {...(interactive
+              ? {
+                  "aria-label": `${AVATAR_REGION_LABELS[id]}: ${target?.role ?? "idle"} target`,
+                  onClick: select,
+                  onFocus: select,
+                  onKeyDown: (event: KeyboardEvent<SVGGElement>) => onRegionKeyDown(event, select),
+                  role: "button",
+                  tabIndex: 0,
+                }
+              : { "aria-hidden": true })}
+            className={`avatar-region avatar-region--${target?.role ?? "idle"}`}
+            data-highlight-cue={target?.role === "secondary" ? "dashed" : target?.role === "stabilizer" ? "dotted" : target?.role === "primary" ? "solid-bold" : "none"}
+            data-region-id={id}
+            key={id}
+            onMouseEnter={target ? select : undefined}
+          >
+            {shapes.map((shape, index) => (
+              <path data-region-id={id} d={shape.d} key={`${id}-${index}`} vectorEffect="non-scaling-stroke" />
+            ))}
+          </g>
+        );
+      })}
+    </g>
   );
 }
 
-export function Avatar({ targets = [], view = "both" }: AvatarProps) {
-  const viewBox = view === "front" ? "0 0 320 560" : view === "back" ? "360 0 320 560" : "0 0 680 560";
+function MaleBase({ view }: { view: "front" | "back" }) {
   return (
-    <figure className={`avatar avatar--${view}`} data-avatar-view={view}>
-      <svg
-        aria-describedby="avatar-description"
-        aria-labelledby="avatar-title"
-        className="avatar__art"
-        role="img"
-        viewBox={viewBox}
+    <g data-base="male" data-layer="base">
+      <circle className="avatar__skin" cx="150" cy="70" r="37" />
+      <path className="avatar__skin" d="M128 101c-9 14-17 24-35 30l20 213h74l20-213c-18-6-26-16-35-30z" />
+      <path className="avatar__skin" d="M100 130c-20 9-31 28-36 56L43 325c-3 19 23 24 29 6l37-123z" />
+      <path className="avatar__skin" d="M200 130c20 9 31 28 36 56l21 139c3 19-23 24-29 6l-37-123z" />
+      <path className="avatar__skin" d="M116 326L96 499c-2 20 25 24 31 5l23-130 23 130c6 19 33 15 31-5l-20-173z" />
+      <path className="avatar__outline" d={view === "front" ? "M137 71h5m16 0h5m-20 17c5 3 9 4 14 0" : "M150 108v180"} />
+    </g>
+  );
+}
+
+function FemaleBase({ view }: { view: "front" | "back" }) {
+  return (
+    <g data-base="female" data-layer="base">
+      <ellipse className="avatar__skin" cx="150" cy="70" rx="34" ry="38" />
+      <path className="avatar__skin" d="M130 102c-8 13-17 21-32 28l16 120-13 94h98l-13-94 16-120c-15-7-24-15-32-28-12 8-28 8-40 0z" />
+      <path className="avatar__skin" d="M101 130c-18 9-27 29-32 55L47 324c-3 18 21 23 27 6l35-122z" />
+      <path className="avatar__skin" d="M199 130c18 9 27 29 32 55l22 139c3 18-21 23-27 6l-35-122z" />
+      <path className="avatar__skin" d="M108 326L94 499c-2 20 25 24 31 5l25-132 25 132c6 19 33 15 31-5l-14-173z" />
+      <path className="avatar__outline" d={view === "front" ? "M137 71h5m16 0h5m-19 17c4 3 8 3 12 0" : "M150 108v180"} />
+    </g>
+  );
+}
+
+function HairLayer({ appearance, view }: { appearance: AvatarAppearance; view: "front" | "back" }) {
+  if (appearance.hairstyle === "bald") return null;
+  const longHair = ["locs", "braids", "bun", "bob", "long_straight"].includes(appearance.hairstyle);
+  return (
+    <g className={`avatar__hair avatar__hair--${appearance.hairstyle}`} data-layer="hair">
+      <path d={longHair ? "M114 69c0-31 15-51 36-51s37 20 37 51l-5 70-18-30h-28l-18 30z" : "M115 65c0-25 14-43 35-43 22 0 37 18 37 43-9-12-19-17-36-18-16 0-27 5-36 18z"} />
+      {appearance.hairstyle === "bun" ? <circle cx="150" cy="16" r="17" /> : null}
+      {view === "front" && appearance.hairstyle === "short_coils" ? (
+        <g className="avatar__hair-detail"><circle cx="127" cy="39" r="5" /><circle cx="143" cy="32" r="6" /><circle cx="160" cy="33" r="6" /><circle cx="176" cy="41" r="5" /></g>
+      ) : null}
+    </g>
+  );
+}
+
+function OutfitLayer({ appearance, view }: { appearance: AvatarAppearance; view: "front" | "back" }) {
+  return (
+    <g className={`avatar__outfit avatar__outfit--${appearance.outfit_style}`} data-layer="outfit">
+      {appearance.outfit_style !== "tank_and_shorts" ? <path d="M104 132l25-18h42l25 18-12 116-68 0z" /> : null}
+      {appearance.outfit_style === "tank_and_shorts" ? <path d="M126 118h48l13 122-74 0z" /> : null}
+      <path d="M108 313h84l10 58-44-5-8-26-8 26-44 5z" />
+      <path className="avatar__outfit-trim" d={`M109 318h82M150 319v21${view === "front" ? "M132 126h36" : ""}`} />
+    </g>
+  );
+}
+
+function AccessoryLayer({ accessory }: { accessory: AvatarAppearance["accessory"] }) {
+  if (accessory === "none") return null;
+  return (
+    <g className="avatar__accessory" data-accessory={accessory} data-layer="accessory">
+      {accessory === "glasses" ? <path d="M123 66h22v14h-22zM155 66h22v14h-22zM145 71h10" /> : null}
+      {accessory === "headband" ? <path d="M117 53q33-13 66 0l-2 9q-31-11-62 0z" /> : null}
+      {accessory === "wristbands" ? <path d="M61 286l20 4-4 17-20-4zM239 286l-20 4 4 17 20-4z" /> : null}
+    </g>
+  );
+}
+
+export function Aura({ enabled, style, tier }: { enabled: boolean; style: AvatarAppearance["aura_style"]; tier: AuraTier }) {
+  if (!enabled || tier === "none") return null;
+  return (
+    <g aria-hidden="true" className={`avatar-aura avatar-aura--${tier} avatar-aura--${style}`} data-aura-tier={tier} data-layer="aura">
+      <ellipse className="avatar-aura__glow" cx="150" cy="282" rx="112" ry="246" />
+      {style === "rings" ? <><ellipse className="avatar-aura__ring avatar-aura__ring--one" cx="150" cy="290" rx="125" ry="230" /><ellipse className="avatar-aura__ring avatar-aura__ring--two" cx="150" cy="290" rx="105" ry="250" /></> : null}
+      {style === "sparks" ? <><path className="avatar-aura__spark avatar-aura__spark--one" d="M38 145l8-18 5 20-9 15z" /><path className="avatar-aura__spark avatar-aura__spark--two" d="M256 302l9-20 4 22-10 14z" /></> : null}
+    </g>
+  );
+}
+
+function AppearanceLayers({ appearance, view }: { appearance: AvatarAppearance; view: "front" | "back" }) {
+  return (
+    <>
+      {appearance.base_presentation === "male" ? <MaleBase view={view} /> : <FemaleBase view={view} />}
+      <OutfitLayer appearance={appearance} view={view} />
+      <HairLayer appearance={appearance} view={view} />
+      <AccessoryLayer accessory={appearance.accessory} />
+    </>
+  );
+}
+
+function AvatarView({
+  appearance,
+  auraTier,
+  definitions,
+  interactiveRegionIds,
+  label,
+  onSelect,
+  targets,
+  transform,
+  view,
+}: {
+  appearance: AvatarAppearance;
+  auraTier: AuraTier;
+  definitions: RegionDefinition[];
+  interactiveRegionIds: ReadonlySet<AvatarRegionId>;
+  label: string;
+  onSelect: (regionId: AvatarRegionId) => void;
+  targets: Map<AvatarRegionId, ResolvedTarget>;
+  transform: string;
+  view: "front" | "back";
+}) {
+  return (
+    <g className="avatar__view" data-view={view} transform={transform}>
+      <text className="avatar__view-label" x="150" y="24">{label}</text>
+      <ellipse className="avatar__ground" cx="150" cy="520" rx="92" ry="12" />
+      <Aura enabled={appearance.aura_enabled} style={appearance.aura_style} tier={auraTier} />
+      <g className={appearance.base_presentation === "female" ? "avatar__figure avatar__figure--female" : "avatar__figure"}>
+        <AppearanceLayers appearance={appearance} view={view} />
+        <MuscleRegions definitions={definitions} interactiveRegionIds={interactiveRegionIds} onSelect={onSelect} targets={targets} />
+      </g>
+    </g>
+  );
+}
+
+type SemanticViewProps = Omit<Parameters<typeof AvatarView>[0], "definitions" | "label" | "transform" | "view">;
+
+function FrontView(props: SemanticViewProps) {
+  return <AvatarView {...props} definitions={FRONT_REGIONS} label="FRONT" transform="translate(10 10)" view="front" />;
+}
+
+function BackView(props: SemanticViewProps) {
+  return <AvatarView {...props} definitions={BACK_REGIONS} label="BACK" transform="translate(370 10)" view="back" />;
+}
+
+export function RegionLegend() {
+  return (
+    <ul aria-label="Muscle highlight legend" className="avatar-legend">
+      <li><span aria-hidden="true" className="avatar-legend__key avatar-legend__key--primary" />Primary · bold border and glow</li>
+      <li><span aria-hidden="true" className="avatar-legend__key avatar-legend__key--secondary" />Secondary · dashed border</li>
+      <li><span aria-hidden="true" className="avatar-legend__key avatar-legend__key--stabilizer" />Stabilizer · dotted outline</li>
+    </ul>
+  );
+}
+
+export function AccessibleRegionList({ targets }: { targets: AvatarTarget[] }) {
+  if (targets.length === 0) return <p className="muted-copy">Recovery day · no planned targets.</p>;
+  return (
+    <ul aria-label="Muscles targeted today" className="avatar-targets">
+      {targets.map((target, index) => (
+        <li className={`avatar-target avatar-target--${target.role}`} key={`${target.displayName}-${target.role}-${index}`}>
+          <span aria-hidden="true" className="avatar-target__cue" />
+          <span>{target.displayName}</span>
+          <small>{target.role}</small>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function AvatarFrame({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`avatar-frame ${className}`.trim()}>{children}</div>;
+}
+
+export function Avatar({
+  appearance = DEFAULT_AVATAR_APPEARANCE,
+  auraTier = "none",
+  reducedMotion = false,
+  targets = [],
+  view = "both",
+}: AvatarProps) {
+  const titleId = useId();
+  const descriptionId = useId();
+  const [selectedRegion, setSelectedRegion] = useState<AvatarRegionId>();
+  const resolvedTargets = useMemo(() => resolveTargets(targets), [targets]);
+  const frontInteractive = useMemo<Set<AvatarRegionId>>(
+    () => new Set(FRONT_REGION_IDS.filter((id) => resolvedTargets.has(id))),
+    [resolvedTargets],
+  );
+  const backInteractive = useMemo<Set<AvatarRegionId>>(
+    () => new Set(BACK_REGION_IDS.filter((id) => resolvedTargets.has(id) && (view !== "both" || !frontInteractive.has(id)))),
+    [frontInteractive, resolvedTargets, view],
+  );
+  const selectedTarget = selectedRegion ? resolvedTargets.get(selectedRegion) : undefined;
+  const viewBox = view === "front" ? "0 0 320 560" : view === "back" ? "360 0 320 560" : "0 0 680 560";
+  const baseLabel = appearance.base_presentation === "male" ? "male" : "female";
+
+  return (
+    <AvatarFrame className={`avatar avatar--${view} avatar--background-${appearance.background}`}>
+      <figure
+        data-avatar-view={view}
+        data-base-presentation={appearance.base_presentation}
+        data-hair-color={appearance.hair_color}
+        data-outfit-palette={appearance.outfit_palette}
+        data-reduced-motion={reducedMotion ? "true" : "false"}
+        data-skin-tone={appearance.skin_tone}
       >
-        <title id="avatar-title">Front and back muscle avatar</title>
-        <desc id="avatar-description">
-          Original illustrated Black male avatar. Purple regions show the muscles targeted by the current
-          workout; the text list below gives the same information.
-        </desc>
-
-        <defs>
-          <linearGradient id="avatar-skin" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0" stopColor="#6f3f2d" />
-            <stop offset="1" stopColor="#3a201a" />
-          </linearGradient>
-          <linearGradient id="avatar-shorts" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="#241735" />
-            <stop offset="1" stopColor="#110b1b" />
-          </linearGradient>
-          <filter id="avatar-glow" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="7" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {view !== "back" ? <g className="avatar__view" data-view="front" transform="translate(10 10)">
-          <text className="avatar__view-label" x="150" y="24">FRONT</text>
-          <ellipse className="avatar__ground" cx="150" cy="520" rx="92" ry="12" />
-
-          <g data-layer="skin">
-            <circle className="avatar__skin" cx="150" cy="70" r="37" />
-            <path className="avatar__skin" d="M128 101c-9 14-17 24-35 30l20 213h74l20-213c-18-6-26-16-35-30z" />
-            <path className="avatar__skin" d="M100 130c-20 9-31 28-36 56l-21 139c-3 19 23 24 29 6l37-123z" />
-            <path className="avatar__skin" d="M200 130c20 9 31 28 36 56l21 139c3 19-23 24-29 6l-37-123z" />
-            <path className="avatar__skin" d="M116 326l-20 173c-2 20 25 24 31 5l23-130 23 130c6 19 33 15 31-5l-20-173z" />
-          </g>
-
-          <g data-layer="hair">
-            <path className="avatar__hair" d="M115 65c0-25 14-43 35-43 22 0 37 18 37 43-9-12-19-17-36-18-16 0-27 5-36 18z" />
-            <circle className="avatar__hair-detail" cx="127" cy="39" r="5" />
-            <circle className="avatar__hair-detail" cx="143" cy="32" r="6" />
-            <circle className="avatar__hair-detail" cx="160" cy="33" r="6" />
-            <circle className="avatar__hair-detail" cx="176" cy="41" r="5" />
-          </g>
-
-          <g data-layer="highlights">
-            <Region id="delts_front" targets={targets} d="M102 137c10-13 19-17 28-15l-8 35-21 12z" />
-            <Region id="delts_front" targets={targets} d="M198 137c-10-13-19-17-28-15l8 35 21 12z" />
-            <Region id="delts_side" targets={targets} d="M91 143c8-10 13-12 20-13l-10 39-14-3z" />
-            <Region id="delts_side" targets={targets} d="M209 143c-8-10-13-12-20-13l10 39 14-3z" />
-            <Region id="chest_upper" targets={targets} d="M126 123c8-7 15-10 23-10v30h-28z" />
-            <Region id="chest_upper" targets={targets} d="M174 123c-8-7-15-10-23-10v30h28z" />
-            <Region id="chest_mid" targets={targets} d="M121 146h28v31l-31-4z" />
-            <Region id="chest_mid" targets={targets} d="M179 146h-28v31l31-4z" />
-            <Region id="chest_lower" targets={targets} d="M118 176l31 4v22c-13-1-24-7-34-16z" />
-            <Region id="chest_lower" targets={targets} d="M182 176l-31 4v22c13-1 24-7 34-16z" />
-            <Region id="biceps" targets={targets} d="M83 174c8-7 16-7 22 0l-8 55-20-4z" />
-            <Region id="biceps" targets={targets} d="M217 174c-8-7-16-7-22 0l8 55 20-4z" />
-            <Region id="brachialis" targets={targets} d="M77 224l20 5-7 23-18-5z" />
-            <Region id="brachialis" targets={targets} d="M223 224l-20 5 7 23 18-5z" />
-            <Region id="forearms" targets={targets} d="M71 249l19 5-17 71-23-5z" />
-            <Region id="forearms" targets={targets} d="M229 249l-19 5 17 71 23-5z" />
-            <Region id="abs" targets={targets} d="M136 205h13v88h-18l-5-74z" />
-            <Region id="abs" targets={targets} d="M164 205h-13v88h18l5-74z" />
-            <Region id="obliques" targets={targets} d="M113 196l12 20 5 75-19-16z" />
-            <Region id="obliques" targets={targets} d="M187 196l-12 20-5 75 19-16z" />
-            <Region id="hip_flexors" targets={targets} d="M115 278l34 17-1 35-39-7z" />
-            <Region id="hip_flexors" targets={targets} d="M185 278l-34 17 1 35 39-7z" />
-            <Region id="abductors" targets={targets} d="M106 331l37 4-8 65-36-10z" />
-            <Region id="abductors" targets={targets} d="M194 331l-37 4 8 65 36-10z" />
-            <Region id="quads" targets={targets} d="M103 350l39-8-11 119-38-4z" />
-            <Region id="quads" targets={targets} d="M197 350l-39-8 11 119 38-4z" />
-            <Region id="adductors" targets={targets} d="M142 345h7l-4 105-17-37z" />
-            <Region id="adductors" targets={targets} d="M158 345h-7l4 105 17-37z" />
-            <Region id="calves" targets={targets} d="M96 458l35 6-8 43-26 0z" />
-            <Region id="calves" targets={targets} d="M204 458l-35 6 8 43 26 0z" />
-          </g>
-
-          <g data-layer="clothing">
-            <path className="avatar__shorts" d="M108 313h84l10 58-44-5-8-26-8 26-44 5z" />
-            <path className="avatar__trim" d="M109 318h82M150 319v21" />
-          </g>
-          <g data-layer="outline">
-            <path className="avatar__outline" d="M128 101c-9 14-17 24-35 30-20 9-31 28-36 56L43 325c-3 19 23 24 29 6l17-78 9 118-2 128c-2 20 25 24 31 5l23-130 23 130c6 19 33 15 31-5l-2-128 9-118 17 78c6 18 32 13 29-6l-14-138c-5-28-16-47-36-56-18-6-26-16-35-30" />
-            <path className="avatar__face" d="M137 71h5m16 0h5m-20 17c5 3 9 4 14 0" />
-          </g>
-        </g> : null}
-
-        {view !== "front" ? <g className="avatar__view" data-view="back" transform="translate(370 10)">
-          <text className="avatar__view-label" x="150" y="24">BACK</text>
-          <ellipse className="avatar__ground" cx="150" cy="520" rx="92" ry="12" />
-          <g data-layer="skin">
-            <circle className="avatar__skin" cx="150" cy="70" r="37" />
-            <path className="avatar__skin" d="M128 101c-9 14-17 24-35 30l20 213h74l20-213c-18-6-26-16-35-30z" />
-            <path className="avatar__skin" d="M100 130c-20 9-31 28-36 56l-21 139c-3 19 23 24 29 6l37-123z" />
-            <path className="avatar__skin" d="M200 130c20 9 31 28 36 56l21 139c3 19-23 24-29 6l-37-123z" />
-            <path className="avatar__skin" d="M116 326l-20 173c-2 20 25 24 31 5l23-130 23 130c6 19 33 15 31-5l-20-173z" />
-          </g>
-          <g data-layer="hair">
-            <path className="avatar__hair" d="M115 65c0-25 14-43 35-43 22 0 37 18 37 43-9-12-19-17-36-18-16 0-27 5-36 18z" />
-          </g>
-          <g data-layer="highlights">
-            <Region id="traps" targets={targets} d="M129 105l20 15-20 38-21-22z" />
-            <Region id="traps" targets={targets} d="M171 105l-20 15 20 38 21-22z" />
-            <Region id="delts_rear" targets={targets} d="M103 134c11-12 20-14 29-11l-8 38-25 8z" />
-            <Region id="delts_rear" targets={targets} d="M197 134c-11-12-20-14-29-11l8 38 25 8z" />
-            <Region id="upper_back" targets={targets} d="M127 135l22-12v61l-36-17z" />
-            <Region id="upper_back" targets={targets} d="M173 135l-22-12v61l36-17z" />
-            <Region id="lats" targets={targets} d="M112 170l37 17-9 79-32-33z" />
-            <Region id="lats" targets={targets} d="M188 170l-37 17 9 79 32-33z" />
-            <Region id="spinal_erectors" targets={targets} d="M140 184h9v106l-18-8z" />
-            <Region id="spinal_erectors" targets={targets} d="M160 184h-9v106l18-8z" />
-            <Region id="triceps" targets={targets} d="M82 170c8-7 17-7 23 0l-8 68-22-5z" />
-            <Region id="triceps" targets={targets} d="M218 170c-8-7-17-7-23 0l8 68 22-5z" />
-            <Region id="forearms" targets={targets} d="M74 239l23 5-24 81-23-5z" />
-            <Region id="forearms" targets={targets} d="M226 239l-23 5 24 81 23-5z" />
-            <Region id="glutes" targets={targets} d="M108 291l41 4v49l-45-8z" />
-            <Region id="glutes" targets={targets} d="M192 291l-41 4v49l45-8z" />
-            <Region id="hamstrings" targets={targets} d="M103 345l40 3-12 111-38-3z" />
-            <Region id="hamstrings" targets={targets} d="M197 345l-40 3 12 111 38-3z" />
-            <Region id="calves" targets={targets} d="M96 458l35 6-8 43-26 0z" />
-            <Region id="calves" targets={targets} d="M204 458l-35 6 8 43 26 0z" />
-          </g>
-          <g data-layer="clothing">
-            <path className="avatar__shorts" d="M108 313h84l10 58-44-5-8-26-8 26-44 5z" />
-            <path className="avatar__trim" d="M109 318h82M150 319v21" />
-          </g>
-          <g data-layer="outline">
-            <path className="avatar__outline" d="M128 101c-9 14-17 24-35 30-20 9-31 28-36 56L43 325c-3 19 23 24 29 6l17-78 9 118-2 128c-2 20 25 24 31 5l23-130 23 130c6 19 33 15 31-5l-2-128 9-118 17 78c6 18 32 13 29-6l-14-138c-5-28-16-47-36-56-18-6-26-16-35-30" />
-            <path className="avatar__outline" d="M150 108v180" />
-          </g>
-        </g> : null}
-      </svg>
-
-      <figcaption className="avatar__caption">
-        {targets.length > 0 ? (
-          <ul aria-label="Muscles targeted today" className="muscle-targets">
-            {targets.map((target) => (
-              <li className={`muscle-chip muscle-chip--${target.role}`} key={target.displayName}>
-                <span aria-hidden="true" className="muscle-chip__dot" />
-                <span>{target.displayName}</span>
-                <small>{target.role}</small>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="muted-copy">Recovery day · no planned targets.</p>
-        )}
-      </figcaption>
-    </figure>
+        <svg aria-describedby={descriptionId} aria-labelledby={titleId} className="avatar__art" role="img" viewBox={viewBox}>
+          <title id={titleId}>{view === "both" ? `Front and back ${baseLabel} muscle avatar` : `${view} ${baseLabel} muscle avatar`}</title>
+          <desc id={descriptionId}>Layered original avatar artwork. Highlight roles use border patterns and the text list below in addition to color.</desc>
+          {view !== "back" ? <FrontView appearance={appearance} auraTier={auraTier} interactiveRegionIds={frontInteractive} onSelect={setSelectedRegion} targets={resolvedTargets} /> : null}
+          {view !== "front" ? <BackView appearance={appearance} auraTier={auraTier} interactiveRegionIds={backInteractive} onSelect={setSelectedRegion} targets={resolvedTargets} /> : null}
+        </svg>
+        <figcaption className="avatar__caption">
+          {selectedRegion && selectedTarget ? (
+            <p className="avatar__region-callout" role="status"><strong>{AVATAR_REGION_LABELS[selectedRegion]}</strong> · {selectedTarget.role} · {selectedTarget.displayNames.join(", ")}</p>
+          ) : <p className="avatar__interaction-hint">Focus or tap a highlighted region for details.</p>}
+          <RegionLegend />
+          <AccessibleRegionList targets={targets} />
+        </figcaption>
+      </figure>
+    </AvatarFrame>
   );
 }
