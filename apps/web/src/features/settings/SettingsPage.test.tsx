@@ -74,7 +74,7 @@ function renderPage(isAuthenticated: boolean) {
 
 function mockSettingsReads() {
   return vi.spyOn(apiClient, "GET").mockImplementation(async (path) => {
-    if (path === "/profile") return { data: profile, response: new Response() };
+    if (path === "/me/profile") return { data: profile, response: new Response() };
     if (path === "/settings") return { data: settings, response: new Response() };
     return { data: splits, response: new Response() };
   });
@@ -102,7 +102,7 @@ describe("SettingsPage", () => {
   it("saves profile, training, hydration, privacy, and motion settings", async () => {
     mockSettingsReads();
     const patch = vi.spyOn(apiClient, "PATCH").mockImplementation(async (path) => {
-      if (path === "/profile") {
+      if (path === "/me/profile") {
         return { data: { ...profile, display_name: "Brandan B." }, response: new Response() };
       }
       return {
@@ -130,7 +130,7 @@ describe("SettingsPage", () => {
 
     await waitFor(() => expect(patch).toHaveBeenCalledTimes(2));
     expect(patch).toHaveBeenCalledWith(
-      "/profile",
+      "/me/profile",
       expect.objectContaining({ body: expect.objectContaining({ display_name: "Brandan B." }) }),
     );
     expect(patch).toHaveBeenCalledWith(

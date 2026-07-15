@@ -67,7 +67,7 @@ describe("LibraryPage", () => {
     expect(screen.getByRole("list", { name: "Muscles targeted today" })).toHaveTextContent(
       "Upper Chest",
     );
-    expect(container.querySelector('[data-muscle-id="chest_upper"]')).toHaveClass(
+    expect(container.querySelector('[data-region-id="chest_upper"]')).toHaveClass(
       "avatar-region--primary",
     );
 

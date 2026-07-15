@@ -9,7 +9,7 @@ import { applyMotionPreference } from "../../app/motionPreference";
 import { useAuth } from "../../auth/context";
 import { ErrorState, LoadingState } from "../../ui/AsyncState";
 
-type Profile = components["schemas"]["AdminProfile"];
+type Profile = components["schemas"]["Profile"];
 type Settings = components["schemas"]["Settings"];
 type Split = components["schemas"]["Split"];
 type Visibility = components["schemas"]["Visibility"];
@@ -29,7 +29,7 @@ const visibilityOptions: { key: VisibilityKey; label: string; hint: string }[] =
 
 async function loadSettingsPage(): Promise<{ profile: Profile; settings: Settings; splits: Split[] }> {
   const [profile, settings, splits] = await Promise.all([
-    apiClient.GET("/profile"),
+    apiClient.GET("/me/profile"),
     apiClient.GET("/settings"),
     apiClient.GET("/splits"),
   ]);
@@ -93,7 +93,7 @@ function SettingsForm({ profile, settings, splits }: { profile: Profile; setting
     const reducedMotion = motion === "system" ? null : motion === "reduce";
     try {
       const [profileResult, settingsResult] = await Promise.all([
-        apiClient.PATCH("/profile", {
+        apiClient.PATCH("/me/profile", {
           body: {
             display_name: displayName,
             height_cm: height === "" ? null : Number(height),

@@ -1,33 +1,46 @@
 import "@testing-library/jest-dom/vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { apiClient } from "./api/client";
+import { clearAccessToken, setAccessToken } from "./api/tokenStore";
 import { App } from "./App";
 import { EmptyState, ErrorState, LoadingState } from "./ui/AsyncState";
 
 describe("App shell", () => {
-  it("renders accessible desktop and mobile navigation", () => {
+  it("renders the guest landing page without the member shell", () => {
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: "Ready for today" })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Mobile navigation" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Skip to main content" })).toHaveAttribute(
-      "href",
-      "#main-content",
-    );
+    expect(screen.getByRole("heading", { name: "Progress feels better when the plan can move with you." })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Try demo" })).toHaveAttribute("href", "#/demo");
+    expect(screen.queryByRole("navigation", { name: "Primary navigation" })).not.toBeInTheDocument();
   });
 
-  it("navigates with hash-safe links", () => {
+  it("restores a member and routes inside the accessible shell", async () => {
+    setAccessToken("member-token");
+    window.location.hash = "#/journal";
+    vi.spyOn(apiClient, "GET").mockImplementation(async (path) => {
+      if (path === "/auth/me") return { data: { id: "user-1", email: "member@example.com", display_name: "Alex", role: "member", account_status: "active", timezone: "America/Toronto", preferred_units: "metric" }, response: new Response() } as never;
+      if (path === "/today") return { data: { effective_day: null, schedule_version: 1 }, response: new Response() } as never;
+      return { data: [], response: new Response() } as never;
+    });
     render(<App />);
 
-    fireEvent.click(screen.getAllByRole("link", { name: "Journal" })[0]!);
-    expect(screen.getByRole("heading", { name: "Journal" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Journal" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Mobile navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Skip to main content" })).toHaveAttribute("href", "#main-content");
 
     fireEvent.click(screen.getAllByRole("link", { name: "More" })[0]!);
     expect(screen.getByRole("heading", { name: "More" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /Library/ }).length).toBeGreaterThan(0);
   });
+});
+
+afterEach(() => {
+  clearAccessToken();
+  window.location.hash = "";
+  vi.restoreAllMocks();
 });
 
 describe("shared async states", () => {
