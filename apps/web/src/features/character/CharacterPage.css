@@ -59,6 +59,35 @@
   font-size: 0.82rem;
 }
 
+.character-skip {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+
+.character-skip label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.character-skip select {
+  min-width: 0;
+  padding: 0.55rem;
+  border: 1px solid rgb(196 154 255 / 24%);
+  border-radius: 0.55rem;
+  color: var(--text-strong);
+  background: var(--surface-1);
+  font: inherit;
+}
+
+.character-skip__message {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
 @media (max-width: 30rem) {
   .character-avatar-card,
   .character-profile-card,

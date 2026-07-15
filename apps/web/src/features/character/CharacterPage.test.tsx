@@ -139,6 +139,30 @@ describe("CharacterPage", () => {
     expect(await screen.findByText("Profile measurements saved.")).toHaveAttribute("role", "status");
   });
 
+  it("skips from Character using the same effective schedule command", async () => {
+    mockCharacterApi();
+    const post = vi.spyOn(apiClient, "POST").mockResolvedValue({
+      data: { ...today, schedule_version: 4, effective_day: null, exercise_plan: [] },
+      response: new Response(),
+    } as never);
+    renderPage();
+
+    fireEvent.change(await screen.findByLabelText("After skipping"), {
+      target: { value: "keep" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Skip today" }));
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith("/today/skip", {
+      params: { header: { "Idempotency-Key": expect.any(String) } },
+      body: {
+        local_date: "2026-07-15",
+        schedule_effect: "keep",
+        expected_version: 3,
+      },
+    }));
+    expect(await screen.findByText("Today skipped. Your plan and streak were updated.")).toBeInTheDocument();
+  });
+
   it("loads Appearance, previews both bases, and persists controlled settings through /me/avatar", async () => {
     mockCharacterApi();
     const patch = vi.spyOn(apiClient, "PATCH").mockResolvedValue({

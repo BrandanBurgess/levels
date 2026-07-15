@@ -115,8 +115,47 @@ function ProfileEditor({ profile }: { profile: Profile }) {
 }
 
 function CharacterOverviewPanel({ overview }: { overview: CharacterOverview }) {
+  const queryClient = useQueryClient();
   const [view, setView] = useState<"front" | "back">("front");
+  const [skipEffect, setSkipEffect] = useState<"advance" | "keep">("advance");
+  const [skipMessage, setSkipMessage] = useState("");
+  const [isSkipping, setIsSkipping] = useState(false);
   const { profile, settings, today } = overview;
+
+  async function skipToday(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSkipping(true);
+    setSkipMessage("");
+    try {
+      const result = await apiClient.POST("/today/skip", {
+        params: { header: { "Idempotency-Key": crypto.randomUUID() } },
+        body: {
+          local_date: today.local_date,
+          schedule_effect: skipEffect,
+          expected_version: today.schedule_version,
+        },
+      });
+      if (result.data) {
+        queryClient.setQueryData<CharacterOverview>(["character-overview"], (current) =>
+          current ? { ...current, today: result.data! } : current,
+        );
+        queryClient.setQueryData(["today"], result.data);
+        setSkipMessage("Today skipped. Your plan and streak were updated.");
+      } else if (result.response.status === 409) {
+        setSkipMessage("Your schedule changed elsewhere. We refreshed the latest plan.");
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["character-overview"] }),
+          queryClient.invalidateQueries({ queryKey: ["today"] }),
+        ]);
+      } else {
+        setSkipMessage("Today could not be skipped. Try again.");
+      }
+    } catch {
+      setSkipMessage("Today could not be skipped. Try again.");
+    } finally {
+      setIsSkipping(false);
+    }
+  }
 
   return (
     <div aria-labelledby="character-overview-tab" className="character-overview" id="character-overview-panel" role="tabpanel">
@@ -159,6 +198,23 @@ function CharacterOverviewPanel({ overview }: { overview: CharacterOverview }) {
             <p className="card-label">Effective plan</p>
             <strong>{today.effective_day?.name ?? "Recovery day"}</strong>
             <span>{today.exercise_plan.length} planned exercises</span>
+            <form className="character-skip" onSubmit={(event) => void skipToday(event)}>
+              <label>
+                After skipping
+                <select
+                  disabled={isSkipping}
+                  onChange={(event) => setSkipEffect(event.target.value as "advance" | "keep")}
+                  value={skipEffect}
+                >
+                  <option value="advance">Advance to the next workout</option>
+                  <option value="keep">Keep this workout next</option>
+                </select>
+              </label>
+              <button className="button button--quiet" disabled={isSkipping} type="submit">
+                {isSkipping ? "Skipping…" : "Skip today"}
+              </button>
+            </form>
+            {skipMessage ? <p aria-live="polite" className="character-skip__message">{skipMessage}</p> : null}
           </div>
           <p className="character-note">Built through consistent training. No ideals, comparisons, or body ratings.</p>
         </aside>
