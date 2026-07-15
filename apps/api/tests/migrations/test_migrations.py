@@ -266,6 +266,25 @@ def _insert_populated_v1_fixture(database_url: str) -> None:
     engine.dispose()
 
 
+def _insert_interrupted_v2_ddl_fixture(database_url: str, *, with_user_data: bool = False) -> None:
+    engine = create_engine(database_url)
+    with engine.begin() as connection:
+        for table_name in (
+            "users",
+            "avatar_settings",
+            "command_receipts",
+            "daily_exercise_plans",
+            "daily_plan_overrides",
+            "schedule_state",
+            "daily_exercise_plan_items",
+        ):
+            connection.exec_driver_sql(f'CREATE TABLE "{table_name}" (id TEXT)')
+        connection.exec_driver_sql('CREATE TABLE "_alembic_tmp_achievements" (id TEXT)')
+        if with_user_data:
+            connection.exec_driver_sql("INSERT INTO users (id) VALUES ('unsafe-to-drop')")
+    engine.dispose()
+
+
 def test_empty_database_upgrade_downgrade_and_reupgrade(tmp_path: Path) -> None:
     database_path = tmp_path / "migration-test.db"
     database_url = f"sqlite+pysqlite:///{database_path.as_posix()}"
@@ -392,6 +411,62 @@ def test_populated_v1_requires_identity_and_preserves_history(
         assert schedule["active_split_id"] == "00000000-0000-0000-0000-000000000002"
         assert schedule["cursor_split_day_id"] == "00000000-0000-0000-0000-000000000003"
 
+    engine.dispose()
+
+
+def test_populated_v1_recovers_known_empty_interrupted_remote_ddl(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "interrupted-v2.db"
+    database_url = f"sqlite+pysqlite:///{database_path.as_posix()}"
+    config = alembic_config(database_url)
+    command.upgrade(config, "a91f6028df36")
+    _insert_populated_v1_fixture(database_url)
+    _insert_interrupted_v2_ddl_fixture(database_url)
+    monkeypatch.setenv("BOOTSTRAP_OWNER_EMAIL", "owner@example.com")
+    monkeypatch.setenv("BOOTSTRAP_OWNER_PASSWORD_HASH", "$argon2id$fixture")
+
+    command.upgrade(config, "head")
+
+    engine = create_engine(database_url)
+    assert "_alembic_tmp_achievements" not in inspect(engine).get_table_names()
+    with engine.connect() as connection:
+        assert connection.exec_driver_sql(
+            "SELECT version_num FROM alembic_version"
+        ).scalar_one() == ("901a70c127bb")
+        assert connection.exec_driver_sql("SELECT COUNT(*) FROM users").scalar_one() == 2
+        assert (
+            connection.exec_driver_sql(
+                "SELECT display_name FROM profiles WHERE id = "
+                "'00000000-0000-0000-0000-000000000001'"
+            ).scalar_one()
+            == "Existing Member"
+        )
+    engine.dispose()
+
+
+def test_interrupted_remote_ddl_recovery_refuses_nonempty_v2_tables(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "unsafe-interrupted-v2.db"
+    database_url = f"sqlite+pysqlite:///{database_path.as_posix()}"
+    config = alembic_config(database_url)
+    command.upgrade(config, "a91f6028df36")
+    _insert_populated_v1_fixture(database_url)
+    _insert_interrupted_v2_ddl_fixture(database_url, with_user_data=True)
+    monkeypatch.setenv("BOOTSTRAP_OWNER_EMAIL", "owner@example.com")
+    monkeypatch.setenv("BOOTSTRAP_OWNER_PASSWORD_HASH", "$argon2id$fixture")
+
+    with pytest.raises(RuntimeError, match="contain data"):
+        command.upgrade(config, "head")
+
+    engine = create_engine(database_url)
+    with engine.connect() as connection:
+        assert connection.exec_driver_sql(
+            "SELECT version_num FROM alembic_version"
+        ).scalar_one() == ("a91f6028df36")
+        assert connection.exec_driver_sql("SELECT COUNT(*) FROM users").scalar_one() == 1
+        assert connection.exec_driver_sql("SELECT COUNT(*) FROM profiles").scalar_one() == 1
     engine.dispose()
 
 
