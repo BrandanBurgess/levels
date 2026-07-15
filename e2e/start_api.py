@@ -21,9 +21,11 @@ from levels_api.models import (
     Split,
     SplitDay,
     User,
+    UserRole,
+    UserStatus,
     WorkoutSession,
 )
-from levels_api.seed import seed_database
+from levels_api.seed import seed_database, seed_user_starter
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = REPO_ROOT / "apps" / "api"
@@ -40,10 +42,17 @@ def prepare_database(database_url: str) -> None:
     engine = create_database_engine(database_url)
     try:
         with Session(engine) as session, session.begin():
-            member = session.scalar(select(User).where(User.is_demo.is_(False)))
-            assert member is not None
-            member.email_normalized = E2E_EMAIL.strip().casefold()
-            member.password_hash = PasswordHasher().hash(E2E_PASSWORD)
+            member = User(
+                email_normalized=E2E_EMAIL.strip().casefold(),
+                password_hash=PasswordHasher().hash(E2E_PASSWORD),
+                status=UserStatus.ACTIVE,
+                role=UserRole.MEMBER,
+                token_version=0,
+                is_demo=False,
+            )
+            session.add(member)
+            session.flush()
+            seed_user_starter(session, member, display_name="Seeded E2E Member")
 
             active_split = session.scalar(
                 select(Split).where(
