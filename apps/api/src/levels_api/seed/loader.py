@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from levels_api.database import create_database_engine
 from levels_api.models import (
     AppSettings,
+    AvatarSettings,
     Exercise,
     ExerciseMuscle,
     MeasurementType,
@@ -22,16 +23,20 @@ from levels_api.models import (
     MuscleRole,
     PreferredUnits,
     Profile,
+    ScheduleState,
     Split,
     SplitDay,
     TemplateAlternative,
     TemplateItemType,
+    User,
+    UserRole,
+    UserStatus,
     VisibilitySettings,
     WorkoutTemplateItem,
 )
 
 DEFAULT_DATABASE_URL = "sqlite+pysqlite:///./levels-dev.db"
-PROFILE_KEY = "brandan"
+DEFAULT_SEED_EMAIL = "seed-owner@levels.local"
 
 SVG_REGIONS: dict[str, list[str]] = {
     "upper_chest": ["chest_upper"],
@@ -69,6 +74,7 @@ class SeedResult:
     splits: int
     profile_id: str
     active_split_slug: str
+    user_id: str
 
 
 def _stable_id(kind: str, key: str) -> str:
@@ -95,16 +101,23 @@ def _seed_muscle_groups(session: Session, catalog: dict[str, Any]) -> None:
 
 def _seed_exercises(session: Session, catalog: dict[str, Any]) -> None:
     session.flush()
-    session.execute(delete(ExerciseMuscle))
+    raw_exercises = cast(list[dict[str, Any]], catalog["exercises"])
+    seeded_exercise_ids = [str(raw["id"]) for raw in raw_exercises]
+    session.execute(
+        delete(ExerciseMuscle).where(ExerciseMuscle.exercise_id.in_(seeded_exercise_ids))
+    )
 
     for raw in cast(list[dict[str, Any]], catalog["exercises"]):
         slug = str(raw["slug"])
-        exercise = session.scalar(select(Exercise).where(Exercise.slug == slug))
+        exercise = session.scalar(
+            select(Exercise).where(Exercise.slug == slug, Exercise.owner_user_id.is_(None))
+        )
         if exercise is None:
             exercise = Exercise(id=str(raw["id"]), slug=slug)
             session.add(exercise)
 
         exercise.name = str(raw["name"])
+        exercise.owner_user_id = None
         exercise.aliases = [str(alias) for alias in cast(list[str], raw["aliases"])]
         exercise.variation_group = str(raw["variation_group"])
         exercise.movement_pattern = str(raw["movement_pattern"])
@@ -140,18 +153,25 @@ def _seed_exercises(session: Session, catalog: dict[str, Any]) -> None:
                 )
 
 
-def _seed_profile(session: Session, data: dict[str, Any]) -> tuple[Profile, AppSettings]:
+def _seed_profile(
+    session: Session,
+    data: dict[str, Any],
+    user: User,
+    display_name: str | None = None,
+    timezone: str | None = None,
+    preferred_units: PreferredUnits | None = None,
+) -> tuple[Profile, AppSettings]:
     raw_profile = cast(dict[str, Any], data["profile"])
-    profile = session.scalar(select(Profile).limit(1))
+    profile = session.scalar(select(Profile).where(Profile.user_id == user.id))
     if profile is None:
-        profile = Profile(id=_stable_id("profile", PROFILE_KEY))
+        profile = Profile(id=_stable_id("profile", user.id), user_id=user.id)
         session.add(profile)
 
-    profile.display_name = str(raw_profile["display_name"])
+    profile.display_name = display_name or str(raw_profile["display_name"])
     profile.height_cm = int(raw_profile["height_cm"])
     profile.body_weight_kg = Decimal(str(raw_profile["body_weight_kg"]))
-    profile.preferred_units = PreferredUnits(str(raw_profile["preferred_units"]))
-    profile.timezone = str(raw_profile["timezone"])
+    profile.preferred_units = preferred_units or PreferredUnits(str(raw_profile["preferred_units"]))
+    profile.timezone = timezone or str(raw_profile["timezone"])
     profile.avatar_variant = "brandan-original-v1"
     session.flush()
 
@@ -160,7 +180,7 @@ def _seed_profile(session: Session, data: dict[str, Any]) -> tuple[Profile, AppS
     )
     if visibility is None:
         visibility = VisibilitySettings(
-            id=_stable_id("visibility", PROFILE_KEY),
+            id=_stable_id("visibility", user.id),
             profile_id=profile.id,
             show_height=True,
             show_body_weight=False,
@@ -177,7 +197,7 @@ def _seed_profile(session: Session, data: dict[str, Any]) -> tuple[Profile, AppS
     raw_settings = cast(dict[str, Any], data["settings"])
     settings = session.scalar(select(AppSettings).where(AppSettings.profile_id == profile.id))
     if settings is None:
-        settings = AppSettings(id=_stable_id("settings", PROFILE_KEY), profile_id=profile.id)
+        settings = AppSettings(id=_stable_id("settings", user.id), profile_id=profile.id)
         session.add(settings)
     settings.week_starts_on = 1
     settings.default_water_goal_ml = int(raw_settings["default_water_goal_ml"])
@@ -206,10 +226,10 @@ def _recommended_weekday(is_active: bool, sequence: int) -> int | None:
 
 
 def _seed_template_items(
-    session: Session, split: Split, day: SplitDay, raw_day: dict[str, Any]
+    session: Session, user_id: str, split: Split, day: SplitDay, raw_day: dict[str, Any]
 ) -> None:
     for sequence, raw in enumerate(_items_for_day(raw_day), start=1):
-        item_id = _stable_id("template-item", f"{split.slug}:{day.sequence}:{sequence}")
+        item_id = _stable_id("template-item", f"{user_id}:{split.slug}:{day.sequence}:{sequence}")
         item = session.get(WorkoutTemplateItem, item_id)
         if item is None:
             item = WorkoutTemplateItem(id=item_id, split_day_id=day.id, sequence=sequence)
@@ -244,13 +264,13 @@ def _seed_template_items(
             )
 
 
-def _seed_splits(session: Session, data: dict[str, Any]) -> Split:
+def _seed_splits(session: Session, data: dict[str, Any], user_id: str) -> Split:
     active_split: Split | None = None
     for display_order, raw_split in enumerate(cast(list[dict[str, Any]], data["splits"]), start=1):
         slug = str(raw_split["slug"])
-        split = session.scalar(select(Split).where(Split.slug == slug))
+        split = session.scalar(select(Split).where(Split.user_id == user_id, Split.slug == slug))
         if split is None:
-            split = Split(id=_stable_id("split", slug), slug=slug)
+            split = Split(id=_stable_id("split", f"{user_id}:{slug}"), user_id=user_id, slug=slug)
             session.add(split)
         split.name = str(raw_split["name"])
         split.description = str(raw_split["description"])
@@ -262,7 +282,7 @@ def _seed_splits(session: Session, data: dict[str, Any]) -> Split:
 
         for raw_day in cast(list[dict[str, Any]], raw_split["days"]):
             sequence = int(raw_day["sequence"])
-            day_id = _stable_id("split-day", f"{slug}:{sequence}")
+            day_id = _stable_id("split-day", f"{user_id}:{slug}:{sequence}")
             day = session.get(SplitDay, day_id)
             if day is None:
                 day = SplitDay(id=day_id, split_id=split.id, sequence=sequence)
@@ -273,7 +293,7 @@ def _seed_splits(session: Session, data: dict[str, Any]) -> Split:
             day.description = None
             day.is_optional = bool(raw_day.get("is_optional", False))
             session.flush()
-            _seed_template_items(session, split, day, raw_day)
+            _seed_template_items(session, user_id, split, day, raw_day)
 
         if split.is_active:
             active_split = split
@@ -283,14 +303,62 @@ def _seed_splits(session: Session, data: dict[str, Any]) -> Split:
     return active_split
 
 
-def seed_session(session: Session) -> SeedResult:
+def _ensure_seed_user(session: Session) -> User:
+    user = session.scalar(select(User).where(User.email_normalized == DEFAULT_SEED_EMAIL))
+    if user is None:
+        user = User(
+            id=_stable_id("user", DEFAULT_SEED_EMAIL),
+            email_normalized=DEFAULT_SEED_EMAIL,
+            password_hash="$argon2id$seed-user-has-no-login",
+            status=UserStatus.ACTIVE,
+            role=UserRole.MEMBER,
+            token_version=0,
+            is_demo=False,
+        )
+        session.add(user)
+        session.flush()
+    return user
+
+
+def seed_user_starter(
+    session: Session,
+    user: User,
+    *,
+    display_name: str | None = None,
+    timezone: str | None = None,
+    preferred_units: PreferredUnits | None = None,
+) -> SeedResult:
+    """Create an idempotent tenant-owned starter profile, settings, splits, and schedule."""
     catalog = _load_json("exercise_catalog.json")
     split_data = _load_json("seed_splits.json")
     _seed_muscle_groups(session, catalog)
     _seed_exercises(session, catalog)
-    profile, settings = _seed_profile(session, split_data)
-    active_split = _seed_splits(session, split_data)
+    profile, settings = _seed_profile(
+        session, split_data, user, display_name, timezone, preferred_units
+    )
+    active_split = _seed_splits(session, split_data, user.id)
     settings.active_split_id = active_split.id
+    first_day = session.scalar(
+        select(SplitDay).where(SplitDay.split_id == active_split.id).order_by(SplitDay.sequence)
+    )
+    avatar = session.get(AvatarSettings, user.id)
+    if avatar is None:
+        session.add(AvatarSettings(user_id=user.id))
+    schedule = session.get(ScheduleState, user.id)
+    if schedule is None:
+        session.add(
+            ScheduleState(
+                user_id=user.id,
+                active_split_id=active_split.id,
+                cursor_split_day_id=first_day.id if first_day else None,
+                cursor_effective_date=datetime.now(UTC).date(),
+                version=0,
+            )
+        )
+    else:
+        schedule.active_split_id = active_split.id
+        if schedule.cursor_split_day_id is None and first_day is not None:
+            schedule.cursor_split_day_id = first_day.id
     session.flush()
 
     return SeedResult(
@@ -299,7 +367,12 @@ def seed_session(session: Session) -> SeedResult:
         splits=session.scalar(select(func.count()).select_from(Split)) or 0,
         profile_id=profile.id,
         active_split_slug=active_split.slug,
+        user_id=user.id,
     )
+
+
+def seed_session(session: Session, user: User | None = None) -> SeedResult:
+    return seed_user_starter(session, user or _ensure_seed_user(session))
 
 
 def seed_database(database_url: str | None = None) -> SeedResult:

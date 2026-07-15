@@ -14,6 +14,7 @@ from sqlalchemy import (
     Integer,
     Numeric,
     String,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -49,9 +50,24 @@ class Exercise(IdMixin, TimestampMixin, Base):
             name="ck_exercises_rep_max",
         ),
         Index("idx_exercises_variation_group", "variation_group"),
+        Index("idx_exercises_owner_archived", "owner_user_id", "archived_at"),
+        Index(
+            "uq_global_exercises_slug",
+            "slug",
+            unique=True,
+            sqlite_where=text("owner_user_id IS NULL"),
+        ),
+        Index(
+            "uq_custom_exercises_owner_slug",
+            "owner_user_id",
+            "slug",
+            unique=True,
+            sqlite_where=text("owner_user_id IS NOT NULL"),
+        ),
     )
 
-    slug: Mapped[str] = mapped_column(String(150), unique=True, nullable=False)
+    owner_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    slug: Mapped[str] = mapped_column(String(150), nullable=False)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     aliases: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     variation_group: Mapped[str] = mapped_column(String(150), nullable=False)

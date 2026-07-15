@@ -1,16 +1,30 @@
 from .base import Base
 from .catalog import Exercise, ExerciseMuscle, MuscleGroup
 from .enums import (
+    BasePresentation,
     MeasurementType,
     MuscleRole,
+    OverrideAction,
     PreferredUnits,
     PublicVisibility,
     RecordType,
+    ScheduleEffect,
     SessionStatus,
     SetType,
     SuggestionConfidence,
     TemplateItemType,
+    UserRole,
+    UserStatus,
     WaterSource,
+)
+from .identity import User
+from .planning import (
+    AvatarSettings,
+    CommandReceipt,
+    DailyExercisePlan,
+    DailyExercisePlanItem,
+    DailyPlanOverride,
+    ScheduleState,
 )
 from .profile import AppSettings, Profile, VisibilitySettings
 from .progress import Achievement, PersonalRecord, ProgressionSuggestion
@@ -29,12 +43,19 @@ from .training import (
 __all__ = [
     "Achievement",
     "AppSettings",
+    "AvatarSettings",
     "Base",
+    "BasePresentation",
+    "CommandReceipt",
+    "DailyExercisePlan",
+    "DailyExercisePlanItem",
+    "DailyPlanOverride",
     "Exercise",
     "ExerciseMuscle",
     "MeasurementType",
     "MuscleGroup",
     "MuscleRole",
+    "OverrideAction",
     "PersonalRecord",
     "PreferredUnits",
     "Profile",
@@ -42,6 +63,8 @@ __all__ = [
     "PublicVisibility",
     "ReadinessLog",
     "RecordType",
+    "ScheduleEffect",
+    "ScheduleState",
     "SessionExercise",
     "SessionStatus",
     "SetLog",
@@ -51,6 +74,9 @@ __all__ = [
     "SuggestionConfidence",
     "TemplateAlternative",
     "TemplateItemType",
+    "User",
+    "UserRole",
+    "UserStatus",
     "VisibilitySettings",
     "WaterLog",
     "WaterSource",
