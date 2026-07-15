@@ -71,7 +71,7 @@ def test_valid_credentials_return_member_token_and_current_user(app: Flask) -> N
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["token_type"] == "Bearer"
-    assert payload["expires_in"] == 900
+    assert payload["expires_in"] == 1800
     assert payload["user"] == {
         "id": "00000000-0000-0000-0000-000000000001",
         "email": EMAIL,
@@ -87,7 +87,7 @@ def test_valid_credentials_return_member_token_and_current_user(app: Flask) -> N
     assert claims["sub"] == payload["user"]["id"]
     assert claims["role"] == "member"
     assert claims["ver"] == 0
-    assert claims["exp"] - claims["iat"] == 900
+    assert claims["exp"] - claims["iat"] == 1800
 
     headers = {"Authorization": f"Bearer {payload['access_token']}"}
     assert app.test_client().get("/protected-test", headers=headers).status_code == 200

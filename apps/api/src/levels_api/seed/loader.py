@@ -24,6 +24,8 @@ from levels_api.models import (
     PreferredUnits,
     Profile,
     ScheduleState,
+    SessionExercise,
+    SessionStatus,
     Split,
     SplitDay,
     TemplateAlternative,
@@ -32,11 +34,13 @@ from levels_api.models import (
     UserRole,
     UserStatus,
     VisibilitySettings,
+    WorkoutSession,
     WorkoutTemplateItem,
 )
 
 DEFAULT_DATABASE_URL = "sqlite+pysqlite:///./levels-dev.db"
 DEFAULT_SEED_EMAIL = "seed-owner@levels.local"
+DEMO_EMAIL = "demo@levels.invalid"
 
 SVG_REGIONS: dict[str, list[str]] = {
     "upper_chest": ["chest_upper"],
@@ -375,12 +379,93 @@ def seed_session(session: Session, user: User | None = None) -> SeedResult:
     return seed_user_starter(session, user or _ensure_seed_user(session))
 
 
+def seed_demo_session(session: Session) -> SeedResult:
+    """Seed a fixed fictional tenant used exclusively by anonymous GET demo APIs."""
+    demo = session.scalar(select(User).where(User.email_normalized == DEMO_EMAIL))
+    if demo is None:
+        demo = User(
+            id=_stable_id("user", DEMO_EMAIL),
+            email_normalized=DEMO_EMAIL,
+            password_hash="$argon2id$demo-has-no-credentials",
+            status=UserStatus.DISABLED,
+            role=UserRole.MEMBER,
+            token_version=0,
+            is_demo=True,
+        )
+        session.add(demo)
+        session.flush()
+    result = seed_user_starter(
+        session,
+        demo,
+        display_name="Alex Rivers",
+        timezone="America/Toronto",
+        preferred_units=PreferredUnits.METRIC,
+    )
+    splits = session.scalars(
+        select(Split).where(Split.user_id == demo.id).order_by(Split.display_order)
+    ).all()
+    if splits:
+        splits[0].name = "Alex's Athletic Upper/Lower"
+    if len(splits) > 1:
+        splits[1].name = "Alex's Bodyweight Conditioning"
+
+    existing_session = session.scalar(
+        select(WorkoutSession.id).where(WorkoutSession.user_id == demo.id).limit(1)
+    )
+    if existing_session is None:
+        active_split = next((split for split in splits if split.is_active), None)
+        demo_days = list(active_split.days[:2]) if active_split is not None else []
+        for index, day in enumerate(demo_days):
+            completed_at = datetime(2026, 7, 12 + index, 18, 0, tzinfo=UTC)
+            workout = WorkoutSession(
+                id=_stable_id("demo-session", str(index)),
+                user_id=demo.id,
+                version=0,
+                split_day_id=day.id,
+                session_date_local=completed_at.date(),
+                started_at=completed_at,
+                completed_at=completed_at,
+                status=SessionStatus.COMPLETED,
+                title=day.name,
+            )
+            session.add(workout)
+            for sequence, item in enumerate(day.items[:4]):
+                exercise = session.get(Exercise, item.exercise_id)
+                if exercise is None:
+                    continue
+                session.add(
+                    SessionExercise(
+                        id=_stable_id("demo-session-exercise", f"{index}:{sequence}"),
+                        workout_session_id=workout.id,
+                        exercise_id=exercise.id,
+                        source_template_item_id=item.id,
+                        sequence=sequence,
+                        planned_sets=item.sets,
+                        item_type=item.item_type,
+                        display_name_snapshot=exercise.name,
+                        variation_group_snapshot=exercise.variation_group,
+                        rep_min_snapshot=item.rep_min,
+                        rep_max_snapshot=item.rep_max,
+                        duration_seconds_snapshot=item.duration_seconds,
+                        distance_meters_snapshot=item.distance_meters,
+                        rounds_target_snapshot=item.rounds_target,
+                        rest_seconds_snapshot=item.rest_seconds,
+                        target_rir_snapshot=item.target_rir,
+                        optional_snapshot=item.optional,
+                    )
+                )
+    session.flush()
+    return result
+
+
 def seed_database(database_url: str | None = None) -> SeedResult:
     resolved_url = database_url or os.getenv("DATABASE_URL") or DEFAULT_DATABASE_URL
     engine: Engine = create_database_engine(resolved_url, os.getenv("TURSO_AUTH_TOKEN"))
     try:
         with Session(engine) as session, session.begin():
-            return seed_session(session)
+            result = seed_session(session)
+            seed_demo_session(session)
+            return result
     finally:
         engine.dispose()
 

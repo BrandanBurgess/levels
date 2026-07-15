@@ -305,10 +305,14 @@ def test_populated_v1_requires_identity_and_preserves_history(
     metadata.reflect(engine)
     with engine.connect() as connection:
         users = connection.execute(select(metadata.tables["users"])).mappings().all()
-        assert len(users) == 1
-        user_id = users[0]["id"]
-        assert users[0]["email_normalized"] == "owner@example.com"
-        assert users[0]["password_hash"] == "$argon2id$fixture"
+        assert len(users) == 2
+        owner = next(user for user in users if not user["is_demo"])
+        demo = next(user for user in users if user["is_demo"])
+        user_id = owner["id"]
+        assert owner["email_normalized"] == "owner@example.com"
+        assert owner["password_hash"] == "$argon2id$fixture"
+        assert demo["email_normalized"] == "demo@levels.invalid"
+        assert demo["status"] == "disabled"
 
         for table_name in (
             "profiles",
@@ -320,7 +324,15 @@ def test_populated_v1_requires_identity_and_preserves_history(
             "achievements",
             "progression_suggestions",
         ):
-            rows = connection.execute(select(metadata.tables[table_name])).mappings().all()
+            rows = (
+                connection.execute(
+                    select(metadata.tables[table_name]).where(
+                        metadata.tables[table_name].c.user_id == user_id
+                    )
+                )
+                .mappings()
+                .all()
+            )
             assert rows, table_name
             assert {row["user_id"] for row in rows} == {user_id}
 
@@ -352,8 +364,24 @@ def test_populated_v1_requires_identity_and_preserves_history(
         assert set_log["load_kg"] == 100
         assert set_log["reps"] == 6
 
-        avatar = connection.execute(select(metadata.tables["avatar_settings"])).mappings().one()
-        schedule = connection.execute(select(metadata.tables["schedule_state"])).mappings().one()
+        avatar = (
+            connection.execute(
+                select(metadata.tables["avatar_settings"]).where(
+                    metadata.tables["avatar_settings"].c.user_id == user_id
+                )
+            )
+            .mappings()
+            .one()
+        )
+        schedule = (
+            connection.execute(
+                select(metadata.tables["schedule_state"]).where(
+                    metadata.tables["schedule_state"].c.user_id == user_id
+                )
+            )
+            .mappings()
+            .one()
+        )
         assert avatar["user_id"] == user_id
         assert schedule["user_id"] == user_id
         assert schedule["active_split_id"] == "00000000-0000-0000-0000-000000000002"

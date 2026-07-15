@@ -19,6 +19,12 @@ down_revision: str | None = "a91f6028df36"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+DEMO_EMAIL = "demo@levels.invalid"
+
+
+def _stable_id(kind: str, key: str) -> str:
+    return str(uuid5(NAMESPACE_URL, f"https://levels.app/seed/{kind}/{key}"))
+
 
 def upgrade() -> None:
     connection = op.get_bind()
@@ -439,10 +445,113 @@ def upgrade() -> None:
     ) as batch_op:
         batch_op.drop_constraint("uq_readiness_logs_local_date", type_="unique")
 
+    # The demo identity is synthetic, disabled for login, and populated further by the
+    # idempotent catalog seed. Keeping its minimal profile in the migration guarantees
+    # that anonymous demo reads never bind to bootstrap-member data.
+    now = datetime.now(UTC)
+    demo_user_id = _stable_id("user", DEMO_EMAIL)
+    demo_profile_id = _stable_id("profile", demo_user_id)
+    connection.execute(
+        sa.text(
+            """
+            INSERT INTO users (
+                id, email_normalized, password_hash, status, role,
+                token_version, is_demo, last_login_at, created_at, updated_at
+            ) VALUES (
+                :id, :email, '$argon2id$demo-has-no-credentials', 'disabled', 'member',
+                0, 1, NULL, :created_at, :updated_at
+            )
+            """
+        ),
+        {"id": demo_user_id, "email": DEMO_EMAIL, "created_at": now, "updated_at": now},
+    )
+    connection.execute(
+        sa.text(
+            """
+            INSERT INTO profiles (
+                id, user_id, display_name, height_cm, body_weight_kg, preferred_units,
+                timezone, avatar_variant, created_at, updated_at
+            ) VALUES (
+                :id, :user_id, 'Alex Rivers', NULL, NULL, 'metric',
+                'America/Toronto', 'levels-original-v2', :created_at, :updated_at
+            )
+            """
+        ),
+        {
+            "id": demo_profile_id,
+            "user_id": demo_user_id,
+            "created_at": now,
+            "updated_at": now,
+        },
+    )
+    connection.execute(
+        sa.text(
+            """
+            INSERT INTO visibility_settings (
+                id, profile_id, show_height, show_body_weight, show_water,
+                show_session_summaries, show_set_details, show_public_notes,
+                show_progress_charts, show_personal_records, show_readiness
+            ) VALUES (
+                :id, :profile_id, 0, 0, 0, 1, 0, 0, 1, 1, 0
+            )
+            """
+        ),
+        {"id": _stable_id("visibility", demo_user_id), "profile_id": demo_profile_id},
+    )
+    connection.execute(
+        sa.text(
+            """
+            INSERT INTO app_settings (
+                id, profile_id, active_split_id, week_starts_on, default_water_goal_ml,
+                water_quick_add_ml, primary_muscle_weight, secondary_muscle_weight,
+                default_target_rir, default_load_increment_kg, reduced_motion_override,
+                created_at, updated_at
+            ) VALUES (
+                :id, :profile_id, NULL, 1, 2800, '[250,500,750]', 1.0, 0.45,
+                2.0, 1.133981, NULL, :created_at, :updated_at
+            )
+            """
+        ),
+        {
+            "id": _stable_id("settings", demo_user_id),
+            "profile_id": demo_profile_id,
+            "created_at": now,
+            "updated_at": now,
+        },
+    )
+    connection.execute(
+        sa.text(
+            """
+            INSERT INTO avatar_settings (
+                user_id, base_presentation, skin_tone, hairstyle, hair_color,
+                outfit_style, outfit_palette, accessory, background, aura_style,
+                aura_enabled, created_at, updated_at
+            ) VALUES (
+                :user_id, 'female', 'medium_deep', 'braids', 'dark_brown',
+                'training_tee', 'teal', 'headband', 'gradient', 'standard',
+                1, :created_at, :updated_at
+            )
+            """
+        ),
+        {"user_id": demo_user_id, "created_at": now, "updated_at": now},
+    )
+    connection.execute(
+        sa.text(
+            """
+            INSERT INTO schedule_state (
+                user_id, active_split_id, cursor_split_day_id, cursor_effective_date,
+                version, created_at, updated_at
+            ) VALUES (
+                :user_id, NULL, NULL, NULL, 0, :created_at, :updated_at
+            )
+            """
+        ),
+        {"user_id": demo_user_id, "created_at": now, "updated_at": now},
+    )
+
     bootstrap_user_id: str | None = None
     if bootstrap_email:
         bootstrap_user_id = str(uuid5(NAMESPACE_URL, f"https://levels.app/user/{bootstrap_email}"))
-        now = datetime.now(UTC)
         connection.execute(
             sa.text(
                 """
@@ -598,6 +707,22 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    connection = op.get_bind()
+    demo_user_id = _stable_id("user", DEMO_EMAIL)
+    demo_profile_id = _stable_id("profile", demo_user_id)
+    connection.execute(
+        sa.text("DELETE FROM visibility_settings WHERE profile_id = :profile_id"),
+        {"profile_id": demo_profile_id},
+    )
+    connection.execute(
+        sa.text("DELETE FROM app_settings WHERE profile_id = :profile_id"),
+        {"profile_id": demo_profile_id},
+    )
+    connection.execute(
+        sa.text("DELETE FROM profiles WHERE user_id = :user_id"),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(sa.text("DELETE FROM users WHERE id = :user_id"), {"user_id": demo_user_id})
     # ### commands auto generated by Alembic - please adjust! ###
     with op.batch_alter_table("workout_sessions", schema=None) as batch_op:
         batch_op.drop_constraint("fk_workout_sessions_user_id_users", type_="foreignkey")

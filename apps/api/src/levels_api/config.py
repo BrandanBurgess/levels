@@ -55,7 +55,7 @@ class Settings:
     admin_username: str | None = None
     admin_password_hash: str | None = None
     jwt_secret_key: str | None = None
-    jwt_expires_seconds: int = 900
+    jwt_expires_seconds: int = 1800
     testing: bool = False
 
     @classmethod

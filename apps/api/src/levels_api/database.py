@@ -70,8 +70,11 @@ def _close_request_session(_: BaseException | None = None) -> None:
 def transaction() -> Iterator[Session]:
     session = get_db()
     try:
-        with session.begin():
-            yield session
+        # Authentication performs a tenant lookup before protected handlers run, which
+        # starts SQLAlchemy's implicit transaction. Commit that request transaction here
+        # instead of attempting a nested ``begin()``.
+        yield session
+        session.commit()
     except Exception:
         session.rollback()
         raise
