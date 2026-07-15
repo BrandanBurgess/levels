@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,8 @@ from sqlalchemy.orm import Session
 from levels_api import Settings, create_app
 from levels_api.auth.service import create_access_token
 from levels_api.database import get_engine
-from levels_api.models import Base, User, UserRole, UserStatus, WorkoutTemplateItem
+from levels_api.features.today import repository as today_repository
+from levels_api.models import Base, ScheduleState, User, UserRole, UserStatus, WorkoutTemplateItem
 from levels_api.seed import seed_user_starter
 
 JWT_SECRET = "tests-only-jwt-signing-key-32-characters-long"
@@ -205,6 +207,68 @@ def test_completion_is_idempotent_and_completed_snapshot_is_immutable(app: Flask
         json={"expected_version": first.get_json()["version"], "planned_sets": 10},
     )
     assert immutable.status_code == 409
+
+
+def test_completed_snapshot_survives_save_to_split_removals(app: Flask) -> None:
+    client = app.test_client()
+    started = _start(app)
+    completed = client.post(
+        f"/api/v1/sessions/{started['id']}/complete",
+        headers={**_auth(app), "Idempotency-Key": "complete-history-001"},
+    )
+    assert completed.status_code == 200
+    before = client.get(f"/api/v1/sessions/{started['id']}", headers=_auth(app)).get_json()
+    first = before["exercises"][0]
+
+    saved = client.put(
+        "/api/v1/today/exercises",
+        headers={**_auth(app), "Idempotency-Key": "archive-template-history-001"},
+        json={
+            "local_date": MONDAY,
+            "source_split_day_id": started["split_day_id"],
+            "scope": "save_to_split",
+            "expected_version": 0,
+            "items": [
+                {
+                    "source_template_item_id": first["source_template_item_id"],
+                    "exercise_id": first["exercise_id"],
+                    "sequence": 0,
+                    "item_type": first["item_type"],
+                    "planned_sets": first["planned_sets"],
+                    "rep_min": first["rep_min"],
+                    "rep_max": first["rep_max"],
+                    "rest_seconds": first["rest_seconds"],
+                    "target_rir": first["target_rir"],
+                    "optional": first["optional"],
+                    "notes": first["notes"],
+                }
+            ],
+        },
+    )
+    assert saved.status_code == 200, saved.get_json()
+    after = client.get(f"/api/v1/sessions/{started['id']}", headers=_auth(app)).get_json()
+    assert after == before
+
+
+def test_completion_cas_conflict_rolls_back_completion(
+    app: Flask, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    started = _start(app)
+    with app.app_context(), Session(get_engine()) as session, session.begin():
+        state = session.get(ScheduleState, app.config["USER_IDS"][0])
+        assert state is not None
+        state.cursor_effective_date = date.fromisoformat(MONDAY)
+
+    monkeypatch.setattr(today_repository, "update_schedule", lambda *args, **kwargs: None)
+    response = app.test_client().post(
+        f"/api/v1/sessions/{started['id']}/complete",
+        headers={**_auth(app), "Idempotency-Key": "complete-conflict-001"},
+    )
+    assert response.status_code == 409
+    assert response.get_json()["error"]["code"] == "VERSION_CONFLICT"
+    stored = app.test_client().get(f"/api/v1/sessions/{started['id']}", headers=_auth(app))
+    assert stored.get_json()["status"] == "in_progress"
+    assert stored.get_json()["completed_at"] is None
 
 
 def test_cross_tenant_session_and_child_ids_are_hidden(app: Flask) -> None:

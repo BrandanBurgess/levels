@@ -8,7 +8,7 @@ from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
-from sqlalchemy import MetaData, create_engine, inspect, select
+from sqlalchemy import MetaData, create_engine, func, inspect, select
 from sqlalchemy.orm import Session
 
 from levels_api.models import Base
@@ -408,5 +408,56 @@ def test_migration_head_matches_model_metadata(tmp_path: Path) -> None:
             opts={"compare_type": True, "render_as_batch": True},
         )
         assert compare_metadata(context, Base.metadata) == []
+
+
+def test_downgrade_refuses_multi_tenant_data_before_mutation(tmp_path: Path) -> None:
+    database_path = tmp_path / "multi-tenant-downgrade.db"
+    database_url = f"sqlite+pysqlite:///{database_path.as_posix()}"
+    config = alembic_config(database_url)
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    metadata = MetaData()
+    metadata.reflect(engine)
+    now = datetime.now(UTC)
+    with engine.begin() as connection:
+        for index in (1, 2):
+            user_id = f"00000000-0000-0000-0000-0000000000{index:02d}"
+            connection.execute(
+                metadata.tables["users"].insert(),
+                {
+                    "id": user_id,
+                    "email_normalized": f"member-{index}@example.test",
+                    "password_hash": "$argon2id$fixture",
+                    "status": "active",
+                    "role": "member",
+                    "token_version": 0,
+                    "is_demo": False,
+                    "last_login_at": None,
+                    "created_at": now,
+                    "updated_at": now,
+                },
+            )
+            connection.execute(
+                metadata.tables["profiles"].insert(),
+                {
+                    "id": f"10000000-0000-0000-0000-0000000000{index:02d}",
+                    "user_id": user_id,
+                    "display_name": f"Member {index}",
+                    "height_cm": None,
+                    "body_weight_kg": None,
+                    "preferred_units": "metric",
+                    "timezone": "America/Toronto",
+                    "avatar_variant": "brandan-original-v1",
+                    "created_at": now,
+                    "updated_at": now,
+                },
+            )
+
+    with pytest.raises(RuntimeError, match="cannot be downgraded safely"):
+        command.downgrade(config, "base")
+    with engine.connect() as connection:
+        assert MigrationContext.configure(connection).get_current_revision() == "901a70c127bb"
+        assert connection.scalar(select(func.count()).select_from(metadata.tables["users"])) == 3
+    engine.dispose()
 
     engine.dispose()

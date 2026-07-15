@@ -6,6 +6,7 @@ from decimal import Decimal
 from typing import cast
 from zoneinfo import ZoneInfo
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from levels_api.errors import ApiError
@@ -249,17 +250,24 @@ def start_session(
     )
     workout.exercises = [_snapshot_from_plan_item(workout, item) for item in plan_items]
     session.add(workout)
-    session.flush()
-    record_receipt(
-        session,
-        user_id,
-        operation,
-        idempotency_key,
-        write,
-        result_resource_id=workout.id,
-        result_version=workout.version,
-        status_code=201,
-    )
+    try:
+        session.flush()
+        record_receipt(
+            session,
+            user_id,
+            operation,
+            idempotency_key,
+            write,
+            result_resource_id=workout.id,
+            result_version=workout.version,
+            status_code=201,
+        )
+    except IntegrityError as error:
+        raise ApiError(
+            409,
+            "SESSION_ALREADY_STARTED",
+            "An active session already exists for this date.",
+        ) from error
     return workout
 
 
@@ -622,14 +630,20 @@ def complete_session(
                 next_date = workout.session_date_local + date.resolution
                 while weekdays and next_date.weekday() not in weekdays:
                     next_date += date.resolution
-                today_repository.update_schedule(
+                updated_state = today_repository.update_schedule(
                     session,
                     user_id,
                     state.version,
                     cursor_split_day_id=days[(index + 1) % len(days)].id,
                     cursor_effective_date=next_date,
                 )
-                state = require_schedule(session, user_id)
+                if updated_state is None:
+                    raise ApiError(
+                        409,
+                        "VERSION_CONFLICT",
+                        "The schedule changed. Refresh and complete the workout again.",
+                    )
+                state = updated_state
     record_receipt(
         session,
         user_id,

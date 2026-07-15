@@ -229,9 +229,17 @@ describe("JournalPage", () => {
     await waitFor(() => expect(patch).toHaveBeenCalled());
     expect(patch).toHaveBeenCalledWith(
       "/sessions/{session_id}",
-      expect.objectContaining({ body: expect.objectContaining({ status: "completed" }) }),
+      expect.objectContaining({ body: expect.not.objectContaining({ status: "completed" }) }),
     );
-    expect(post).not.toHaveBeenCalled();
+    expect(post).toHaveBeenCalledWith(
+      "/sessions/{session_id}/complete",
+      expect.objectContaining({
+        params: {
+          path: { session_id: "session-1" },
+          header: { "Idempotency-Key": expect.any(String) },
+        },
+      }),
+    );
   });
 
   it("restores the latest local set and notes draft after a refresh", async () => {

@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from typing import cast
 
 from flask import Flask, current_app, g
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 ENGINE_KEY = "levels_database_engine"
@@ -32,7 +32,18 @@ def engine_configuration(
 
 def create_database_engine(database_url: str, turso_auth_token: str | None = None) -> Engine:
     resolved_url, connect_args = engine_configuration(database_url, turso_auth_token)
-    return create_engine(resolved_url, connect_args=connect_args, pool_pre_ping=True)
+    engine = create_engine(resolved_url, connect_args=connect_args, pool_pre_ping=True)
+    if resolved_url.startswith("sqlite"):
+
+        @event.listens_for(engine, "connect")
+        def enable_foreign_keys(dbapi_connection: object, _connection_record: object) -> None:
+            cursor = dbapi_connection.cursor()  # type: ignore[attr-defined]
+            try:
+                cursor.execute("PRAGMA foreign_keys=ON")
+            finally:
+                cursor.close()
+
+    return engine
 
 
 def init_database(app: Flask) -> None:

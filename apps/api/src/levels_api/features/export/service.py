@@ -73,9 +73,7 @@ def export_payload(
         exported[name] = _table_rows(session, table, table.c.profile_id.in_(profile_ids))
 
     split_days = tables["split_days"]
-    exported["split_days"] = _table_rows(
-        session, split_days, split_days.c.split_id.in_(split_ids)
-    )
+    exported["split_days"] = _table_rows(session, split_days, split_days.c.split_id.in_(split_ids))
     split_day_ids = _ids(exported["split_days"])
 
     template_items = tables["workout_template_items"]
@@ -117,9 +115,13 @@ def export_payload(
         session, exercise_muscles, exercise_muscles.c.exercise_id.in_(exercise_ids)
     )
     muscle_groups = tables["muscle_groups"]
-    exported["muscle_groups"] = _table_rows(session, muscle_groups, muscle_groups.c.id.in_({
-        str(row["muscle_group_id"]) for row in exported["exercise_muscles"]
-    }))
+    exported["muscle_groups"] = _table_rows(
+        session,
+        muscle_groups,
+        muscle_groups.c.id.in_(
+            {str(row["muscle_group_id"]) for row in exported["exercise_muscles"]}
+        ),
+    )
 
     return {
         "exported_at": exported_at.isoformat(),

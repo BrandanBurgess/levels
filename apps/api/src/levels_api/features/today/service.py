@@ -9,12 +9,13 @@ from decimal import Decimal
 from typing import cast
 from uuid import uuid4
 
-from sqlalchemy import delete, update
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from levels_api.auth.service import current_user_payload
 from levels_api.errors import ApiError
 from levels_api.features.exercises.service import serialize_exercise
+from levels_api.features.history import archive_template_item
 from levels_api.features.streak.service import streak_summary
 from levels_api.models import (
     AvatarSettings,
@@ -27,7 +28,6 @@ from levels_api.models import (
     OverrideAction,
     ScheduleEffect,
     ScheduleState,
-    SessionExercise,
     SplitDay,
     WorkoutTemplateItem,
 )
@@ -657,12 +657,7 @@ def _save_template(
         template.notes = input_item.notes
     removed = [item for item_id, item in by_id.items() if item_id not in supplied_ids]
     for item in removed:
-        session.execute(
-            update(SessionExercise)
-            .where(SessionExercise.source_template_item_id == item.id)
-            .values(source_template_item_id=None)
-        )
-        session.delete(item)
+        archive_template_item(session, day.split.user_id, item)
 
 
 def replace_exercise_plan(

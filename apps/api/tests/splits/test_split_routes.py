@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,15 @@ from sqlalchemy.orm import Session
 from levels_api import Settings, create_app
 from levels_api.auth.service import create_access_token
 from levels_api.database import get_engine
-from levels_api.models import Base, ScheduleState, User
+from levels_api.models import (
+    Base,
+    PublicVisibility,
+    ScheduleState,
+    SessionExercise,
+    SessionStatus,
+    User,
+    WorkoutSession,
+)
 from levels_api.seed import seed_session
 
 JWT_SECRET = "tests-only-jwt-signing-key-32-characters-long"
@@ -79,6 +88,47 @@ def _write() -> dict[str, object]:
                     },
                 ],
             }
+        ],
+    }
+
+
+def _write_from_detail(
+    detail: dict[str, object], days: list[dict[str, object]]
+) -> dict[str, object]:
+    return {
+        "name": detail["name"],
+        "slug": detail["slug"],
+        "description": detail["description"],
+        "days": [
+            {
+                "id": day["id"],
+                "name": day["name"],
+                "day_type": day["day_type"],
+                "sequence": index,
+                "is_optional": day["is_optional"],
+                "items": [
+                    {
+                        "id": item["id"],
+                        "exercise_id": item["exercise"]["id"],
+                        "sequence": item_index,
+                        "item_type": item["item_type"],
+                        "sets": item["sets"],
+                        "rep_min": item["rep_min"],
+                        "rep_max": item["rep_max"],
+                        "duration_seconds": item["duration_seconds"],
+                        "distance_meters": item["distance_meters"],
+                        "rounds_target": item["rounds_target"],
+                        "rest_seconds": item["rest_seconds"],
+                        "target_rir": item["target_rir"],
+                        "optional": item["optional"],
+                        "alternative_exercise_ids": [
+                            alternative["id"] for alternative in item["alternatives"]
+                        ],
+                    }
+                    for item_index, item in enumerate(day["items"], start=1)
+                ],
+            }
+            for index, day in enumerate(days, start=1)
         ],
     }
 
@@ -173,6 +223,56 @@ def test_activation_updates_single_active_split_and_profile_settings(app: Flask)
     blocked = client.delete(f"/api/v1/splits/{created['id']}", headers=_auth(app))
     assert blocked.status_code == 409
     assert blocked.get_json()["error"]["code"] == "ACTIVE_SPLIT"
+
+
+def test_removing_split_day_preserves_completed_session_payload(app: Flask) -> None:
+    client = app.test_client()
+    detail = client.get("/api/v1/splits", headers=_auth(app)).get_json()[0]
+    retired_day = detail["days"][0]
+    source = retired_day["items"][0]
+    with app.app_context(), Session(get_engine()) as session, session.begin():
+        user = session.scalar(
+            select(User).where(User.email_normalized == "seed-owner@levels.local")
+        )
+        assert user is not None
+        workout = WorkoutSession(
+            user_id=user.id,
+            split_day_id=retired_day["id"],
+            session_date_local=date(2026, 7, 13),
+            started_at=datetime(2026, 7, 13, 18, tzinfo=UTC),
+            completed_at=datetime(2026, 7, 13, 19, tzinfo=UTC),
+            status=SessionStatus.COMPLETED,
+            title=retired_day["name"],
+            public_visibility=PublicVisibility.PRIVATE,
+        )
+        workout.exercises.append(
+            SessionExercise(
+                exercise_id=source["exercise"]["id"],
+                source_template_item_id=source["id"],
+                sequence=0,
+                planned_sets=source["sets"],
+                item_type=source["item_type"],
+                display_name_snapshot=source["exercise"]["name"],
+                variation_group_snapshot=source["exercise"]["variation_group"],
+                rep_min_snapshot=source["rep_min"],
+                rep_max_snapshot=source["rep_max"],
+                rest_seconds_snapshot=source["rest_seconds"],
+                optional_snapshot=source["optional"],
+            )
+        )
+        session.add(workout)
+        session.flush()
+        workout_id = workout.id
+
+    before = client.get(f"/api/v1/sessions/{workout_id}", headers=_auth(app)).get_json()
+    updated = client.patch(
+        f"/api/v1/splits/{detail['id']}",
+        headers=_auth(app),
+        json=_write_from_detail(detail, detail["days"][1:]),
+    )
+    assert updated.status_code == 200, updated.get_json()
+    after = client.get(f"/api/v1/sessions/{workout_id}", headers=_auth(app)).get_json()
+    assert after == before
 
 
 def test_template_validation_rejects_unknown_or_ambiguous_content(app: Flask) -> None:

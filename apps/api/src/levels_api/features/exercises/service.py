@@ -89,9 +89,7 @@ def require_exercise(session: Session, user_id: str, exercise_id: str) -> Exerci
     return exercise
 
 
-def _apply_write(
-    session: Session, user_id: str, exercise: Exercise, write: ExerciseWrite
-) -> None:
+def _apply_write(session: Session, user_id: str, exercise: Exercise, write: ExerciseWrite) -> None:
     existing = repository.exercise_by_slug(session, user_id, write.slug)
     if existing is not None and existing.id != exercise.id:
         raise ApiError(409, "SLUG_CONFLICT", "An exercise already uses this slug.")

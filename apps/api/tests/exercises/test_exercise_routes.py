@@ -70,9 +70,7 @@ def _write(slug: str = "custom_press") -> dict[str, object]:
 
 
 def test_search_matches_aliases_and_returns_group_and_avatar_targets(app: Flask) -> None:
-    response = app.test_client().get(
-        "/api/v1/exercises?search=crossover", headers=_auth(app)
-    )
+    response = app.test_client().get("/api/v1/exercises?search=crossover", headers=_auth(app))
 
     assert response.status_code == 200
     exercises = response.get_json()

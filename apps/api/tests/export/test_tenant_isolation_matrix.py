@@ -104,12 +104,18 @@ def test_two_user_isolation_matrix(tenant_app: Flask) -> None:
         split["id"] for split in second_splits
     )
     assert client.get(f"/api/v1/splits/{second_split_id}", headers=first_auth).status_code == 404
-    assert client.patch(
-        "/api/v1/settings", headers=first_auth, json={"active_split_id": second_split_id}
-    ).status_code == 404
-    assert client.get(
-        f"/api/v1/growth/suggestions?split_day_id={second_day_id}", headers=first_auth
-    ).status_code == 404
+    assert (
+        client.patch(
+            "/api/v1/settings", headers=first_auth, json={"active_split_id": second_split_id}
+        ).status_code
+        == 404
+    )
+    assert (
+        client.get(
+            f"/api/v1/growth/suggestions?split_day_id={second_day_id}", headers=first_auth
+        ).status_code
+        == 404
+    )
 
     first_custom = client.post(
         "/api/v1/exercises",
@@ -122,18 +128,22 @@ def test_two_user_isolation_matrix(tenant_app: Flask) -> None:
         json=_exercise_write("Second Private Press", "private_press"),
     ).get_json()
     assert first_custom["id"] != second_custom["id"]
-    assert client.get(
-        f"/api/v1/exercises/{second_custom['id']}", headers=first_auth
-    ).status_code == 404
+    assert (
+        client.get(f"/api/v1/exercises/{second_custom['id']}", headers=first_auth).status_code
+        == 404
+    )
     assert {
         exercise["id"]
         for exercise in client.get("/api/v1/exercises?scope=mine", headers=first_auth).get_json()
     } == {first_custom["id"]}
-    assert client.patch(
-        "/api/v1/exercises/push_up",
-        headers=first_auth,
-        json=_exercise_write("Cannot Edit Global", "cannot_edit_global"),
-    ).status_code == 403
+    assert (
+        client.patch(
+            "/api/v1/exercises/push_up",
+            headers=first_auth,
+            json=_exercise_write("Cannot Edit Global", "cannot_edit_global"),
+        ).status_code
+        == 403
+    )
 
     client.post(
         "/api/v1/water/today",
@@ -145,12 +155,16 @@ def test_two_user_isolation_matrix(tenant_app: Flask) -> None:
         headers={**second_auth, "Idempotency-Key": "shared-key"},
         json={"amount_ml": 750, "occurred_at": "2026-07-13T12:00:00Z"},
     )
-    assert client.get(
-        "/api/v1/water/today?date=2026-07-13", headers=first_auth
-    ).get_json()["total_ml"] == 250
-    assert client.get(
-        "/api/v1/water/today?date=2026-07-13", headers=second_auth
-    ).get_json()["total_ml"] == 750
+    assert (
+        client.get("/api/v1/water/today?date=2026-07-13", headers=first_auth).get_json()["total_ml"]
+        == 250
+    )
+    assert (
+        client.get("/api/v1/water/today?date=2026-07-13", headers=second_auth).get_json()[
+            "total_ml"
+        ]
+        == 750
+    )
 
     with tenant_app.app_context(), Session(get_engine()) as session, session.begin():
         session.add_all(
@@ -175,9 +189,10 @@ def test_two_user_isolation_matrix(tenant_app: Flask) -> None:
                 ),
             ]
         )
-    assert {item["value_numeric"] for item in client.get(
-        "/api/v1/records", headers=first_auth
-    ).get_json()} == {11}
+    assert {
+        item["value_numeric"]
+        for item in client.get("/api/v1/records", headers=first_auth).get_json()
+    } == {11}
 
     export = client.get("/api/v1/export?format=json", headers=first_auth)
     body = export.get_data(as_text=True)

@@ -22,6 +22,7 @@ from .service import (
     hash_password,
     login_rate_limiter,
     normalize_email,
+    registration_rate_limiter,
     require_user,
 )
 
@@ -141,14 +142,21 @@ def register() -> tuple[Response, int]:
         raise ApiError(403, "REGISTRATION_DISABLED", "Account registration is disabled.")
     email, password, display_name, timezone, preferred_units = _registration_payload()
     ip_address = client_ip()
-    limiter = login_rate_limiter()
+    limiter = registration_rate_limiter()
     if limiter.blocked(ip_address, email):
         raise ApiError(429, "RATE_LIMITED", "Too many registration attempts. Try again later.")
+    # Charge every valid registration attempt before Argon2 and tenant seeding so
+    # rotating through unique emails cannot bypass the IP budget.
+    limiter.record_failure(ip_address, email)
 
     try:
         with transaction() as session:
             if session.scalar(select(User.id).where(User.email_normalized == email)) is not None:
-                raise ApiError(409, "ACCOUNT_EXISTS", "An account already exists for this email.")
+                raise ApiError(
+                    409,
+                    "REGISTRATION_CONFLICT",
+                    "Account registration could not be completed.",
+                )
             user = User(
                 email_normalized=email,
                 password_hash=hash_password(password),
@@ -168,7 +176,9 @@ def register() -> tuple[Response, int]:
             )
     except IntegrityError as error:
         raise ApiError(
-            409, "ACCOUNT_EXISTS", "An account already exists for this email."
+            409,
+            "REGISTRATION_CONFLICT",
+            "Account registration could not be completed.",
         ) from error
 
     response, _ = _auth_response(user)

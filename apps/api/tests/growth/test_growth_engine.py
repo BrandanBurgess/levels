@@ -48,9 +48,9 @@ def _auth(app: Flask) -> dict[str, str]:
 
 
 def _upper_day_id(app: Flask) -> str:
-    return app.test_client().get(
-        "/api/v1/splits", headers=_auth(app)
-    ).get_json()[0]["days"][0]["id"]
+    return (
+        app.test_client().get("/api/v1/splits", headers=_auth(app)).get_json()[0]["days"][0]["id"]
+    )
 
 
 def _completed_session(

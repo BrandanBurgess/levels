@@ -105,9 +105,7 @@ def test_records_are_named_filtered_and_current_by_default(app: Flask) -> None:
         "session_volume",
     }
     assert {item["exercise_name"] for item in payload} == {"Incline Barbell Bench Press"}
-    assert client.get(
-        "/api/v1/records?exercise_id=plank", headers=_auth(app)
-    ).get_json() == []
+    assert client.get("/api/v1/records?exercise_id=plank", headers=_auth(app)).get_json() == []
 
 
 def test_record_history_and_boolean_validation(app: Flask) -> None:
@@ -116,9 +114,7 @@ def test_record_history_and_boolean_validation(app: Flask) -> None:
     client = app.test_client()
 
     current = client.get("/api/v1/records", headers=_auth(app)).get_json()
-    history = client.get(
-        "/api/v1/records?current_only=false", headers=_auth(app)
-    ).get_json()
+    history = client.get("/api/v1/records?current_only=false", headers=_auth(app)).get_json()
 
     assert len(history) > len(current)
     assert any(item["value_numeric"] == 60 for item in history)
@@ -144,9 +140,7 @@ def test_profile_visibility_does_not_hide_own_records(app: Flask) -> None:
         assert visibility is not None
         visibility.show_personal_records = False
     assert client.get("/api/v1/records", headers=_auth(app)).get_json()
-    assert client.get(
-        "/api/v1/records?current_only=false", headers=_auth(app)
-    ).get_json()
+    assert client.get("/api/v1/records?current_only=false", headers=_auth(app)).get_json()
 
     with app.app_context(), Session(get_engine()) as session, session.begin():
         visibility = session.scalar(select(VisibilitySettings))

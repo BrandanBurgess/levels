@@ -422,6 +422,7 @@ function SessionBook({
   const [restoredNotes] = useState(() => loadNotesDraft(session));
   const [notesPrivate, setNotesPrivate] = useState(restoredNotes.notesPrivate);
   const [message, setMessage] = useState<string>();
+  const completionKey = useRef(crypto.randomUUID());
   const exerciseMap = new Map(exercises.map((exercise) => [exercise.id, exercise]));
 
   function updateNotes(value: string) {
@@ -458,14 +459,27 @@ function SessionBook({
 
   async function saveSession(status?: "in_progress" | "completed") {
     try {
-      const { error } = await apiClient.PATCH("/sessions/{session_id}", {
+      const { error: patchError } = await apiClient.PATCH("/sessions/{session_id}", {
         params: { path: { session_id: session.id } },
         body: {
-          ...(status ? { status } : {}),
+          ...(status === "in_progress" ? { status } : {}),
           notes_private: notesPrivate,
         },
       });
-      if (error) throw new Error("Session write failed");
+      if (patchError) throw new Error("Session write failed");
+      if (status === "completed") {
+        const { error: completionError } = await apiClient.POST(
+          "/sessions/{session_id}/complete",
+          {
+            params: {
+              path: { session_id: session.id },
+              header: { "Idempotency-Key": completionKey.current },
+            },
+          },
+        );
+        if (completionError) throw new Error("Session completion failed");
+        completionKey.current = crypto.randomUUID();
+      }
       persistNotesDraft(session.id, null);
       setMessage(status === "completed" ? "Workout completed." : status === "in_progress" ? "Workout resumed." : "Notes saved remotely.");
       await refresh();

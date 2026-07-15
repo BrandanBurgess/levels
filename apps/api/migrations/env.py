@@ -41,6 +41,12 @@ def run_migrations_online() -> None:
 
     try:
         with connectable.connect() as connection:
+            # SQLite batch migrations rebuild referenced tables. Runtime connections
+            # enforce foreign keys, while this dedicated migration connection must
+            # temporarily disable them for Alembic's table-copy operations.
+            if connection.dialect.name == "sqlite":
+                connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
+                connection.commit()
             context.configure(
                 connection=connection,
                 target_metadata=target_metadata,

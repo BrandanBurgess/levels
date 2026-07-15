@@ -47,7 +47,7 @@ function AuthProbe() {
   return (
     <div>
       <p>{isAuthenticated ? admin?.displayName : "Public"}</p>
-      <button onClick={() => void login("brandan", "password")} type="button">
+      <button onClick={() => void login("brandan@example.com", "password")} type="button">
         Login
       </button>
       <button onClick={logout} type="button">
@@ -64,8 +64,17 @@ describe("memory-only auth", () => {
       POST: vi.fn().mockResolvedValue({
         data: {
           access_token: "memory-token",
-          expires_in_seconds: 900,
-          admin: { display_name: "Brandan Burgess" },
+          token_type: "Bearer",
+          expires_in: 1800,
+          user: {
+            id: "user-1",
+            email: "brandan@example.com",
+            display_name: "Brandan Burgess",
+            role: "member",
+            account_status: "active",
+            timezone: "America/Toronto",
+            preferred_units: "imperial",
+          },
         },
       }),
     } as unknown as LevelsClient;
@@ -81,7 +90,7 @@ describe("memory-only auth", () => {
     expect(storageSpy).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Logout" }));
-    expect(screen.getByText("Public")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Public")).toBeInTheDocument());
     expect(getAccessToken()).toBeUndefined();
     storageSpy.mockRestore();
   });

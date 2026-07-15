@@ -15,6 +15,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -51,7 +52,7 @@ class Split(IdMixin, TimestampMixin, Base):
 
     days: Mapped[list[SplitDay]] = relationship(
         back_populates="split",
-        cascade="all, delete-orphan",
+        cascade="save-update, merge",
         order_by="SplitDay.sequence",
     )
 
@@ -78,7 +79,7 @@ class SplitDay(IdMixin, Base):
     split: Mapped[Split] = relationship(back_populates="days")
     items: Mapped[list[WorkoutTemplateItem]] = relationship(
         back_populates="split_day",
-        cascade="all, delete-orphan",
+        cascade="save-update, merge",
         order_by="WorkoutTemplateItem.sequence",
     )
     sessions: Mapped[list[WorkoutSession]] = relationship(back_populates="split_day")
@@ -153,6 +154,13 @@ class WorkoutSession(IdMixin, TimestampMixin, Base):
             name="ck_workout_sessions_effort",
         ),
         Index("idx_workout_sessions_date_status", "user_id", "session_date_local", "status"),
+        Index(
+            "uq_workout_sessions_active_user_date",
+            "user_id",
+            "session_date_local",
+            unique=True,
+            sqlite_where=text("deleted_at IS NULL AND status IN ('draft', 'in_progress')"),
+        ),
     )
 
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))

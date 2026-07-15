@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 
 from levels_api.config import DEFAULT_DATABASE_URL
 from levels_api.database import create_database_engine
-from levels_api.models import Exercise, MuscleGroup, Profile, Split
+from levels_api.models import Exercise, MuscleGroup, Profile, Split, User
+from levels_api.seed.loader import DEFAULT_SEED_EMAIL, DEMO_EMAIL
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,18 +33,29 @@ def verify_database(engine: Engine) -> DatabaseStatus:
         splits = session.scalar(select(func.count()).select_from(Split)) or 0
         profiles = session.scalar(select(func.count()).select_from(Profile)) or 0
         active_splits = session.scalars(select(Split).where(Split.is_active.is_(True))).all()
+        bootstrap_user = session.scalar(
+            select(User).where(User.email_normalized == DEFAULT_SEED_EMAIL)
+        )
+        demo_user = session.scalar(select(User).where(User.email_normalized == DEMO_EMAIL))
         catalog = session.scalars(select(Exercise)).all()
 
     if revision is None:
         raise RuntimeError("Database has no Alembic revision")
-    if (muscle_groups, exercises, splits, profiles) != (25, 98, 2, 1):
+    if (muscle_groups, exercises, splits, profiles) != (25, 98, 4, 2):
         raise RuntimeError(
             "Seed verification failed: expected 25 muscle groups, 98 exercises, "
-            "2 splits, and 1 profile"
+            "4 tenant-owned splits, and 2 profiles"
         )
-    if len(active_splits) != 1:
-        raise RuntimeError("Seed verification failed: expected exactly one active split")
-    if active_splits[0].slug != "brandan-athletic-upper-lower":
+    if bootstrap_user is None or demo_user is None or not demo_user.is_demo:
+        raise RuntimeError("Seed verification failed: missing bootstrap or demo tenant")
+    tenant_active_splits = {split.user_id: split for split in active_splits}
+    if len(active_splits) != 2 or len(tenant_active_splits) != 2:
+        raise RuntimeError("Seed verification failed: expected one active split per tenant")
+    bootstrap_active_split = tenant_active_splits.get(bootstrap_user.id)
+    if (
+        bootstrap_active_split is None
+        or bootstrap_active_split.slug != "brandan-athletic-upper-lower"
+    ):
         raise RuntimeError("Seed verification failed: unexpected active split")
     searchable_catalog = " ".join(
         value for exercise in catalog for value in (exercise.slug, exercise.name, *exercise.aliases)
@@ -57,7 +69,7 @@ def verify_database(engine: Engine) -> DatabaseStatus:
         exercises=exercises,
         splits=splits,
         profiles=profiles,
-        active_split_slug=active_splits[0].slug,
+        active_split_slug=bootstrap_active_split.slug,
     )
 
 

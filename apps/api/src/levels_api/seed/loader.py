@@ -335,8 +335,12 @@ def seed_user_starter(
     """Create an idempotent tenant-owned starter profile, settings, splits, and schedule."""
     catalog = _load_json("exercise_catalog.json")
     split_data = _load_json("seed_splits.json")
-    _seed_muscle_groups(session, catalog)
-    _seed_exercises(session, catalog)
+    # Registration clones tenant starter rows but must not rewrite the shared
+    # catalog on every anonymous request. A clean database still bootstraps it once.
+    if not session.scalar(select(func.count()).select_from(MuscleGroup)):
+        _seed_muscle_groups(session, catalog)
+    if not session.scalar(select(func.count()).select_from(Exercise)):
+        _seed_exercises(session, catalog)
     profile, settings = _seed_profile(
         session, split_data, user, display_name, timezone, preferred_units
     )

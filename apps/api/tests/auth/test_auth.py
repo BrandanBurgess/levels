@@ -13,8 +13,10 @@ from sqlalchemy.orm import Session
 
 from levels_api import Settings, create_app
 from levels_api.auth import require_user
+from levels_api.auth.rate_limit import LoginRateLimiter
+from levels_api.auth.service import REGISTRATION_RATE_LIMITER_KEY
 from levels_api.database import get_engine
-from levels_api.models import Base, Profile, Split, User, UserRole, UserStatus
+from levels_api.models import Base, Exercise, Profile, Split, User, UserRole, UserStatus
 from levels_api.seed import seed_user_starter
 
 EMAIL = "brandan@example.com"
@@ -190,6 +192,8 @@ def test_registration_creates_isolated_starter_account_and_rejects_duplicates(
         "timezone": "Europe/London",
         "preferred_units": "metric",
     }
+    with app.app_context(), Session(get_engine()) as session:
+        catalog_timestamps = dict(session.execute(select(Exercise.id, Exercise.updated_at)).all())
     response = app.test_client().post("/api/v1/auth/register", json=payload)
     assert response.status_code == 201
     body = response.get_json()
@@ -215,10 +219,47 @@ def test_registration_creates_isolated_starter_account_and_rejects_duplicates(
             )
             == 2
         )
+        assert (
+            dict(session.execute(select(Exercise.id, Exercise.updated_at)).all())
+            == catalog_timestamps
+        )
 
     duplicate = app.test_client().post("/api/v1/auth/register", json=payload)
     assert duplicate.status_code == 409
-    assert duplicate.get_json()["error"]["code"] == "ACCOUNT_EXISTS"
+    assert duplicate.get_json()["error"]["code"] == "REGISTRATION_CONFLICT"
+    assert (
+        duplicate.get_json()["error"]["message"] == "Account registration could not be completed."
+    )
+
+
+def test_registration_rate_limit_charges_unique_successful_emails(app: Flask) -> None:
+    app.extensions[REGISTRATION_RATE_LIMITER_KEY] = LoginRateLimiter(limit=2)
+    client = app.test_client()
+    for index in range(2):
+        response = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": f"rate-{index}@example.com",
+                "password": "a secure new password",
+                "display_name": f"Rate Member {index}",
+                "timezone": "America/Toronto",
+                "preferred_units": "metric",
+            },
+        )
+        assert response.status_code == 201
+
+    limited = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "rate-2@example.com",
+            "password": "a secure new password",
+            "display_name": "Rate Member 2",
+            "timezone": "America/Toronto",
+            "preferred_units": "metric",
+        },
+    )
+    assert limited.status_code == 429
+    assert limited.get_json()["error"]["code"] == "RATE_LIMITED"
 
 
 def test_logout_revokes_the_presented_token(app: Flask) -> None:

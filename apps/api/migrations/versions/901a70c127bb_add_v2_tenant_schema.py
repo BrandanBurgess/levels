@@ -702,6 +702,13 @@ def upgrade() -> None:
     with op.batch_alter_table("workout_sessions", schema=None) as batch_op:
         batch_op.alter_column("user_id", existing_type=sa.String(length=36), nullable=False)
         batch_op.alter_column("version", existing_type=sa.Integer(), nullable=False)
+    op.create_index(
+        "uq_workout_sessions_active_user_date",
+        "workout_sessions",
+        ["user_id", "session_date_local"],
+        unique=True,
+        sqlite_where=sa.text("deleted_at IS NULL AND status IN ('draft', 'in_progress')"),
+    )
 
     # ### end Alembic commands ###
 
@@ -710,6 +717,16 @@ def downgrade() -> None:
     connection = op.get_bind()
     demo_user_id = _stable_id("user", DEMO_EMAIL)
     demo_profile_id = _stable_id("profile", demo_user_id)
+    member_tenants = connection.scalar(
+        sa.text("SELECT COUNT(DISTINCT user_id) FROM profiles WHERE user_id <> :demo_user_id"),
+        {"demo_user_id": demo_user_id},
+    )
+    if int(member_tenants or 0) > 1:
+        raise RuntimeError(
+            "LEVELS v2 contains multi-tenant data and cannot be downgraded safely; "
+            "restore a pre-v2 backup or roll forward instead"
+        )
+    op.drop_index("uq_workout_sessions_active_user_date", table_name="workout_sessions")
     # Remove only the synthetic demo tenant before restoring v1's singleton unique
     # constraints. This also keeps downgrade safe after the idempotent demo seed ran.
     for table_name in (

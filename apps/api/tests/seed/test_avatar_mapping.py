@@ -11,7 +11,7 @@ def test_every_seeded_highlightable_muscle_has_a_rendered_svg_region() -> None:
     avatar_source = (
         repository_root / "apps" / "web" / "src" / "features" / "avatar" / "Avatar.tsx"
     ).read_text(encoding="utf-8")
-    rendered_regions = set(re.findall(r'<Region id="([a-z_]+)"', avatar_source))
+    rendered_regions = set(re.findall(r'\{ id: "([a-z_]+)", shapes:', avatar_source))
 
     seeded_regions = {region for regions in SVG_REGIONS.values() for region in regions}
 

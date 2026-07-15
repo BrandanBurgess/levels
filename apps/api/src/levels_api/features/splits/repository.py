@@ -6,9 +6,7 @@ from sqlalchemy.orm import Session
 from levels_api.models import Split
 
 
-def all_splits(
-    session: Session, user_id: str, *, include_archived: bool = False
-) -> list[Split]:
+def all_splits(session: Session, user_id: str, *, include_archived: bool = False) -> list[Split]:
     statement = (
         select(Split)
         .where(Split.user_id == user_id)
@@ -30,6 +28,4 @@ def split_by_id(session: Session, user_id: str, split_id: str) -> Split | None:
 
 
 def split_by_slug(session: Session, user_id: str, slug: str) -> Split | None:
-    return session.scalar(
-        select(Split).where(Split.user_id == user_id, Split.slug == slug)
-    )
+    return session.scalar(select(Split).where(Split.user_id == user_id, Split.slug == slug))

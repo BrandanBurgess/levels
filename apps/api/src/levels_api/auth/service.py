@@ -20,7 +20,9 @@ from levels_api.models import Profile, User, UserRole, UserStatus
 from .rate_limit import LoginRateLimiter
 
 AUTH_RATE_LIMITER_KEY = "levels_auth_rate_limiter"
+REGISTRATION_RATE_LIMITER_KEY = "levels_registration_rate_limiter"
 PASSWORD_HASHER_KEY = "levels_password_hasher"
+DUMMY_PASSWORD_HASH_KEY = "levels_dummy_password_hash"
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,7 +35,10 @@ class Actor:
 
 def init_auth(app: Flask) -> None:
     app.extensions[AUTH_RATE_LIMITER_KEY] = LoginRateLimiter()
-    app.extensions[PASSWORD_HASHER_KEY] = PasswordHasher()
+    app.extensions[REGISTRATION_RATE_LIMITER_KEY] = LoginRateLimiter()
+    hasher = PasswordHasher()
+    app.extensions[PASSWORD_HASHER_KEY] = hasher
+    app.extensions[DUMMY_PASSWORD_HASH_KEY] = hasher.hash("levels-invalid-credential-sentinel")
 
 
 def _configured_value(name: str) -> str:
@@ -63,6 +68,7 @@ def verify_password(password_hash: str, password: str) -> bool:
 def find_login_user(email: str, password: str) -> User | None:
     user = get_db().scalar(select(User).where(User.email_normalized == normalize_email(email)))
     if user is None or user.status is not UserStatus.ACTIVE or user.is_demo:
+        verify_password(cast(str, current_app.extensions[DUMMY_PASSWORD_HASH_KEY]), password)
         return None
     return user if verify_password(user.password_hash, password) else None
 
@@ -178,6 +184,10 @@ def optional_admin() -> str | None:
 
 def login_rate_limiter() -> LoginRateLimiter:
     return cast(LoginRateLimiter, current_app.extensions[AUTH_RATE_LIMITER_KEY])
+
+
+def registration_rate_limiter() -> LoginRateLimiter:
+    return cast(LoginRateLimiter, current_app.extensions[REGISTRATION_RATE_LIMITER_KEY])
 
 
 def client_ip() -> str:

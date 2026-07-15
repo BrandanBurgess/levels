@@ -199,6 +199,7 @@ function CharacterOverviewPanel({ overview }: { overview: CharacterOverview }) {
             <strong>{today.effective_day?.name ?? "Recovery day"}</strong>
             <span>{today.exercise_plan.length} planned exercises</span>
             <form className="character-skip" onSubmit={(event) => void skipToday(event)}>
+              <p className="muted-copy">Skipping records a missed training opportunity and resets your current streak.</p>
               <label>
                 After skipping
                 <select

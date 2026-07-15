@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from levels_api.errors import ApiError
 from levels_api.features.exercises.service import serialize_exercise
+from levels_api.features.history import archive_split_day, archive_template_item
 from levels_api.features.profile.service import require_profile
 from levels_api.models import (
     Exercise,
@@ -161,6 +162,7 @@ def _reconcile_days(
             day = matched_day
         else:
             day = SplitDay(recommended_weekday=None, description=None)
+            session.add(day)
         existing_items = {item.id: item for item in day.items}
         reconciled_items: list[WorkoutTemplateItem] = []
         for item_write in sorted(day_write.items, key=lambda value: value.sequence):
@@ -172,15 +174,25 @@ def _reconcile_days(
                 item = matched_item
             else:
                 item = WorkoutTemplateItem()
+                session.add(item)
             _reconcile_item(item, item_write, exercises)
             reconciled_items.append(item)
         day.name = day_write.name
         day.day_type = day_write.day_type
         day.sequence = day_write.sequence
         day.is_optional = day_write.is_optional
+        for retired_item in existing_items.values():
+            archive_template_item(session, user_id, retired_item)
+        for item in reconciled_items:
+            item.split_day = day
         day.items = reconciled_items
         reconciled_days.append(day)
+        day.split = split
+    for retired_day in existing_days.values():
+        archive_split_day(session, user_id, retired_day)
     split.days = reconciled_days
+    session.flush()
+    session.expire(split, ["days"])
 
 
 def _apply_write(
