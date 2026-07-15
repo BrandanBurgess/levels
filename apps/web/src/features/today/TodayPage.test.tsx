@@ -27,11 +27,11 @@ const press: Exercise = {
   default_rep_max: 12,
   default_rest_seconds: 120,
   automatic_progression_enabled: true,
-  muscle_targets: [],
+  muscle_targets: [{ slug: "upper_chest", display_name: "Upper Chest", role: "primary", intensity: 1, svg_region_ids: ["chest_upper"] }],
 };
 
-const row: Exercise = { ...press, id: "row", slug: "row", name: "Cable Row", variation_group: "row", movement_pattern: "horizontal_pull", equipment: "cable" };
-const curl: Exercise = { ...press, id: "curl", slug: "curl", name: "Cable Curl", variation_group: "curl", movement_pattern: "elbow_flexion", equipment: "cable", compound: false };
+const row: Exercise = { ...press, id: "row", slug: "row", name: "Cable Row", variation_group: "row", movement_pattern: "horizontal_pull", equipment: "cable", muscle_targets: [{ slug: "upper_back", display_name: "Upper Back", role: "primary", intensity: 1, svg_region_ids: ["upper_back"] }] };
+const curl: Exercise = { ...press, id: "curl", slug: "curl", name: "Cable Curl", variation_group: "curl", movement_pattern: "elbow_flexion", equipment: "cable", compound: false, muscle_targets: [{ slug: "biceps", display_name: "Biceps", role: "primary", intensity: 1, svg_region_ids: ["biceps"] }] };
 
 const day = {
   id: "upper-a",
@@ -58,8 +58,8 @@ const today: Today = {
   override: null,
   schedule_version: 7,
   exercise_plan: [
-    { id: "plan-press", source_template_item_id: "template-press", exercise: press, sequence: 1, item_type: "main", planned_sets: 3, rep_min: 8, rep_max: 12, optional: false },
-    { id: "plan-row", source_template_item_id: "template-row", exercise: row, sequence: 2, item_type: "main", planned_sets: 3, rep_min: 8, rep_max: 12, optional: false },
+    { id: "plan-press", source_template_item_id: "template-press", exercise: press, sequence: 0, item_type: "main", planned_sets: 3, rep_min: 8, rep_max: 12, optional: false },
+    { id: "plan-row", source_template_item_id: "template-row", exercise: row, sequence: 1, item_type: "main", planned_sets: 3, rep_min: 8, rep_max: 12, optional: false },
   ],
   active_session: null,
   muscle_targets: [{ slug: "upper_chest", display_name: "Upper Chest", role: "primary", intensity: 1, svg_region_ids: ["chest_upper"] }],
@@ -69,11 +69,11 @@ const today: Today = {
   streak: { current_count: 4, longest_count: 9, tier: "active", last_qualified_local_date: "2026-07-14", next_milestone: 7 },
 };
 
-function renderPage(todayResponse: Today = today) {
+function renderPage(todayResponse: Today = today, options: { reducedMotion?: boolean | null } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   vi.spyOn(apiClient, "GET").mockImplementation(async (path) => {
     if (path === "/today") return { data: todayResponse, response: new Response() } as never;
-    if (path === "/settings") return { data: { week_starts_on: 1, default_water_goal_ml: 2800, water_quick_add_ml: [250, 500], reduced_motion_override: null, visibility: {} }, response: new Response() } as never;
+    if (path === "/settings") return { data: { week_starts_on: 1, default_water_goal_ml: 2800, water_quick_add_ml: [250, 500], reduced_motion_override: options.reducedMotion ?? null, visibility: {} }, response: new Response() } as never;
     if (path === "/splits") return { data: [split], response: new Response() } as never;
     return { data: [press, row, curl], response: new Response() } as never;
   });
@@ -92,10 +92,17 @@ describe("TodayPage", () => {
     expect(screen.getByRole("heading", { name: "0 mL" })).toBeInTheDocument();
   });
 
+  it("passes a server-side reduced-motion preference to the Today avatar", async () => {
+    const { container } = renderPage(today, { reducedMotion: true });
+    await screen.findByRole("heading", { name: "Ready for Upper A" });
+    await waitFor(() => expect(container.querySelector('[data-reduced-motion="true"]')).not.toBeNull());
+  });
+
   it("skips today with explicit advance or keep behavior", async () => {
     const post = vi.spyOn(apiClient, "POST").mockResolvedValue({ data: { ...today, schedule_version: 8 }, response: new Response() } as never);
     renderPage();
     fireEvent.click(await screen.findByRole("button", { name: "Skip today" }));
+    expect(screen.getByText(/resets your current 4-day streak/i)).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText("Keep this workout next"));
     fireEvent.click(screen.getByRole("button", { name: "Confirm skip" }));
     await waitFor(() => expect(post).toHaveBeenCalledWith("/today/skip", expect.objectContaining({
@@ -103,6 +110,15 @@ describe("TodayPage", () => {
       params: { header: { "Idempotency-Key": expect.any(String) } },
     })));
     expect(await screen.findByRole("status")).toHaveTextContent("next workout stays in place");
+  });
+
+  it("recovers from a thrown skip request and re-enables the confirmation", async () => {
+    vi.spyOn(apiClient, "POST").mockRejectedValue(new Error("offline"));
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Skip today" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm skip" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Check your connection");
+    expect(screen.getByRole("button", { name: "Confirm skip" })).toBeEnabled();
   });
 
   it.each([
@@ -127,6 +143,7 @@ describe("TodayPage", () => {
     const put = vi.spyOn(apiClient, "PUT").mockResolvedValue({ data: today, response: new Response() } as never);
     renderPage();
     fireEvent.click(await screen.findByRole("button", { name: "Edit exercises" }));
+    fireEvent.change(screen.getByLabelText("Exercise picker collection"), { target: { value: "all" } });
     fireEvent.change(screen.getByLabelText("Exercise to add"), { target: { value: "curl" } });
     fireEvent.click(screen.getByRole("button", { name: "Add exercise" }));
     fireEvent.click(screen.getByRole("button", { name: "Move Cable Curl up" }));
@@ -139,7 +156,55 @@ describe("TodayPage", () => {
     const items = (put.mock.calls[0]?.[1]?.body as components["schemas"]["TodayExercisePlanUpdate"]).items;
     expect(items).toHaveLength(2);
     expect(items.map((item) => item.exercise_id)).toEqual(["curl", "curl"]);
-    expect(items.map((item) => item.sequence)).toEqual([1, 2]);
+    expect(items.map((item) => item.sequence)).toEqual([0, 1]);
+  });
+
+  it("defaults to recommendations, combines picker filters, and edits prescription fields", async () => {
+    const put = vi.spyOn(apiClient, "PUT").mockResolvedValue({ data: today, response: new Response() } as never);
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Edit exercises" }));
+
+    expect(screen.getByLabelText("Exercise picker collection")).toHaveValue("recommended");
+    expect(Array.from((screen.getByLabelText("Exercise to add") as HTMLSelectElement).options).map((option) => option.text)).toEqual(["Incline Press", "Cable Row"]);
+
+    fireEvent.change(screen.getByLabelText("Exercise picker collection"), { target: { value: "all" } });
+    fireEvent.change(screen.getByLabelText("Muscle filter"), { target: { value: "biceps" } });
+    fireEvent.change(screen.getByLabelText("Equipment filter"), { target: { value: "cable" } });
+    fireEvent.change(screen.getByLabelText("Movement filter"), { target: { value: "elbow_flexion" } });
+    fireEvent.change(screen.getByLabelText("Measurement filter"), { target: { value: "load_reps" } });
+    await waitFor(() => expect(Array.from((screen.getByLabelText("Exercise to add") as HTMLSelectElement).options).map((option) => option.text)).toEqual(["Cable Curl"]));
+
+    fireEvent.change(screen.getByLabelText("Planned sets for Incline Press"), { target: { value: "4" } });
+    fireEvent.change(screen.getByLabelText("Minimum reps for Incline Press"), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText("Maximum reps for Incline Press"), { target: { value: "14" } });
+    fireEvent.change(screen.getByLabelText("Rest seconds for Incline Press"), { target: { value: "90" } });
+    fireEvent.change(screen.getByLabelText("Target RIR for Incline Press"), { target: { value: "2" } });
+    fireEvent.click(screen.getByLabelText("Optional Incline Press"));
+    fireEvent.change(screen.getByLabelText("Notes for Incline Press"), { target: { value: "Controlled tempo" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save for today only" }));
+
+    await waitFor(() => expect(put).toHaveBeenCalled());
+    const item = (put.mock.calls[0]?.[1]?.body as components["schemas"]["TodayExercisePlanUpdate"]).items[0];
+    expect(item).toEqual(expect.objectContaining({ planned_sets: 4, rep_min: 10, rep_max: 14, rest_seconds: 90, target_rir: 2, optional: true, notes: "Controlled tempo" }));
+  });
+
+  it("resets Save to split after cancel and after a successful save", async () => {
+    const put = vi.spyOn(apiClient, "PUT").mockResolvedValue({ data: today, response: new Response() } as never);
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Edit exercises" }));
+    fireEvent.click(screen.getByLabelText("Save these changes to the split too"));
+    fireEvent.change(screen.getByLabelText("Exercise picker collection"), { target: { value: "all" } });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit exercises" }));
+    expect(screen.getByLabelText("Save these changes to the split too")).not.toBeChecked();
+    expect(screen.getByLabelText("Exercise picker collection")).toHaveValue("recommended");
+
+    fireEvent.click(screen.getByLabelText("Save these changes to the split too"));
+    fireEvent.click(screen.getByRole("button", { name: "Save today and split" }));
+    await screen.findByText("Exercise plan saved to today and the split.");
+    fireEvent.click(screen.getByRole("button", { name: "Edit exercises" }));
+    expect(screen.getByLabelText("Save these changes to the split too")).not.toBeChecked();
+    expect(put).toHaveBeenCalledTimes(1);
   });
 
   it("can save an exercise edit back to the split", async () => {
