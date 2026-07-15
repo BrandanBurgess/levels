@@ -4,7 +4,7 @@ Date: 2026-07-15
 
 Branch: `feature/lv2-101-205-tenant-foundation`
 
-Verified implementation commit: `0dcca4d`
+Verified implementation commit: `de798bf`
 
 Overall result: **PASS**
 
@@ -14,7 +14,7 @@ Command: `npm run verify`
 
 Result: PASS
 
-Elapsed time: 116.4 seconds
+Elapsed time: 117.3 seconds
 
 The gate ran, in order:
 
@@ -32,7 +32,7 @@ The gate ran, in order:
 4. `npm run test`
    - Web: PASS (`16` files, `62` tests)
    - Generated client: PASS (`1` file, `2` tests)
-   - API: PASS (`135` tests)
+   - API: PASS (`136` tests)
    - Web coverage: 78.05% statements, 69.88% branches, 75.82% functions, 83.03% lines
    - API coverage: 92%
 5. `npm run openapi:check`
@@ -50,6 +50,7 @@ The gate ran, in order:
 - Populated v1 migration preserves IDs, timestamps, sessions, sets, and snapshots.
 - Migration metadata matches the SQLAlchemy model metadata.
 - Multi-tenant downgrade aborts before mutation when it cannot be performed safely.
+- Deployment seeding creates only the fixed fictional demo tenant; member starter data is created explicitly during registration or test setup.
 - Runtime SQLite foreign-key enforcement is verified.
 - Tenant isolation covers profiles, splits, sessions and children, hydration, records, growth, export, custom exercises, avatar, settings, and schedule state.
 - Cross-tenant object access returns `404`; demo writes return `401` or `405` and change no data.
