@@ -1,88 +1,50 @@
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 
-import { AppShell } from "./app/AppShell";
 import { AppProviders } from "./app/AppProviders";
+import { AppShell } from "./app/AppShell";
 import { PlaceholderPage } from "./app/PlaceholderPage";
+import { GuestOnly, MemberAccess } from "./auth/MemberAccess";
 import { LoginPage } from "./auth/LoginPage";
+import { RegisterPage } from "./auth/RegisterPage";
 import { CharacterPage } from "./features/character/CharacterPage";
-import { LibraryPage } from "./features/library/LibraryPage";
-import { JournalPage } from "./features/journal/JournalPage";
+import { DemoPage } from "./features/demo/DemoPage";
 import { GrowthPage } from "./features/growth/GrowthPage";
+import { JournalPage } from "./features/journal/JournalPage";
+import { LibraryPage } from "./features/library/LibraryPage";
 import { ProgressPage } from "./features/progress/ProgressPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { SplitsPage } from "./features/splits/SplitsPage";
 import { TodayPage } from "./features/today/TodayPage";
 
-const pages = {
-  today: {
-    eyebrow: "TODAY · MONDAY",
-    title: "Ready for Upper A",
-    description: "Your training plan, target muscles, hydration, and latest wins live here.",
-  },
-  journal: {
-    eyebrow: "TRAINING LOG",
-    title: "Journal",
-    description: "Start a workout or revisit a completed training session.",
-  },
-  character: {
-    eyebrow: "YOUR CHARACTER",
-    title: "Character",
-    description: "See the muscles your current plan is developing, front and back.",
-  },
-  progress: {
-    eyebrow: "TRAINING HISTORY",
-    title: "Progress",
-    description: "Review personal records, volume, and consistent work over time.",
-  },
-  more: {
-    eyebrow: "PLAN & PREFERENCES",
-    title: "More",
-    description: "Open Growth, Splits, Library, or Settings.",
-  },
-  growth: {
-    eyebrow: "EXPLAINABLE GUIDANCE",
-    title: "Growth",
-    description: "See conservative suggestions backed by your recent sessions.",
-  },
-  splits: {
-    eyebrow: "TRAINING PLAN",
-    title: "Splits",
-    description: "Explore the active Upper / Lower plan and alternative routines.",
-  },
-  library: {
-    eyebrow: "EXERCISE CATALOG",
-    title: "Library",
-    description: "Search movements, variations, equipment, and muscle targets.",
-  },
-  settings: {
-    eyebrow: "OWNER CONTROLS",
-    title: "Settings",
-    description: "Manage profile details, units, visibility, and training defaults.",
-  },
-} as const;
+const morePage = {
+  eyebrow: "PLAN & PREFERENCES",
+  title: "More",
+  description: "Open Growth, Splits, Library, or Settings.",
+};
 
 export function App() {
   return (
     <AppProviders>
       <HashRouter>
         <Routes>
-        <Route element={<AppShell />}>
-          <Route index element={<TodayPage />} />
-          <Route path="growth" element={<GrowthPage />} />
-          <Route path="journal" element={<JournalPage />} />
-          <Route path="progress" element={<ProgressPage />} />
-          <Route path="character" element={<CharacterPage />} />
-          <Route path="library" element={<LibraryPage />} />
-          <Route path="splits" element={<SplitsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          {Object.entries(pages)
-            .filter(([path]) => !["today", "growth", "journal", "character", "progress", "library", "splits", "settings"].includes(path))
-            .map(([path, page]) => (
-              <Route key={path} path={path} element={<PlaceholderPage {...page} />} />
-            ))}
-          <Route path="*" element={<Navigate replace to="/" />} />
-          <Route path="login" element={<LoginPage />} />
-        </Route>
+          <Route path="login" element={<GuestOnly><LoginPage /></GuestOnly>} />
+          <Route path="register" element={<GuestOnly><RegisterPage /></GuestOnly>} />
+          <Route path="demo/*" element={<DemoPage />} />
+
+          <Route element={<MemberAccess />}>
+            <Route element={<AppShell />}>
+              <Route index element={<TodayPage />} />
+              <Route path="growth" element={<GrowthPage />} />
+              <Route path="journal" element={<JournalPage />} />
+              <Route path="progress" element={<ProgressPage />} />
+              <Route path="character" element={<CharacterPage />} />
+              <Route path="library" element={<LibraryPage />} />
+              <Route path="splits" element={<SplitsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="more" element={<PlaceholderPage {...morePage} />} />
+              <Route path="*" element={<Navigate replace to="/" />} />
+            </Route>
+          </Route>
         </Routes>
       </HashRouter>
     </AppProviders>

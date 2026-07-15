@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from flask import Flask
+from sqlalchemy import text
 
 from levels_api import Settings, create_app
 from levels_api.config import ConfigurationError
@@ -118,11 +119,17 @@ def test_cors_uses_exact_allowlist_without_credentials(app: Flask) -> None:
         "/api/v1/health",
         headers={
             "Origin": "http://localhost:5173",
-            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Method": "PUT",
         },
     )
     assert preflight.status_code == 200
     assert preflight.headers["Access-Control-Allow-Origin"] == "http://localhost:5173"
+    assert "PUT" in preflight.headers["Access-Control-Allow-Methods"]
+
+
+def test_runtime_sqlite_engine_enforces_foreign_keys(app: Flask) -> None:
+    with app.app_context(), get_engine().connect() as connection:
+        assert connection.scalar(text("PRAGMA foreign_keys")) == 1
 
 
 def test_database_session_is_request_scoped(app: Flask) -> None:

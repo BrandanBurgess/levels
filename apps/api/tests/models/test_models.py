@@ -23,6 +23,7 @@ from levels_api.models import (
     SetType,
     Split,
     SplitDay,
+    User,
     VisibilitySettings,
     WorkoutSession,
 )
@@ -49,6 +50,11 @@ def test_metadata_contains_complete_schema(engine: Engine) -> None:
     assert table_names == {
         "achievements",
         "app_settings",
+        "avatar_settings",
+        "command_receipts",
+        "daily_exercise_plan_items",
+        "daily_exercise_plans",
+        "daily_plan_overrides",
         "exercise_muscles",
         "exercises",
         "muscle_groups",
@@ -56,11 +62,13 @@ def test_metadata_contains_complete_schema(engine: Engine) -> None:
         "profiles",
         "progression_suggestions",
         "readiness_logs",
+        "schedule_state",
         "session_exercises",
         "set_logs",
         "split_days",
         "splits",
         "template_alternatives",
+        "users",
         "visibility_settings",
         "water_logs",
         "workout_sessions",
@@ -68,9 +76,21 @@ def test_metadata_contains_complete_schema(engine: Engine) -> None:
     }
 
 
+def create_user(session: Session, email: str = "member@example.com") -> User:
+    user = User(email_normalized=email, password_hash="test-password-hash")
+    session.add(user)
+    session.flush()
+    return user
+
+
 def test_profile_defaults_and_json_values_are_independent(engine: Engine) -> None:
     with Session(engine) as session:
-        profile = Profile(display_name="Brandan", preferred_units=PreferredUnits.IMPERIAL)
+        user = create_user(session)
+        profile = Profile(
+            user_id=user.id,
+            display_name="Brandan",
+            preferred_units=PreferredUnits.IMPERIAL,
+        )
         profile.visibility = VisibilitySettings()
         profile.settings = AppSettings()
         session.add(profile)
@@ -84,8 +104,10 @@ def test_profile_defaults_and_json_values_are_independent(engine: Engine) -> Non
 
 def test_database_rejects_out_of_range_profile_height(engine: Engine) -> None:
     with Session(engine) as session:
+        user = create_user(session)
         session.add(
             Profile(
+                user_id=user.id,
                 display_name="Brandan",
                 height_cm=99,
                 preferred_units=PreferredUnits.IMPERIAL,
@@ -98,6 +120,7 @@ def test_database_rejects_out_of_range_profile_height(engine: Engine) -> None:
 
 def test_session_exercise_is_a_historical_snapshot(engine: Engine) -> None:
     with Session(engine) as session:
+        user = create_user(session)
         exercise = Exercise(
             slug="incline_press",
             name="Incline Press",
@@ -109,10 +132,11 @@ def test_session_exercise_is_a_historical_snapshot(engine: Engine) -> None:
             compound=True,
             unilateral=False,
         )
-        split = Split(name="Upper Lower", slug="upper-lower")
+        split = Split(user_id=user.id, name="Upper Lower", slug="upper-lower")
         day = SplitDay(name="Upper A", day_type="upper", sequence=1)
         split.days.append(day)
         workout = WorkoutSession(
+            user_id=user.id,
             split_day=day,
             session_date_local=date(2026, 7, 13),
             status=SessionStatus.IN_PROGRESS,
@@ -150,6 +174,7 @@ def test_session_exercise_is_a_historical_snapshot(engine: Engine) -> None:
 
 def test_set_idempotency_key_is_unique(engine: Engine) -> None:
     with Session(engine) as session:
+        user = create_user(session)
         exercise = Exercise(
             slug="cable_curl",
             name="Cable Curl",
@@ -162,6 +187,7 @@ def test_set_idempotency_key_is_unique(engine: Engine) -> None:
             unilateral=False,
         )
         workout = WorkoutSession(
+            user_id=user.id,
             session_date_local=date(2026, 7, 13),
             status=SessionStatus.IN_PROGRESS,
             title="Arms",
@@ -188,5 +214,30 @@ def test_set_idempotency_key_is_unique(engine: Engine) -> None:
         workout.exercises.extend([first, second])
         session.add(workout)
 
+        with pytest.raises(IntegrityError):
+            session.commit()
+
+
+def test_only_one_active_session_is_allowed_per_member_and_date(engine: Engine) -> None:
+    with Session(engine) as session:
+        user = create_user(session)
+        session.add_all(
+            [
+                WorkoutSession(
+                    user_id=user.id,
+                    session_date_local=date(2026, 7, 13),
+                    status=SessionStatus.IN_PROGRESS,
+                    title="First",
+                    public_visibility=PublicVisibility.PRIVATE,
+                ),
+                WorkoutSession(
+                    user_id=user.id,
+                    session_date_local=date(2026, 7, 13),
+                    status=SessionStatus.DRAFT,
+                    title="Second",
+                    public_visibility=PublicVisibility.PRIVATE,
+                ),
+            ]
+        )
         with pytest.raises(IntegrityError):
             session.commit()

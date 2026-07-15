@@ -34,7 +34,7 @@ class RecordResult:
     current_records: list[PersonalRecord]
 
 
-def _eligible_sets(session: Session, exercise_id: str) -> list[SetLog]:
+def _eligible_sets(session: Session, user_id: str, exercise_id: str) -> list[SetLog]:
     return list(
         session.scalars(
             select(SetLog)
@@ -42,6 +42,7 @@ def _eligible_sets(session: Session, exercise_id: str) -> list[SetLog]:
             .join(SessionExercise.workout_session)
             .where(
                 SessionExercise.exercise_id == exercise_id,
+                WorkoutSession.user_id == user_id,
                 SetLog.deleted_at.is_(None),
                 SetLog.set_type != SetType.WARMUP,
                 WorkoutSession.deleted_at.is_(None),
@@ -160,8 +161,8 @@ def _achievement_key(candidate: Candidate) -> str:
     return f"record:{candidate.set_log.id}:{candidate.record_type.value}"
 
 
-def rebuild_records(session: Session, exercise_id: str) -> RecordResult:
-    sets = _eligible_sets(session, exercise_id)
+def rebuild_records(session: Session, user_id: str, exercise_id: str) -> RecordResult:
+    sets = _eligible_sets(session, user_id, exercise_id)
     candidates = [candidate for set_log in sets for candidate in _set_candidates(set_log)]
     candidates.extend(_volume_candidates(sets))
     candidates.sort(
@@ -175,7 +176,12 @@ def rebuild_records(session: Session, exercise_id: str) -> RecordResult:
     )
 
     existing_records = list(
-        session.scalars(select(PersonalRecord).where(PersonalRecord.exercise_id == exercise_id))
+        session.scalars(
+            select(PersonalRecord).where(
+                PersonalRecord.user_id == user_id,
+                PersonalRecord.exercise_id == exercise_id,
+            )
+        )
     )
     for record in existing_records:
         session.delete(record)
@@ -191,6 +197,7 @@ def rebuild_records(session: Session, exercise_id: str) -> RecordResult:
             if record.record_type == candidate.record_type:
                 record.is_current = False
         record = PersonalRecord(
+            user_id=user_id,
             exercise_id=exercise_id,
             record_type=candidate.record_type,
             value_numeric=candidate.value.quantize(Decimal("0.0001")),
@@ -209,6 +216,7 @@ def rebuild_records(session: Session, exercise_id: str) -> RecordResult:
         achievement.idempotency_key: achievement
         for achievement in session.scalars(
             select(Achievement).where(
+                Achievement.user_id == user_id,
                 Achievement.exercise_id == exercise_id,
                 Achievement.achievement_type == "personal_record",
             )
@@ -220,6 +228,7 @@ def rebuild_records(session: Session, exercise_id: str) -> RecordResult:
         achievement = existing_achievements.pop(key, None)
         if achievement is None:
             achievement = Achievement(
+                user_id=user_id,
                 achievement_type="personal_record",
                 exercise_id=exercise_id,
                 set_log=candidate.set_log,

@@ -11,6 +11,36 @@ class PreferredUnits(StrEnum):
     METRIC = "metric"
 
 
+class UserStatus(StrEnum):
+    ACTIVE = "active"
+    DISABLED = "disabled"
+
+
+class UserRole(StrEnum):
+    MEMBER = "member"
+    ADMIN = "admin"
+
+
+class BasePresentation(StrEnum):
+    MALE = "male"
+    FEMALE = "female"
+
+
+class OverrideAction(StrEnum):
+    REPLACE = "replace"
+    SWAP = "swap"
+    REST = "rest"
+    SKIP = "skip"
+
+
+class ScheduleEffect(StrEnum):
+    ONE_TIME = "one_time"
+    CONTINUE_FROM_HERE = "continue_from_here"
+    SWAP_FORWARD = "swap_forward"
+    ADVANCE = "advance"
+    KEEP = "keep"
+
+
 class MuscleRole(StrEnum):
     PRIMARY = "primary"
     SECONDARY = "secondary"

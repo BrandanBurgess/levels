@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from flask import Blueprint, Response, jsonify, request
 
-from levels_api.auth import optional_admin
+from levels_api.auth import current_user_id, require_user
 from levels_api.database import get_db
 from levels_api.errors import ApiError
 
@@ -21,11 +21,12 @@ def _current_only() -> bool:
 
 
 @record_blueprint.get("/records")
+@require_user
 def get_records() -> tuple[Response, int]:
     result = list_record_payloads(
         get_db(),
+        current_user_id(),
         exercise_id=request.args.get("exercise_id"),
         current_only=_current_only(),
-        owner=optional_admin() is not None,
     )
     return jsonify(result), 200

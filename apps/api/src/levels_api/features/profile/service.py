@@ -1,18 +1,20 @@
 from __future__ import annotations
 
+from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from levels_api.errors import ApiError
-from levels_api.models import Profile
+from levels_api.models import Profile, ScheduleState, Split, SplitDay
 
 from . import repository
 from .schemas import ProfileUpdate, SettingsUpdate
 
 
-def require_profile(session: Session) -> Profile:
-    profile = repository.get_profile(session)
+def require_profile(session: Session, user_id: str) -> Profile:
+    profile = repository.get_profile(session, user_id)
     if profile is None or profile.settings is None or profile.visibility is None:
         raise ApiError(503, "DATA_NOT_INITIALIZED", "Profile data is unavailable.")
     return profile
@@ -47,22 +49,43 @@ def update_profile(session: Session, profile: Profile, update: ProfileUpdate) ->
         profile.timezone = update.timezone
 
 
-def update_settings(session: Session, profile: Profile, update: SettingsUpdate) -> None:
+def update_settings(
+    session: Session, user_id: str, profile: Profile, update: SettingsUpdate
+) -> None:
     settings = profile.settings
     visibility = profile.visibility
     assert settings is not None and visibility is not None
     fields = update.model_fields_set
     if "active_split_id" in fields:
         if update.active_split_id is not None and not repository.split_exists(
-            session, update.active_split_id
+            session, user_id, update.active_split_id
         ):
             raise ApiError(
-                400,
-                "VALIDATION_ERROR",
-                "One or more fields are invalid.",
-                {"active_split_id": "Split does not exist."},
+                404,
+                "NOT_FOUND",
+                "The requested split was not found.",
             )
         settings.active_split_id = update.active_split_id
+        for split in session.scalars(select(Split).where(Split.user_id == user_id)):
+            split.is_active = split.id == update.active_split_id
+        state = session.get(ScheduleState, user_id)
+        if state is None:
+            raise ApiError(503, "DATA_NOT_INITIALIZED", "Schedule data is unavailable.")
+        first_day = (
+            session.scalar(
+                select(SplitDay)
+                .where(SplitDay.split_id == update.active_split_id)
+                .order_by(SplitDay.sequence)
+            )
+            if update.active_split_id is not None
+            else None
+        )
+        state.active_split_id = update.active_split_id
+        state.cursor_split_day_id = first_day.id if first_day is not None else None
+        state.cursor_effective_date = (
+            datetime.now(ZoneInfo(profile.timezone)).date() if first_day is not None else None
+        )
+        state.version += 1
     for field in (
         "week_starts_on",
         "default_water_goal_ml",

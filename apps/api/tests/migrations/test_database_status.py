@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from levels_api.models import Exercise
 from levels_api.scripts.database_status import verify_database
-from levels_api.seed import seed_session
+from levels_api.seed import seed_demo_session, seed_session
 
 API_ROOT = Path(__file__).resolve().parents[2]
 
@@ -23,6 +23,7 @@ def _seeded_engine(tmp_path: Path) -> Engine:
     engine = create_engine(database_url)
     with Session(engine) as session, session.begin():
         seed_session(session)
+        seed_demo_session(session)
     return engine
 
 
@@ -33,7 +34,7 @@ def test_database_status_accepts_migrated_seeded_database(tmp_path: Path) -> Non
     finally:
         engine.dispose()
 
-    assert status.revision == "a91f6028df36"
+    assert status.revision == "901a70c127bb"
     assert status.active_split_slug == "brandan-athletic-upper-lower"
 
 

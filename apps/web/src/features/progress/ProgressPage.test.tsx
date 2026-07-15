@@ -16,7 +16,7 @@ const history: RecordItem[] = [
   currentRecord,
 ];
 const exercises = [{ id: "press", slug: "incline_press", name: "Incline Press", aliases: [], variation_group: "incline_press", movement_pattern: "horizontal_push", equipment: "barbell", measurement_type: "load_reps" as const, compound: true, unilateral: false, automatic_progression_enabled: true, muscle_targets: [{ slug: "upper_chest", display_name: "Upper Chest", role: "primary" as const, intensity: 1, svg_region_ids: ["chest_upper"] }] }];
-const sessions = [{ id: "session-1", split_day_id: "upper-a", session_date_local: "2026-07-10", started_at: "2026-07-10T12:00:00Z", completed_at: "2026-07-10T13:00:00Z", status: "completed" as const, title: "Upper A", public_visibility: "full" as const, perceived_effort: 7, exercises: [{ id: "item", exercise_id: "press", display_name: "Incline Press", sequence: 1, sets: [] }] }];
+const sessions = [{ id: "session-1", version: 1, split_day_id: "upper-a", session_date_local: "2026-07-10", started_at: "2026-07-10T12:00:00Z", completed_at: "2026-07-10T13:00:00Z", status: "completed" as const, title: "Upper A", perceived_effort: 7, exercises: [{ id: "item", exercise_id: "press", display_name: "Incline Press", variation_group: "press", sequence: 1, planned_sets: 3, item_type: "main" as const, optional: false, sets: [] }] }];
 
 function renderPage(isAuthenticated = false, records = { current, history }) {
   vi.spyOn(apiClient, "GET")
@@ -48,7 +48,7 @@ describe("ProgressPage", () => {
     fireEvent.change(screen.getByLabelText("Exercise"), { target: { value: "press" } });
     fireEvent.change(screen.getByLabelText("Muscle"), { target: { value: "upper_chest" } });
     expect(screen.getAllByText("Incline Press")).not.toHaveLength(0);
-    expect(apiClient.GET).toHaveBeenCalledWith("/sessions", { params: { query: { public_only: false } } });
+    expect(apiClient.GET).toHaveBeenCalledWith("/sessions", { params: { query: {} } });
   });
 
   it("explains a privacy-safe empty records state", async () => {

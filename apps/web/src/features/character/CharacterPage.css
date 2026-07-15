@@ -1,0 +1,112 @@
+.character-page {
+  min-width: 0;
+}
+
+.character-tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin: 0 0 1rem;
+  padding: 0.25rem;
+  border: 1px solid rgb(196 154 255 / 20%);
+  border-radius: 0.85rem;
+  background: var(--surface-1);
+}
+
+.character-tabs button {
+  padding: 0.62rem 0.95rem;
+  border: 0;
+  border-radius: 0.65rem;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.character-tabs button[aria-selected="true"] {
+  color: var(--text-strong);
+  background: var(--purple-700);
+}
+
+.character-tabs button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+.character-overview,
+.character-layout,
+.character-avatar-card,
+.character-profile-card {
+  min-width: 0;
+}
+
+.character-workout-summary {
+  display: grid;
+  gap: 0.3rem;
+  margin: 1rem 0;
+  padding: 0.9rem;
+  border: 1px solid rgb(196 154 255 / 14%);
+  border-radius: 0.75rem;
+  background: rgb(139 61 255 / 7%);
+}
+
+.character-workout-summary strong {
+  color: var(--text-strong);
+}
+
+.character-workout-summary span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.character-skip {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+
+.character-skip label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.character-skip select {
+  min-width: 0;
+  padding: 0.55rem;
+  border: 1px solid rgb(196 154 255 / 24%);
+  border-radius: 0.55rem;
+  color: var(--text-strong);
+  background: var(--surface-1);
+  font: inherit;
+}
+
+.character-skip__message {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 30rem) {
+  .character-avatar-card,
+  .character-profile-card,
+  .character-editor {
+    padding: 0.9rem;
+  }
+
+  .character-avatar-card > .card-heading-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .character-avatar-card .segmented-control {
+    align-self: flex-start;
+  }
+
+  .character-facts div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

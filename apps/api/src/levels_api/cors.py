@@ -5,7 +5,7 @@ from typing import cast
 from flask import Flask, Response, request
 
 ALLOWED_HEADERS = "Authorization, Content-Type, Idempotency-Key, X-Request-ID"
-ALLOWED_METHODS = "GET, POST, PATCH, DELETE, OPTIONS"
+ALLOWED_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
 
 
 def init_cors(app: Flask) -> None:

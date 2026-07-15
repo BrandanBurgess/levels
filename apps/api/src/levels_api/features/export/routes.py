@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 from flask import Blueprint, Response, current_app, jsonify, request
 
-from levels_api.auth import require_admin
+from levels_api.auth import current_user_id, require_user
 from levels_api.database import get_db
 from levels_api.errors import ApiError
 
@@ -14,13 +14,14 @@ export_blueprint = Blueprint("export", __name__, url_prefix="/api/v1")
 
 
 @export_blueprint.get("/export")
-@require_admin
+@require_user
 def get_export() -> Response | tuple[Response, int]:
     export_format = request.args.get("format")
     if export_format not in {"json", "csv"}:
         raise ApiError(400, "VALIDATION_ERROR", "format must be json or csv.")
     payload = export_payload(
         get_db(),
+        current_user_id(),
         exported_at=datetime.now(UTC),
         version=str(current_app.config["API_VERSION"]),
     )

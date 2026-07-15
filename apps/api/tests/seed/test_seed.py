@@ -17,10 +17,11 @@ from levels_api.models import (
     Profile,
     Split,
     SplitDay,
+    User,
     VisibilitySettings,
     WorkoutTemplateItem,
 )
-from levels_api.seed import seed_session
+from levels_api.seed import seed_database, seed_session
 
 REPO_ROOT = Path(__file__).parents[4]
 HANDOFF_ROOT = REPO_ROOT / "docs" / "levels_product_handoff" / "levels_product_handoff"
@@ -66,6 +67,27 @@ def test_seed_is_idempotent_and_selects_active_split(seeded_session: Session) ->
     assert seeded_session.scalar(select(func.count()).select_from(VisibilitySettings)) == 1
     assert seeded_session.scalar(select(func.count()).select_from(AppSettings)) == 1
     assert seeded_session.scalar(select(func.count()).select_from(ExerciseMuscle)) == 277
+
+
+def test_deployment_seed_creates_only_fictional_demo_tenant(tmp_path: Path) -> None:
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'deployment-seed.db'}"
+    engine = create_engine(database_url)
+    Base.metadata.create_all(engine)
+    engine.dispose()
+
+    first = seed_database(database_url)
+    second = seed_database(database_url)
+
+    assert first == second
+    engine = create_engine(database_url)
+    with Session(engine) as session:
+        assert session.scalar(select(func.count()).select_from(User)) == 1
+        demo = session.scalar(select(User))
+        assert demo is not None
+        assert demo.is_demo is True
+        assert demo.email_normalized == "demo@levels.invalid"
+        assert session.scalar(select(func.count()).select_from(Split)) == 2
+    engine.dispose()
 
 
 def test_seeded_profile_is_private_by_default(seeded_session: Session) -> None:

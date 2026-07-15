@@ -26,6 +26,9 @@ class Profile(IdMixin, TimestampMixin, Base):
         ),
     )
 
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False
+    )
     display_name: Mapped[str] = mapped_column(String(100), nullable=False)
     height_cm: Mapped[int | None] = mapped_column(Integer)
     body_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(7, 3))

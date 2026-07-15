@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 
+import { AccountMenu } from "../auth/AccountMenu";
 import { useAuth } from "../auth/context";
 
 type NavItem = { label: string; to: string; icon: string; end?: boolean };
@@ -29,79 +30,59 @@ function NavigationLink({ item, mobile = false }: { item: NavItem; mobile?: bool
       end={item.end ?? false}
       to={item.to}
     >
-      <span aria-hidden="true" className="nav-icon">
-        {item.icon}
-      </span>
+      <span aria-hidden="true" className="nav-icon">{item.icon}</span>
       <span>{item.label}</span>
     </NavLink>
   );
 }
 
 export function AppShell() {
-  const { admin, isAuthenticated, logout } = useAuth();
+  const { user } = useAuth();
   return (
     <div className="app-shell">
-      <a className="skip-link" href="#main-content">
-        Skip to main content
-      </a>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
 
       <aside className="desktop-sidebar">
         <NavLink aria-label="LEVELS home" className="brand" to="/">
-          <span className="brand__mark" aria-hidden="true">
-            L
-          </span>
+          <span className="brand__mark" aria-hidden="true">L</span>
           <span>LEVELS</span>
         </NavLink>
-        <p className="mode-label">{isAuthenticated ? `Owner · ${admin?.displayName}` : "Public showcase"}</p>
+        <p className="mode-label">Member · {user?.display_name}</p>
         <nav aria-label="Primary navigation" className="side-nav">
-          {primaryNavigation.slice(0, 4).map((item) => (
-            <NavigationLink item={item} key={item.to} />
-          ))}
+          {primaryNavigation.slice(0, 4).map((item) => <NavigationLink item={item} key={item.to} />)}
         </nav>
         <p className="side-nav__section-label">Plan</p>
         <nav aria-label="Planning navigation" className="side-nav">
-          {secondaryNavigation.map((item) => (
-            <NavigationLink item={item} key={item.to} />
-          ))}
+          {secondaryNavigation.map((item) => <NavigationLink item={item} key={item.to} />)}
         </nav>
-        {isAuthenticated ? (
-          <button className="owner-link owner-link--button" onClick={logout} type="button">Sign out</button>
-        ) : (
-          <NavLink className="owner-link" to="/login">Owner sign in</NavLink>
-        )}
+        <AccountMenu />
       </aside>
 
       <div className="shell-center">
         <header className="mobile-header">
           <NavLink aria-label="LEVELS home" className="brand" to="/">
-            <span className="brand__mark" aria-hidden="true">
-              L
-            </span>
+            <span className="brand__mark" aria-hidden="true">L</span>
             <span>LEVELS</span>
           </NavLink>
-          <span className="public-badge">{isAuthenticated ? "Owner" : "Public"}</span>
+          <AccountMenu compact />
         </header>
-        <main id="main-content" tabIndex={-1}>
-          <Outlet />
-        </main>
+        <main id="main-content" tabIndex={-1}><Outlet /></main>
       </div>
 
-      <aside aria-label="Today at a glance" className="context-rail">
+      <aside aria-label="Account at a glance" className="context-rail">
         <section className="rail-card">
-          <p className="rail-card__label">Hydration</p>
+          <p className="rail-card__label">Account</p>
           <p className="rail-card__value">Private</p>
-          <p className="rail-card__hint">Visible only when the owner enables it.</p>
+          <p className="rail-card__hint">Your training data is scoped to {user?.email}.</p>
         </section>
         <section className="rail-card rail-card--accent">
-          <p className="rail-card__label">Latest milestone</p>
-          <p className="rail-card__value">Training data is waking up</p>
+          <p className="rail-card__label">Status</p>
+          <p className="rail-card__value">{user?.account_status === "active" ? "Ready to train" : "Account disabled"}</p>
         </section>
       </aside>
 
       <nav aria-label="Mobile navigation" className="mobile-nav">
-        {primaryNavigation.map((item) => (
-          <NavigationLink item={item} key={item.to} mobile />
-        ))}
+        {primaryNavigation.map((item) => <NavigationLink item={item} key={item.to} mobile />)}
       </nav>
     </div>
   );

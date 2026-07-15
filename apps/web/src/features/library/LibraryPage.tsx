@@ -7,7 +7,7 @@ import { EmptyState, ErrorState, LoadingState } from "../../ui/AsyncState";
 import { Avatar } from "../avatar/Avatar";
 
 type Exercise = components["schemas"]["Exercise"];
-type ExerciseQuery = NonNullable<operations["listExercises"]["parameters"]["query"]>;
+type ExerciseQuery = NonNullable<operations["listAvailableExercises"]["parameters"]["query"]>;
 
 const muscleOptions = [
   ["upper_chest", "Upper Chest"], ["mid_chest", "Mid Chest"], ["front_delts", "Front Delts"],

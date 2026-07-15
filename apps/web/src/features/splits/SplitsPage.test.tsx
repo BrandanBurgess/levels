@@ -7,7 +7,7 @@ import { AuthContext, type AuthState } from "../../auth/context";
 import { SplitsPage } from "./SplitsPage";
 
 function exercise(id: string, name: string) {
-  return { id, slug: id, name, aliases: [], variation_group: id, movement_pattern: "push", equipment: "bodyweight", measurement_type: "bodyweight_reps" as const, compound: true, unilateral: false, automatic_progression_enabled: true, muscle_targets: [] };
+  return { id, scope: "global" as const, can_edit: false, slug: id, name, aliases: [], variation_group: id, movement_pattern: "push", equipment: "bodyweight", measurement_type: "bodyweight_reps" as const, compound: true, unilateral: false, automatic_progression_enabled: true, muscle_targets: [] };
 }
 
 const pushUp = exercise("push_up", "Push-Up");

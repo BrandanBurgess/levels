@@ -22,12 +22,12 @@ const metricLabels: Record<Metric, string> = {
   rounds: "Rounds",
 };
 
-async function fetchProgress(owner: boolean) {
+async function fetchProgress() {
   const [current, history, exercises, sessions] = await Promise.all([
     apiClient.GET("/records", { params: { query: { current_only: true } } }),
     apiClient.GET("/records", { params: { query: { current_only: false } } }),
     apiClient.GET("/exercises", { params: { query: {} } }),
-    apiClient.GET("/sessions", { params: { query: { public_only: !owner } } }),
+    apiClient.GET("/sessions", { params: { query: {} } }),
   ]);
   if (!current.data || !history.data || !exercises.data || !sessions.data) {
     throw new Error("Progress request failed");
@@ -114,7 +114,7 @@ export function ProgressPage() {
   const [dateTo, setDateTo] = useState("");
   const [metric, setMetric] = useState<Metric>("estimated_1rm");
   const [exportState, setExportState] = useState<"idle" | "working" | "success" | "error">("idle");
-  const query = useQuery({ queryKey: ["progress", isAuthenticated], queryFn: () => fetchProgress(isAuthenticated) });
+  const query = useQuery({ queryKey: ["progress"], queryFn: fetchProgress });
   const data = query.data;
 
   const muscles = useMemo(() => {

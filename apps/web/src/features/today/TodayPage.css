@@ -1,0 +1,29 @@
+.today-actions__buttons,
+.exercise-plan-editor__actions,
+.exercise-plan-editor__add { display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: end; }
+.today-action-form,
+.exercise-plan-editor { display: grid; gap: 0.85rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgb(196 154 255 / 16%); }
+.today-action-form label,
+.exercise-plan-editor label { display: grid; gap: 0.35rem; color: var(--text); font-size: 0.76rem; font-weight: 800; }
+.today-action-form select,
+.today-action-form input[type='date'],
+.exercise-plan-editor select,
+.exercise-plan-editor input[type='number'],
+.exercise-plan-editor textarea { min-width: 0; width: 100%; min-height: 2.65rem; padding: 0.55rem; border: 1px solid rgb(196 154 255 / 24%); border-radius: 0.55rem; color: var(--text-strong); background: var(--surface-2); }
+.today-action-form fieldset { display: grid; gap: 0.55rem; margin: 0; padding: 0.8rem; border: 1px solid rgb(196 154 255 / 18%); border-radius: 0.65rem; }
+.today-action-form fieldset label,
+.save-scope { display: flex; align-items: center; gap: 0.5rem; }
+.skip-streak-warning { margin: 0; padding: 0.75rem; border-left: 3px solid var(--warning); border-radius: 0 0.55rem 0.55rem 0; color: var(--text); background: rgb(240 201 109 / 9%); line-height: 1.5; }
+.today-override-note { color: var(--warning); font-size: 0.78rem; }
+.exercise-picker-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.65rem; margin: 0; padding: 0.8rem; border: 1px solid rgb(196 154 255 / 18%); border-radius: 0.7rem; }
+.exercise-picker-filters legend { padding: 0 0.35rem; color: var(--purple-150); font-size: 0.8rem; font-weight: 850; }
+.exercise-plan-editor > ol { display: grid; gap: 0.65rem; margin: 0; padding: 0; list-style: none; }
+.exercise-plan-editor > ol > li { display: grid; gap: 0.7rem; padding: 0.8rem; border: 1px solid rgb(196 154 255 / 14%); border-radius: 0.65rem; background: rgb(7 5 11 / 35%); }
+.exercise-plan-editor__item-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.65rem; }
+.prescription-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.65rem; padding-top: 0.25rem; border-top: 1px solid rgb(196 154 255 / 10%); }
+.prescription-grid .prescription-optional { display: flex; align-items: center; align-self: end; min-height: 2.65rem; gap: 0.5rem; }
+.prescription-grid .prescription-notes { grid-column: 1 / -1; }
+.prescription-grid textarea { resize: vertical; }
+.exercise-plan-editor__add label { flex: 1 1 14rem; }
+@media (max-width: 42rem) { .prescription-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 28rem) { .prescription-grid { grid-template-columns: 1fr; } }

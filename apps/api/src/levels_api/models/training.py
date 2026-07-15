@@ -15,6 +15,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -35,9 +36,14 @@ if TYPE_CHECKING:
 
 class Split(IdMixin, TimestampMixin, Base):
     __tablename__ = "splits"
+    __table_args__ = (
+        UniqueConstraint("user_id", "slug", name="uq_splits_user_slug"),
+        Index("idx_splits_user_archived_order", "user_id", "archived_at", "display_order"),
+    )
 
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(150), nullable=False)
-    slug: Mapped[str] = mapped_column(String(150), unique=True, nullable=False)
+    slug: Mapped[str] = mapped_column(String(150), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_seeded: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -46,7 +52,7 @@ class Split(IdMixin, TimestampMixin, Base):
 
     days: Mapped[list[SplitDay]] = relationship(
         back_populates="split",
-        cascade="all, delete-orphan",
+        cascade="save-update, merge",
         order_by="SplitDay.sequence",
     )
 
@@ -73,7 +79,7 @@ class SplitDay(IdMixin, Base):
     split: Mapped[Split] = relationship(back_populates="days")
     items: Mapped[list[WorkoutTemplateItem]] = relationship(
         back_populates="split_day",
-        cascade="all, delete-orphan",
+        cascade="save-update, merge",
         order_by="WorkoutTemplateItem.sequence",
     )
     sessions: Mapped[list[WorkoutSession]] = relationship(back_populates="split_day")
@@ -111,6 +117,7 @@ class WorkoutTemplateItem(IdMixin, Base):
     rep_max: Mapped[int | None] = mapped_column(Integer)
     duration_seconds: Mapped[int | None] = mapped_column(Integer)
     distance_meters: Mapped[Decimal | None] = mapped_column(Numeric(12, 3))
+    rounds_target: Mapped[int | None] = mapped_column(Integer)
     rest_seconds: Mapped[int | None] = mapped_column(Integer)
     target_rir: Mapped[Decimal | None] = mapped_column(Numeric(4, 2))
     superset_group: Mapped[str | None] = mapped_column(String(50))
@@ -146,9 +153,18 @@ class WorkoutSession(IdMixin, TimestampMixin, Base):
             "perceived_effort IS NULL OR perceived_effort BETWEEN 1 AND 10",
             name="ck_workout_sessions_effort",
         ),
-        Index("idx_workout_sessions_date_status", "session_date_local", "status"),
+        Index("idx_workout_sessions_date_status", "user_id", "session_date_local", "status"),
+        Index(
+            "uq_workout_sessions_active_user_date",
+            "user_id",
+            "session_date_local",
+            unique=True,
+            sqlite_where=text("deleted_at IS NULL AND status IN ('draft', 'in_progress')"),
+        ),
     )
 
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     split_day_id: Mapped[str | None] = mapped_column(ForeignKey("split_days.id"))
     session_date_local: Mapped[date] = mapped_column(nullable=False)
     started_at: Mapped[datetime] = mapped_column(default=utc_now, nullable=False)
@@ -207,13 +223,32 @@ class SessionExercise(IdMixin, Base):
         ForeignKey("workout_template_items.id")
     )
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
+    planned_sets: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    item_type: Mapped[TemplateItemType] = mapped_column(
+        Enum(
+            TemplateItemType,
+            native_enum=False,
+            create_constraint=True,
+            length=24,
+            values_callable=enum_values,
+        ),
+        default=TemplateItemType.ACCESSORY,
+        nullable=False,
+    )
     display_name_snapshot: Mapped[str] = mapped_column(String(200), nullable=False)
     variation_group_snapshot: Mapped[str] = mapped_column(String(150), nullable=False)
     rep_min_snapshot: Mapped[int | None] = mapped_column(Integer)
     rep_max_snapshot: Mapped[int | None] = mapped_column(Integer)
+    duration_seconds_snapshot: Mapped[int | None] = mapped_column(Integer)
+    distance_meters_snapshot: Mapped[Decimal | None] = mapped_column(Numeric(12, 3))
+    rounds_target_snapshot: Mapped[int | None] = mapped_column(Integer)
+    rest_seconds_snapshot: Mapped[int | None] = mapped_column(Integer)
     target_rir_snapshot: Mapped[Decimal | None] = mapped_column(Numeric(4, 2))
+    optional_snapshot: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
     substitution_reason: Mapped[str | None] = mapped_column(Text)
+    removed_at: Mapped[datetime | None]
+    removal_reason: Mapped[str | None] = mapped_column(String(300))
 
     workout_session: Mapped[WorkoutSession] = relationship(back_populates="exercises")
     exercise: Mapped[Exercise] = relationship(back_populates="session_exercises")
@@ -284,9 +319,12 @@ class ReadinessLog(IdMixin, TimestampMixin, Base):
         CheckConstraint("energy BETWEEN 1 AND 5", name="ck_readiness_energy"),
         CheckConstraint("soreness BETWEEN 1 AND 5", name="ck_readiness_soreness"),
         CheckConstraint("sleep_quality BETWEEN 1 AND 5", name="ck_readiness_sleep"),
+        UniqueConstraint("user_id", "local_date", name="uq_readiness_user_date"),
+        Index("idx_readiness_user_date", "user_id", "local_date"),
     )
 
-    local_date: Mapped[date] = mapped_column(unique=True, nullable=False)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    local_date: Mapped[date] = mapped_column(nullable=False)
     energy: Mapped[int] = mapped_column(Integer, nullable=False)
     soreness: Mapped[int] = mapped_column(Integer, nullable=False)
     sleep_quality: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -298,9 +336,10 @@ class WaterLog(IdMixin, Base):
     __tablename__ = "water_logs"
     __table_args__ = (
         CheckConstraint("amount_ml BETWEEN 1 AND 5000", name="ck_water_logs_amount"),
-        Index("idx_water_logs_local_date", "local_date"),
+        Index("idx_water_logs_local_date", "user_id", "local_date"),
     )
 
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     occurred_at: Mapped[datetime] = mapped_column(default=utc_now, nullable=False)
     local_date: Mapped[date] = mapped_column(nullable=False)
     amount_ml: Mapped[int] = mapped_column(Integer, nullable=False)

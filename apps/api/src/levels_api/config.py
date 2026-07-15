@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 DEFAULT_DATABASE_URL = "sqlite+pysqlite:///./levels-dev.db"
 DEFAULT_ORIGIN = "http://localhost:5173"
 VALID_LOG_LEVELS = {"CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"}
+TEST_JWT_SECRET = "levels-test-jwt-secret-at-least-32-characters"
 
 
 class ConfigurationError(ValueError):
@@ -29,6 +30,15 @@ def _parse_origins(raw: str) -> tuple[str, ...]:
     return origins
 
 
+def _parse_bool(name: str, raw: str) -> bool:
+    value = raw.strip().casefold()
+    if value in {"1", "true", "yes", "on"}:
+        return True
+    if value in {"0", "false", "no", "off"}:
+        return False
+    raise ConfigurationError(f"{name} must be true or false")
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     app_env: str
@@ -38,10 +48,14 @@ class Settings:
     cors_allowed_origins: tuple[str, ...]
     public_web_origin: str
     log_level: str
+    registration_enabled: bool = True
+    bootstrap_owner_email: str | None = None
+    bootstrap_owner_password_hash: str | None = None
+    # Retained only so stacked v1 tests can be migrated incrementally; runtime auth ignores them.
     admin_username: str | None = None
     admin_password_hash: str | None = None
     jwt_secret_key: str | None = None
-    jwt_expires_seconds: int = 900
+    jwt_expires_seconds: int = 1800
     testing: bool = False
 
     @classmethod
@@ -59,6 +73,13 @@ class Settings:
         admin_username = values.get("ADMIN_USERNAME", "").strip() or None
         admin_password_hash = values.get("ADMIN_PASSWORD_HASH", "").strip() or None
         jwt_secret_key = values.get("JWT_SECRET_KEY", "").strip() or None
+        registration_enabled = _parse_bool(
+            "REGISTRATION_ENABLED", values.get("REGISTRATION_ENABLED", "true")
+        )
+        bootstrap_owner_email = values.get("BOOTSTRAP_OWNER_EMAIL", "").strip().casefold() or None
+        bootstrap_owner_password_hash = (
+            values.get("BOOTSTRAP_OWNER_PASSWORD_HASH", "").strip() or None
+        )
 
         if app_env not in {"development", "test", "production"}:
             raise ConfigurationError("APP_ENV must be development, test, or production")
@@ -72,9 +93,18 @@ class Settings:
             raise ConfigurationError("PUBLIC_WEB_ORIGIN must be present in CORS_ALLOWED_ORIGINS")
         if admin_password_hash is not None and not admin_password_hash.startswith("$argon2"):
             raise ConfigurationError("ADMIN_PASSWORD_HASH must be an Argon2 hash")
+        if (
+            bootstrap_owner_password_hash is not None
+            and not bootstrap_owner_password_hash.startswith("$argon2")
+        ):
+            raise ConfigurationError("BOOTSTRAP_OWNER_PASSWORD_HASH must be an Argon2 hash")
+        if (bootstrap_owner_email is None) != (bootstrap_owner_password_hash is None):
+            raise ConfigurationError(
+                "BOOTSTRAP_OWNER_EMAIL and BOOTSTRAP_OWNER_PASSWORD_HASH must be set together"
+            )
         if app_env == "production":
-            if not all((admin_username, admin_password_hash, jwt_secret_key)):
-                raise ConfigurationError("Production admin authentication values are required")
+            if jwt_secret_key is None:
+                raise ConfigurationError("JWT_SECRET_KEY is required in production")
             if len(jwt_secret_key or "") < 32:
                 raise ConfigurationError("JWT_SECRET_KEY must contain at least 32 characters")
 
@@ -86,6 +116,9 @@ class Settings:
             cors_allowed_origins=origins,
             public_web_origin=public_web_origin,
             log_level=log_level,
+            registration_enabled=registration_enabled,
+            bootstrap_owner_email=bootstrap_owner_email,
+            bootstrap_owner_password_hash=bootstrap_owner_password_hash,
             admin_username=admin_username,
             admin_password_hash=admin_password_hash,
             jwt_secret_key=jwt_secret_key,
@@ -101,6 +134,7 @@ class Settings:
         admin_username: str | None = None,
         admin_password_hash: str | None = None,
         jwt_secret_key: str | None = None,
+        registration_enabled: bool = True,
     ) -> Settings:
         return cls(
             app_env="test",
@@ -110,8 +144,9 @@ class Settings:
             cors_allowed_origins=cors_allowed_origins,
             public_web_origin=cors_allowed_origins[0],
             log_level="ERROR",
+            registration_enabled=registration_enabled,
             admin_username=admin_username,
             admin_password_hash=admin_password_hash,
-            jwt_secret_key=jwt_secret_key,
+            jwt_secret_key=jwt_secret_key or TEST_JWT_SECRET,
             testing=True,
         )

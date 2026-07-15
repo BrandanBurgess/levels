@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from levels_api import Settings, create_app
 from levels_api.auth.service import create_access_token
 from levels_api.database import get_engine
-from levels_api.models import Base, ReadinessLog
+from levels_api.models import Base, ReadinessLog, User
 from levels_api.seed import seed_session
 
 JWT_SECRET = "tests-only-jwt-signing-key-32-characters-long"
@@ -32,8 +32,11 @@ def app(tmp_path: Path) -> Iterator[Flask]:
         engine = get_engine()
         Base.metadata.create_all(engine)
         with Session(engine) as session, session.begin():
-            seed_session(session)
-        token, _ = create_access_token("brandan")
+            seeded = seed_session(session)
+            user = session.get(User, seeded.user_id)
+            assert user is not None
+            token, _ = create_access_token(user)
+            application.config["TEST_USER_ID"] = user.id
         application.config["TEST_ACCESS_TOKEN"] = token
     yield application
     with application.app_context():
@@ -45,7 +48,9 @@ def _auth(app: Flask) -> dict[str, str]:
 
 
 def _upper_day_id(app: Flask) -> str:
-    return app.test_client().get("/api/v1/splits").get_json()[0]["days"][0]["id"]
+    return (
+        app.test_client().get("/api/v1/splits", headers=_auth(app)).get_json()[0]["days"][0]["id"]
+    )
 
 
 def _completed_session(
@@ -61,12 +66,16 @@ def _completed_session(
     client = app.test_client()
     workout = client.post(
         "/api/v1/sessions",
-        json={"title": f"Evidence {local_date}", "date": local_date},
-        headers=_auth(app),
+        json={
+            "title": f"Evidence {local_date}",
+            "date": local_date,
+            "expected_schedule_version": 0,
+        },
+        headers={**_auth(app), "Idempotency-Key": f"growth-session-{local_date}"},
     ).get_json()
     item = client.post(
         f"/api/v1/sessions/{workout['id']}/exercises",
-        json={"exercise_id": EXERCISE_ID},
+        json={"exercise_id": EXERCISE_ID, "expected_version": workout["version"]},
         headers=_auth(app),
     ).get_json()
     response = client.post(
@@ -83,20 +92,18 @@ def _completed_session(
         headers=_auth(app),
     )
     assert response.status_code == 201
-    completed = client.patch(
-        f"/api/v1/sessions/{workout['id']}",
-        json={"status": "completed", "public_visibility": visibility},
-        headers=_auth(app),
+    completed = client.post(
+        f"/api/v1/sessions/{workout['id']}/complete",
+        headers={**_auth(app), "Idempotency-Key": f"growth-complete-{local_date}"},
     )
     assert completed.status_code == 200
     return workout["id"]
 
 
-def _suggestion(app: Flask, *, owner: bool = True) -> dict[str, object]:
-    headers = _auth(app) if owner else None
+def _suggestion(app: Flask) -> dict[str, object]:
     response = app.test_client().get(
         f"/api/v1/growth/suggestions?date=2026-07-13&split_day_id={_upper_day_id(app)}",
-        headers=headers,
+        headers=_auth(app),
     )
     assert response.status_code == 200
     return next(item for item in response.get_json() if item["exercise_id"] == EXERCISE_ID)
@@ -161,6 +168,7 @@ def test_two_declines_and_low_readiness_maintain_without_overload(app: Flask) ->
     with app.app_context(), Session(get_engine()) as session, session.begin():
         session.add(
             ReadinessLog(
+                user_id=str(app.config["TEST_USER_ID"]),
                 local_date=date(2026, 7, 13),
                 energy=2,
                 soreness=4,
@@ -173,9 +181,8 @@ def test_two_declines_and_low_readiness_maintain_without_overload(app: Flask) ->
     assert "readiness" in readiness["explanation"][0]
 
 
-def test_public_growth_uses_only_full_public_evidence(app: Flask) -> None:
-    _completed_session(app, "2026-07-09", 8, visibility="private")
-    _completed_session(app, "2026-07-10", 8, visibility="private")
-    public = _suggestion(app, owner=False)
-    assert public["suggestion_type"] == "insufficient_data"
-    assert public["source_session_ids"] == []
+def test_growth_requires_authentication(app: Flask) -> None:
+    response = app.test_client().get(
+        f"/api/v1/growth/suggestions?split_day_id={_upper_day_id(app)}"
+    )
+    assert response.status_code == 401

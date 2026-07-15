@@ -6,7 +6,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from levels_api.models import (
-    PublicVisibility,
     ReadinessLog,
     SessionExercise,
     SessionStatus,
@@ -17,7 +16,7 @@ from levels_api.models import (
 
 
 def recent_exercise_sessions(
-    session: Session, exercise_id: str, *, owner: bool, limit: int = 3
+    session: Session, user_id: str, exercise_id: str, *, limit: int = 3
 ) -> list[SessionExercise]:
     statement = (
         select(SessionExercise)
@@ -25,6 +24,7 @@ def recent_exercise_sessions(
         .join(SessionExercise.sets)
         .where(
             SessionExercise.exercise_id == exercise_id,
+            WorkoutSession.user_id == user_id,
             WorkoutSession.status == SessionStatus.COMPLETED,
             WorkoutSession.deleted_at.is_(None),
             SetLog.deleted_at.is_(None),
@@ -38,13 +38,16 @@ def recent_exercise_sessions(
         .distinct()
         .limit(limit)
     )
-    if not owner:
-        statement = statement.where(WorkoutSession.public_visibility == PublicVisibility.FULL)
     return list(session.scalars(statement).unique())
 
 
-def readiness_on(session: Session, local_date: date) -> ReadinessLog | None:
-    return session.scalar(select(ReadinessLog).where(ReadinessLog.local_date == local_date))
+def readiness_on(session: Session, user_id: str, local_date: date) -> ReadinessLog | None:
+    return session.scalar(
+        select(ReadinessLog).where(
+            ReadinessLog.user_id == user_id,
+            ReadinessLog.local_date == local_date,
+        )
+    )
 
 
 def active_sets(item: SessionExercise) -> list[SetLog]:

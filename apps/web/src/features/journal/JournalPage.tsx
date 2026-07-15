@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiClient } from "../../api/client";
-import { useAuth } from "../../auth/context";
 import { EmptyState, ErrorState, LoadingState } from "../../ui/AsyncState";
 
 type WorkoutSession = components["schemas"]["WorkoutSession"];
@@ -79,23 +78,23 @@ function clearSetDraft(sessionId: string, itemId: string) {
   }
 }
 
-async function loadSessions(owner: boolean) {
+async function loadSessions() {
   const { data, error } = await apiClient.GET("/sessions", {
-    params: { query: { public_only: !owner } },
+    params: { query: {} },
   });
   if (!data || error) throw new Error("Session request failed");
   return data;
 }
 
 async function loadExercises() {
-  const { data, error } = await apiClient.GET("/exercises");
+  const { data, error } = await apiClient.GET("/exercises", { params: { query: {} } });
   if (!data || error) throw new Error("Exercise request failed");
   return data;
 }
 
-async function loadDashboard() {
-  const { data, error } = await apiClient.GET("/public/dashboard");
-  if (!data || error) throw new Error("Dashboard request failed");
+async function loadToday() {
+  const { data, error } = await apiClient.GET("/today", { params: { query: {} } });
+  if (!data || error) throw new Error("Today request failed");
   return data;
 }
 
@@ -379,7 +378,7 @@ function SetEntry({
   );
 }
 
-type NotesDraft = { notesPrivate: string; notesPublic: string; updatedAt: string };
+type NotesDraft = { notesPrivate: string; updatedAt: string };
 
 function notesDraftKey(sessionId: string) {
   return `levels:journal:notes:${sessionId}`;
@@ -394,7 +393,6 @@ function loadNotesDraft(session: WorkoutSession): NotesDraft {
   }
   return {
     notesPrivate: session.notes_private ?? "",
-    notesPublic: session.notes_public ?? "",
     updatedAt: new Date().toISOString(),
   };
 }
@@ -423,18 +421,14 @@ function SessionBook({
   const [newExercise, setNewExercise] = useState("");
   const [restoredNotes] = useState(() => loadNotesDraft(session));
   const [notesPrivate, setNotesPrivate] = useState(restoredNotes.notesPrivate);
-  const [notesPublic, setNotesPublic] = useState(restoredNotes.notesPublic);
   const [message, setMessage] = useState<string>();
+  const completionKey = useRef(crypto.randomUUID());
   const exerciseMap = new Map(exercises.map((exercise) => [exercise.id, exercise]));
 
-  function updateNotes(field: "private" | "public", value: string) {
-    const nextPrivate = field === "private" ? value : notesPrivate;
-    const nextPublic = field === "public" ? value : notesPublic;
-    setNotesPrivate(nextPrivate);
-    setNotesPublic(nextPublic);
+  function updateNotes(value: string) {
+    setNotesPrivate(value);
     persistNotesDraft(session.id, {
-      notesPrivate: nextPrivate,
-      notesPublic: nextPublic,
+      notesPrivate: value,
       updatedAt: new Date().toISOString(),
     });
   }
@@ -444,7 +438,7 @@ function SessionBook({
     if (!exerciseId) return;
     const { error } = await apiClient.POST("/sessions/{session_id}/exercises", {
       params: { path: { session_id: session.id } },
-      body: { exercise_id: exerciseId, replace_session_exercise_id: item.id, substitution_reason: "Owner substitution" },
+      body: { exercise_id: exerciseId, expected_version: session.version, replace_session_exercise_id: item.id, substitution_reason: "Member substitution" },
     });
     setMessage(error ? "Substitution could not be saved." : "Exercise substituted in this session only.");
     if (!error) await refresh();
@@ -454,7 +448,7 @@ function SessionBook({
     if (!newExercise) return;
     const { error } = await apiClient.POST("/sessions/{session_id}/exercises", {
       params: { path: { session_id: session.id } },
-      body: { exercise_id: newExercise },
+      body: { exercise_id: newExercise, expected_version: session.version },
     });
     setMessage(error ? "Exercise could not be added." : "Exercise added.");
     if (!error) {
@@ -465,16 +459,27 @@ function SessionBook({
 
   async function saveSession(status?: "in_progress" | "completed") {
     try {
-      const { error } = await apiClient.PATCH("/sessions/{session_id}", {
+      const { error: patchError } = await apiClient.PATCH("/sessions/{session_id}", {
         params: { path: { session_id: session.id } },
         body: {
-          ...(status ? { status } : {}),
+          ...(status === "in_progress" ? { status } : {}),
           notes_private: notesPrivate,
-          notes_public: notesPublic,
-          public_visibility: status === "completed" ? "summary" : session.public_visibility,
         },
       });
-      if (error) throw new Error("Session write failed");
+      if (patchError) throw new Error("Session write failed");
+      if (status === "completed") {
+        const { error: completionError } = await apiClient.POST(
+          "/sessions/{session_id}/complete",
+          {
+            params: {
+              path: { session_id: session.id },
+              header: { "Idempotency-Key": completionKey.current },
+            },
+          },
+        );
+        if (completionError) throw new Error("Session completion failed");
+        completionKey.current = crypto.randomUUID();
+      }
       persistNotesDraft(session.id, null);
       setMessage(status === "completed" ? "Workout completed." : status === "in_progress" ? "Workout resumed." : "Notes saved remotely.");
       await refresh();
@@ -491,8 +496,7 @@ function SessionBook({
         <h2 id="session-title">{session.title}</h2>
         <p className={`session-status session-status--${session.status}`}>{session.status.replace("_", " ")}</p>
         <p className="draft-hint">Saved on this device as you type and remotely when the field loses focus.</p>
-        <label className="notes-field">Private notes<textarea onBlur={() => void saveSession()} onChange={(event) => updateNotes("private", event.target.value)} rows={5} value={notesPrivate} /></label>
-        <label className="notes-field">Public notes<textarea onBlur={() => void saveSession()} onChange={(event) => updateNotes("public", event.target.value)} rows={4} value={notesPublic} /></label>
+        <label className="notes-field">Private notes<textarea onBlur={() => void saveSession()} onChange={(event) => updateNotes(event.target.value)} rows={5} value={notesPrivate} /></label>
         <div className="book-actions">
           <button className="button" onClick={() => void saveSession()} type="button">Save notes</button>
           {session.status === "completed" ? <button className="button button--primary" onClick={() => void saveSession("in_progress")} type="button">Resume workout</button> : <button className="button button--primary" onClick={() => void saveSession("completed")} type="button">Complete workout</button>}
@@ -529,11 +533,10 @@ function SessionBook({
 }
 
 export function JournalPage() {
-  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
-  const sessionsQuery = useQuery({ queryKey: ["sessions", isAuthenticated], queryFn: () => loadSessions(isAuthenticated) });
+  const sessionsQuery = useQuery({ queryKey: ["sessions"], queryFn: loadSessions });
   const exercisesQuery = useQuery({ queryKey: ["exercises", "journal"], queryFn: loadExercises });
-  const dashboardQuery = useQuery({ queryKey: ["public-dashboard"], queryFn: loadDashboard, enabled: isAuthenticated });
+  const todayQuery = useQuery({ queryKey: ["today"], queryFn: loadToday });
   const [selectedId, setSelectedId] = useState<string>();
   const [starting, setStarting] = useState(false);
   const sessions = sessionsQuery.data ?? [];
@@ -544,12 +547,12 @@ export function JournalPage() {
   }
 
   async function startToday() {
-    const day = dashboardQuery.data?.scheduled_day;
+    const day = todayQuery.data?.effective_day;
     if (!day) return;
     setStarting(true);
     const { data } = await apiClient.POST("/sessions", {
       params: { header: { "Idempotency-Key": crypto.randomUUID() } },
-      body: { split_day_id: day.id },
+      body: { split_day_id: day.id, expected_schedule_version: todayQuery.data!.schedule_version },
     });
     setStarting(false);
     if (data) {
@@ -561,12 +564,12 @@ export function JournalPage() {
   return (
     <article className="page-shell journal-shell">
       <header className="page-heading journal-heading"><p className="eyebrow">TRAINING LOG</p><h1>Journal</h1><p>Open today’s workout, record the work, and keep every session legible.</p></header>
-      {isAuthenticated && dashboardQuery.data?.scheduled_day && !sessions.some((session) => session.status === "in_progress") ? <button className="button button--primary start-workout" disabled={starting} onClick={() => void startToday()} type="button">{starting ? "Opening workout…" : `Start ${dashboardQuery.data.scheduled_day.name}`}</button> : null}
+      {todayQuery.data?.effective_day && !sessions.some((session) => session.status === "in_progress") ? <button className="button button--primary start-workout" disabled={starting} onClick={() => void startToday()} type="button">{starting ? "Opening workout…" : `Start ${todayQuery.data.effective_day.name}`}</button> : null}
       {sessionsQuery.isPending || exercisesQuery.isPending ? <LoadingState /> : null}
       {sessionsQuery.isError || exercisesQuery.isError ? <ErrorState message="The workout journal could not be loaded." onRetry={() => void Promise.all([sessionsQuery.refetch(), exercisesQuery.refetch()])} /> : null}
       {sessions.length ? <nav aria-label="Workout sessions" className="session-tabs">{sessions.map((session) => <button aria-pressed={selected?.id === session.id} key={session.id} onClick={() => setSelectedId(session.id)} type="button"><strong>{session.title}</strong><span>{session.session_date_local} · {session.status.replace("_", " ")}</span></button>)}</nav> : null}
-      {!sessionsQuery.isPending && sessions.length === 0 ? <EmptyState title={isAuthenticated ? "No sessions yet" : "No public sessions yet"}>{isAuthenticated ? "Start today’s scheduled workout to open the first page." : "Completed sessions will appear when the owner publishes them."}</EmptyState> : null}
-      {selected && exercisesQuery.data ? isAuthenticated ? <SessionBook exercises={exercisesQuery.data} key={selected.id} refresh={refresh} session={selected} sessions={sessions} /> : <section className="public-session"><p className="book-kicker">{selected.session_date_local}</p><h2>{selected.title}</h2>{selected.exercises.map((item) => <div className="public-session__exercise" key={item.id}><h3>{item.display_name}</h3>{item.sets.map((set) => <p key={set.id}>{setSummary(set)}</p>)}</div>)}</section> : null}
+      {!sessionsQuery.isPending && sessions.length === 0 ? <EmptyState title="No sessions yet">Start today’s scheduled workout to open the first page.</EmptyState> : null}
+      {selected && exercisesQuery.data ? <SessionBook exercises={exercisesQuery.data} key={selected.id} refresh={refresh} session={selected} sessions={sessions} /> : null}
     </article>
   );
 }

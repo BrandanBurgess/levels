@@ -18,9 +18,16 @@ if TYPE_CHECKING:
 class PersonalRecord(IdMixin, Base):
     __tablename__ = "personal_records"
     __table_args__ = (
-        Index("idx_personal_records_current", "exercise_id", "record_type", "is_current"),
+        Index(
+            "idx_personal_records_current",
+            "user_id",
+            "exercise_id",
+            "record_type",
+            "is_current",
+        ),
     )
 
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     exercise_id: Mapped[str] = mapped_column(ForeignKey("exercises.id"), nullable=False)
     record_type: Mapped[RecordType] = mapped_column(
         Enum(
@@ -47,6 +54,7 @@ class PersonalRecord(IdMixin, Base):
 class Achievement(IdMixin, Base):
     __tablename__ = "achievements"
 
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     achievement_type: Mapped[str] = mapped_column(String(50), nullable=False)
     exercise_id: Mapped[str | None] = mapped_column(ForeignKey("exercises.id"))
     set_log_id: Mapped[str | None] = mapped_column(ForeignKey("set_logs.id"))
@@ -63,6 +71,7 @@ class Achievement(IdMixin, Base):
 class ProgressionSuggestion(IdMixin, Base):
     __tablename__ = "progression_suggestions"
 
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     local_date: Mapped[date] = mapped_column(nullable=False)
     exercise_id: Mapped[str] = mapped_column(ForeignKey("exercises.id"), nullable=False)
     suggestion_type: Mapped[str] = mapped_column(String(50), nullable=False)

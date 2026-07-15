@@ -38,7 +38,7 @@ describe("createLevelsClient", () => {
       getAccessToken: () => "short-lived-token",
     });
 
-    await client.GET("/profile");
+    await client.GET("/me/profile");
 
     const request = fetchMock.mock.calls[0]?.[0];
     expect(request).toBeInstanceOf(Request);

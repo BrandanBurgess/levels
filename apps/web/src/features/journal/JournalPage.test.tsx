@@ -11,6 +11,8 @@ type WorkoutSession = components["schemas"]["WorkoutSession"];
 
 const exercise = {
   id: "incline_press",
+  scope: "global" as const,
+  can_edit: false,
   slug: "incline-press",
   name: "Incline Press",
   aliases: [],
@@ -38,11 +40,11 @@ const loggedSet = {
 
 const activeSession: WorkoutSession = {
   id: "session-1",
+  version: 3,
   session_date_local: "2026-07-13",
   started_at: "2026-07-13T11:00:00Z",
   status: "in_progress" as const,
   title: "Upper A",
-  public_visibility: "private" as const,
   exercises: [
     {
       id: "session-exercise-1",
@@ -50,6 +52,9 @@ const activeSession: WorkoutSession = {
       display_name: exercise.name,
       variation_group: exercise.variation_group,
       sequence: 1,
+      planned_sets: 3,
+      item_type: "main",
+      optional: false,
       rep_min: 6,
       rep_max: 10,
       sets: [loggedSet],
@@ -57,15 +62,10 @@ const activeSession: WorkoutSession = {
   ],
 };
 
-const dashboard = {
-  date: "2026-07-13",
-  profile: {
-    display_name: "Brandan",
-    preferred_units: "metric" as const,
-    timezone: "America/Toronto",
-    avatar_variant: "default",
-  },
-  scheduled_day: {
+const today = {
+  local_date: "2026-07-13",
+  schedule_version: 5,
+  effective_day: {
     id: "day-1",
     name: "Upper A",
     day_type: "upper",
@@ -89,7 +89,7 @@ function renderPage(isAuthenticated: boolean, sessions: WorkoutSession[] = [acti
   vi.spyOn(apiClient, "GET").mockImplementation(async (path) => {
     if (path === "/sessions") return { data: sessions, response: new Response() };
     if (path === "/exercises") return { data: [exercise], response: new Response() };
-    return { data: dashboard, response: new Response() };
+    return { data: today, response: new Response() };
   });
   return render(
     <AuthContext.Provider value={auth}>
@@ -107,19 +107,17 @@ afterEach(() => {
 });
 
 describe("JournalPage", () => {
-  it("shows a privacy-safe completed public journal", async () => {
+  it("shows a completed member journal", async () => {
     const completed = {
       ...activeSession,
       status: "completed" as const,
-      public_visibility: "full" as const,
     };
-    renderPage(false, [completed]);
+    renderPage(true, [completed]);
 
     expect(await screen.findByRole("heading", { name: "Upper A" })).toBeInTheDocument();
     expect(screen.getByText("60 kg × 8")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Log set" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Edit set 1" })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Private notes")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Private notes")).toBeInTheDocument();
   });
 
   it("opens today's scheduled template for the owner", async () => {
@@ -134,7 +132,7 @@ describe("JournalPage", () => {
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith(
         "/sessions",
-        expect.objectContaining({ body: { split_day_id: "day-1" } }),
+        expect.objectContaining({ body: { split_day_id: "day-1", expected_schedule_version: 5 } }),
       ),
     );
   });
@@ -231,9 +229,17 @@ describe("JournalPage", () => {
     await waitFor(() => expect(patch).toHaveBeenCalled());
     expect(patch).toHaveBeenCalledWith(
       "/sessions/{session_id}",
-      expect.objectContaining({ body: expect.objectContaining({ status: "completed" }) }),
+      expect.objectContaining({ body: expect.not.objectContaining({ status: "completed" }) }),
     );
-    expect(post).not.toHaveBeenCalled();
+    expect(post).toHaveBeenCalledWith(
+      "/sessions/{session_id}/complete",
+      expect.objectContaining({
+        params: {
+          path: { session_id: "session-1" },
+          header: { "Idempotency-Key": expect.any(String) },
+        },
+      }),
+    );
   });
 
   it("restores the latest local set and notes draft after a refresh", async () => {

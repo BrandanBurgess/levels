@@ -4,12 +4,13 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from levels_api.errors import ApiError
 from levels_api.features.profile.service import require_profile
 from levels_api.features.today.repository import scheduled_day
-from levels_api.models import Exercise, ReadinessLog, SessionExercise, SplitDay
+from levels_api.models import Exercise, ReadinessLog, SessionExercise, Split, SplitDay
 
 from . import repository
 
@@ -53,15 +54,15 @@ def _poor_readiness(readiness: ReadinessLog | None) -> bool:
 
 def suggestion_for_exercise(
     session: Session,
+    user_id: str,
     exercise: Exercise,
     *,
-    owner: bool,
     readiness: ReadinessLog | None,
     default_increment: Decimal,
     target_rep_max: int | None,
     target_rir: Decimal,
 ) -> Suggestion:
-    history = repository.recent_exercise_sessions(session, exercise.id, owner=owner)
+    history = repository.recent_exercise_sessions(session, user_id, exercise.id)
     sources = [item.workout_session_id for item in history]
     if len(history) < 2:
         return _base(
@@ -192,16 +193,23 @@ def suggestion_for_exercise(
     )
 
 
-def _target_day(session: Session, local_date: date, split_day_id: str | None) -> SplitDay | None:
-    profile = require_profile(session)
+def _target_day(
+    session: Session, user_id: str, local_date: date, split_day_id: str | None
+) -> SplitDay | None:
+    profile = require_profile(session, user_id)
     assert profile.settings is not None
     if split_day_id is not None:
-        day = session.get(SplitDay, split_day_id)
+        day = session.scalar(
+            select(SplitDay)
+            .join(SplitDay.split)
+            .where(SplitDay.id == split_day_id, Split.user_id == user_id)
+        )
         if day is None:
-            raise ApiError(400, "VALIDATION_ERROR", "The selected split day does not exist.")
+            raise ApiError(404, "NOT_FOUND", "The selected split day was not found.")
         return day
     return scheduled_day(
         session,
+        user_id,
         profile.settings.active_split_id,
         local_date.weekday(),
     )
@@ -209,23 +217,17 @@ def _target_day(session: Session, local_date: date, split_day_id: str | None) ->
 
 def growth_suggestions(
     session: Session,
+    user_id: str,
     local_date: date,
     *,
     split_day_id: str | None,
-    owner: bool,
 ) -> list[Suggestion]:
-    profile = require_profile(session)
+    profile = require_profile(session, user_id)
     assert profile.settings is not None and profile.visibility is not None
-    if not owner and not profile.visibility.show_progress_charts:
-        return []
-    day = _target_day(session, local_date, split_day_id)
+    day = _target_day(session, user_id, local_date, split_day_id)
     if day is None:
         return []
-    readiness = (
-        repository.readiness_on(session, local_date)
-        if owner or profile.visibility.show_readiness
-        else None
-    )
+    readiness = repository.readiness_on(session, user_id, local_date)
     seen: set[str] = set()
     result: list[Suggestion] = []
     for item in day.items:
@@ -235,8 +237,8 @@ def growth_suggestions(
         result.append(
             suggestion_for_exercise(
                 session,
+                user_id,
                 item.exercise,
-                owner=owner,
                 readiness=readiness,
                 default_increment=profile.settings.default_load_increment_kg,
                 target_rep_max=item.rep_max,

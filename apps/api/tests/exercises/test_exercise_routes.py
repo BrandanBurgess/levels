@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from levels_api import Settings, create_app
 from levels_api.auth.service import create_access_token
 from levels_api.database import get_engine
-from levels_api.models import Base
+from levels_api.models import Base, User
 from levels_api.seed import seed_session
 
 JWT_SECRET = "tests-only-jwt-signing-key-32-characters-long"
@@ -30,8 +30,10 @@ def app(tmp_path: Path) -> Iterator[Flask]:
         engine = get_engine()
         Base.metadata.create_all(engine)
         with Session(engine) as session, session.begin():
-            seed_session(session)
-        token, _ = create_access_token("brandan")
+            seeded = seed_session(session)
+            user = session.get(User, seeded.user_id)
+            assert user is not None
+            token, _ = create_access_token(user)
         application.config["TEST_ACCESS_TOKEN"] = token
     yield application
     with application.app_context():
@@ -60,17 +62,15 @@ def _write(slug: str = "custom_press") -> dict[str, object]:
         "muscle_targets": [
             {
                 "slug": "upper_chest",
-                "display_name": "Upper Chest",
                 "role": "primary",
                 "intensity": 1,
-                "svg_region_ids": ["chest_upper"],
             }
         ],
     }
 
 
 def test_search_matches_aliases_and_returns_group_and_avatar_targets(app: Flask) -> None:
-    response = app.test_client().get("/api/v1/exercises?q=crossover")
+    response = app.test_client().get("/api/v1/exercises?search=crossover", headers=_auth(app))
 
     assert response.status_code == 200
     exercises = response.get_json()
@@ -81,19 +81,23 @@ def test_search_matches_aliases_and_returns_group_and_avatar_targets(app: Flask)
 
 def test_filters_cover_muscles_region_pattern_equipment_and_laterality(app: Flask) -> None:
     response = app.test_client().get(
-        "/api/v1/exercises?primary_muscle=upper_chest&secondary_muscle=triceps"
-        "&body_region=chest&movement_pattern=horizontal_push&equipment=barbell&unilateral=false"
+        "/api/v1/exercises?movement_pattern=horizontal_push&equipment=barbell",
+        headers=_auth(app),
     )
 
     assert response.status_code == 200
     exercises = response.get_json()
-    assert {exercise["id"] for exercise in exercises} == {"incline_barbell_bench_press"}
+    assert {exercise["id"] for exercise in exercises} == {
+        "close_grip_bench_press",
+        "flat_barbell_bench_press",
+        "incline_barbell_bench_press",
+    }
 
 
 def test_detail_and_missing_exercise(app: Flask) -> None:
     client = app.test_client()
-    detail = client.get("/api/v1/exercises/pull_up")
-    missing = client.get("/api/v1/exercises/not-real")
+    detail = client.get("/api/v1/exercises/pull_up", headers=_auth(app))
+    missing = client.get("/api/v1/exercises/not-real", headers=_auth(app))
 
     assert detail.status_code == 200
     assert detail.get_json()["name"] == "Pull-Up"
@@ -125,11 +129,8 @@ def test_owner_can_create_update_and_archive_an_exercise(app: Flask) -> None:
     assert updated.get_json()["name"] == "Updated Custom Press"
     assert archived.status_code == 204
     assert all(
-        exercise["id"] != exercise_id for exercise in client.get("/api/v1/exercises").get_json()
-    )
-    assert any(
-        exercise["id"] == exercise_id
-        for exercise in client.get("/api/v1/exercises?include_archived=true").get_json()
+        exercise["id"] != exercise_id
+        for exercise in client.get("/api/v1/exercises", headers=_auth(app)).get_json()
     )
 
 
@@ -138,7 +139,7 @@ def test_write_and_query_validation_is_stable(app: Flask) -> None:
     unknown = _write("unknown_target_press")
     unknown["muscle_targets"][0]["slug"] = "not_a_muscle"  # type: ignore[index]
 
-    assert client.get("/api/v1/exercises?unilateral=maybe").status_code == 400
+    assert client.get("/api/v1/exercises?scope=invalid", headers=_auth(app)).status_code == 400
     assert client.post("/api/v1/exercises", json={}, headers=_auth(app)).status_code == 400
     assert client.post("/api/v1/exercises", json=unknown, headers=_auth(app)).status_code == 400
     assert client.post("/api/v1/exercises", json=_write(), headers=_auth(app)).status_code == 201
