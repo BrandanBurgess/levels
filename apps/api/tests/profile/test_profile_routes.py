@@ -5,11 +5,13 @@ from pathlib import Path
 
 import pytest
 from flask import Flask
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from levels_api import Settings, create_app
 from levels_api.auth.service import create_access_token
 from levels_api.database import get_engine
-from levels_api.models import Base, User
+from levels_api.models import Base, ScheduleState, User
 from levels_api.seed import seed_session
 
 JWT_SECRET = "tests-only-jwt-signing-key-32-characters-long"
@@ -114,6 +116,25 @@ def test_active_split_must_exist(app: Flask) -> None:
 
     assert response.status_code == 404
     assert response.get_json()["error"]["code"] == "NOT_FOUND"
+
+
+def test_active_split_setting_synchronizes_schedule_cursor(app: Flask) -> None:
+    client = app.test_client()
+    splits = client.get("/api/v1/splits", headers=_auth(app)).get_json()
+    target = next(split for split in splits if not split["is_active"])
+
+    response = client.patch(
+        "/api/v1/settings",
+        headers=_auth(app),
+        json={"active_split_id": target["id"]},
+    )
+    assert response.status_code == 200
+    with app.app_context(), Session(get_engine()) as session:
+        schedule = session.scalar(select(ScheduleState))
+        assert schedule is not None
+        assert schedule.active_split_id == target["id"]
+        assert schedule.cursor_split_day_id == target["days"][0]["id"]
+        assert schedule.version == 1
 
 
 @pytest.mark.parametrize(

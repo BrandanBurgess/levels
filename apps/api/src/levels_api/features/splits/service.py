@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -11,6 +12,7 @@ from levels_api.features.exercises.service import serialize_exercise
 from levels_api.features.profile.service import require_profile
 from levels_api.models import (
     Exercise,
+    ScheduleState,
     Split,
     SplitDay,
     TemplateAlternative,
@@ -84,9 +86,7 @@ def _slug(name: str) -> str:
     return value or "training-split"
 
 
-def _exercise_map(
-    session: Session, user_id: str, days: list[SplitDayWrite]
-) -> dict[str, Exercise]:
+def _exercise_map(session: Session, user_id: str, days: list[SplitDayWrite]) -> dict[str, Exercise]:
     exercise_ids = {
         exercise_id
         for day in days
@@ -228,6 +228,18 @@ def activate_split(session: Session, user_id: str, split_id: str) -> Split:
     profile = require_profile(session, user_id)
     assert profile.settings is not None
     profile.settings.active_split_id = target.id
+    state = session.get(ScheduleState, user_id)
+    if state is None:
+        raise ApiError(503, "DATA_NOT_INITIALIZED", "Schedule data is unavailable.")
+    first_day = session.scalar(
+        select(SplitDay).where(SplitDay.split_id == target.id).order_by(SplitDay.sequence)
+    )
+    state.active_split_id = target.id
+    state.cursor_split_day_id = first_day.id if first_day is not None else None
+    state.cursor_effective_date = (
+        datetime.now(ZoneInfo(profile.timezone)).date() if first_day is not None else None
+    )
+    state.version += 1
     session.flush()
     return target
 

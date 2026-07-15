@@ -5,12 +5,13 @@ from pathlib import Path
 
 import pytest
 from flask import Flask
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from levels_api import Settings, create_app
 from levels_api.auth.service import create_access_token
 from levels_api.database import get_engine
-from levels_api.models import Base, User
+from levels_api.models import Base, ScheduleState, User
 from levels_api.seed import seed_session
 
 JWT_SECRET = "tests-only-jwt-signing-key-32-characters-long"
@@ -152,14 +153,23 @@ def test_activation_updates_single_active_split_and_profile_settings(app: Flask)
 
     assert activated.status_code == 200
     assert activated.get_json()["is_active"] is True
-    assert sum(
-        split["is_active"]
-        for split in client.get("/api/v1/splits", headers=_auth(app)).get_json()
-    ) == 1
+    assert (
+        sum(
+            split["is_active"]
+            for split in client.get("/api/v1/splits", headers=_auth(app)).get_json()
+        )
+        == 1
+    )
     assert (
         client.get("/api/v1/settings", headers=_auth(app)).get_json()["active_split_id"]
         == (created["id"])
     )
+    with app.app_context(), Session(get_engine()) as session:
+        schedule = session.scalar(select(ScheduleState))
+        assert schedule is not None
+        assert schedule.active_split_id == created["id"]
+        assert schedule.cursor_split_day_id == created["days"][0]["id"]
+        assert schedule.version == 1
     blocked = client.delete(f"/api/v1/splits/{created['id']}", headers=_auth(app))
     assert blocked.status_code == 409
     assert blocked.get_json()["error"]["code"] == "ACTIVE_SPLIT"
