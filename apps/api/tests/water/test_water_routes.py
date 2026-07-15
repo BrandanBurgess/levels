@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from levels_api import Settings, create_app
 from levels_api.auth.service import create_access_token
 from levels_api.database import get_engine
-from levels_api.models import Base, VisibilitySettings, WaterLog
+from levels_api.models import Base, User, WaterLog
 from levels_api.seed import seed_session
 
 JWT_SECRET = "tests-only-jwt-signing-key-32-characters-long"
@@ -31,8 +31,10 @@ def app(tmp_path: Path) -> Iterator[Flask]:
         engine = get_engine()
         Base.metadata.create_all(engine)
         with Session(engine) as session, session.begin():
-            seed_session(session)
-        token, _ = create_access_token("brandan")
+            seeded = seed_session(session)
+            user = session.get(User, seeded.user_id)
+            assert user is not None
+            token, _ = create_access_token(user)
         application.config["TEST_ACCESS_TOKEN"] = token
     yield application
     with application.app_context():
@@ -43,10 +45,10 @@ def _auth(app: Flask) -> dict[str, str]:
     return {"Authorization": f"Bearer {app.config['TEST_ACCESS_TOKEN']}"}
 
 
-def test_public_water_is_hidden_by_default_but_owner_can_read(app: Flask) -> None:
+def test_water_requires_authentication(app: Flask) -> None:
     client = app.test_client()
     route = "/api/v1/water/today?date=2026-07-13"
-    assert client.get(route).status_code == 404
+    assert client.get(route).status_code == 401
 
     owner = client.get(route, headers=_auth(app))
     assert owner.status_code == 200
@@ -123,24 +125,6 @@ def test_undo_empty_day_returns_not_found(app: Flask) -> None:
     )
     assert response.status_code == 404
     assert response.get_json()["error"]["code"] == "WATER_ENTRY_NOT_FOUND"
-
-
-def test_public_water_can_be_enabled_without_private_entry_fields(app: Flask) -> None:
-    client = app.test_client()
-    client.post(
-        "/api/v1/water/today",
-        headers=_auth(app),
-        json={"amount_ml": 500, "occurred_at": "2026-07-13T12:00:00-04:00"},
-    )
-    with app.app_context(), Session(get_engine()) as session, session.begin():
-        visibility = session.scalar(select(VisibilitySettings))
-        assert visibility is not None
-        visibility.show_water = True
-
-    public = client.get("/api/v1/water/today?date=2026-07-13")
-    assert public.status_code == 200
-    assert public.get_json()["total_ml"] == 500
-    assert set(public.get_json()["entries"][0]) == {"id", "amount_ml", "occurred_at"}
 
 
 @pytest.mark.parametrize(

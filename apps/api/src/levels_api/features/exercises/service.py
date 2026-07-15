@@ -12,7 +12,7 @@ from . import repository
 from .schemas import ExerciseWrite
 
 
-def serialize_exercise(exercise: Exercise) -> dict[str, object]:
+def serialize_exercise(exercise: Exercise, user_id: str) -> dict[str, object]:
     targets = sorted(
         (
             {
@@ -28,6 +28,8 @@ def serialize_exercise(exercise: Exercise) -> dict[str, object]:
     )
     return {
         "id": exercise.id,
+        "scope": "global" if exercise.owner_user_id is None else "custom",
+        "can_edit": exercise.owner_user_id == user_id,
         "slug": exercise.slug,
         "name": exercise.name,
         "aliases": exercise.aliases,
@@ -47,20 +49,19 @@ def serialize_exercise(exercise: Exercise) -> dict[str, object]:
 
 def search_exercises(
     session: Session,
+    user_id: str,
     *,
+    scope: str = "available",
     query: str | None = None,
-    primary_muscle: str | None = None,
-    secondary_muscle: str | None = None,
-    body_region: str | None = None,
+    muscle_id: str | None = None,
     movement_pattern: str | None = None,
     equipment: str | None = None,
-    unilateral: bool | None = None,
-    include_archived: bool = False,
+    measurement_type: str | None = None,
 ) -> list[dict[str, object]]:
     matches: list[Exercise] = []
     needle = query.casefold().strip() if query else None
-    for exercise in repository.all_exercises(session):
-        if exercise.archived_at is not None and not include_archived:
+    for exercise in repository.all_exercises(session, user_id, scope):
+        if exercise.archived_at is not None:
             continue
         if (
             needle
@@ -72,34 +73,26 @@ def search_exercises(
             continue
         if equipment and exercise.equipment != equipment:
             continue
-        if unilateral is not None and exercise.unilateral is not unilateral:
+        if measurement_type and exercise.measurement_type.value != measurement_type:
             continue
         links = exercise.muscle_links
-        if primary_muscle and not any(
-            link.role.value == "primary" and link.muscle_group.slug == primary_muscle
-            for link in links
-        ):
-            continue
-        if secondary_muscle and not any(
-            link.role.value == "secondary" and link.muscle_group.slug == secondary_muscle
-            for link in links
-        ):
-            continue
-        if body_region and not any(link.muscle_group.body_region == body_region for link in links):
+        if muscle_id and not any(link.muscle_group_id == muscle_id for link in links):
             continue
         matches.append(exercise)
-    return [serialize_exercise(exercise) for exercise in matches]
+    return [serialize_exercise(exercise, user_id) for exercise in matches]
 
 
-def require_exercise(session: Session, exercise_id: str) -> Exercise:
-    exercise = repository.exercise_by_id(session, exercise_id)
+def require_exercise(session: Session, user_id: str, exercise_id: str) -> Exercise:
+    exercise = repository.exercise_by_id(session, user_id, exercise_id)
     if exercise is None:
         raise ApiError(404, "NOT_FOUND", "The requested exercise was not found.")
     return exercise
 
 
-def _apply_write(session: Session, exercise: Exercise, write: ExerciseWrite) -> None:
-    existing = repository.exercise_by_slug(session, write.slug)
+def _apply_write(
+    session: Session, user_id: str, exercise: Exercise, write: ExerciseWrite
+) -> None:
+    existing = repository.exercise_by_slug(session, user_id, write.slug)
     if existing is not None and existing.id != exercise.id:
         raise ApiError(409, "SLUG_CONFLICT", "An exercise already uses this slug.")
     slugs = {target.slug for target in write.muscle_targets}
@@ -139,21 +132,41 @@ def _apply_write(session: Session, exercise: Exercise, write: ExerciseWrite) -> 
     ]
 
 
-def create_exercise(session: Session, write: ExerciseWrite) -> Exercise:
-    exercise = Exercise(metadata_json={}, archived_at=None)
+def create_exercise(session: Session, user_id: str, write: ExerciseWrite) -> Exercise:
+    exercise = Exercise(owner_user_id=user_id, metadata_json={}, archived_at=None)
     session.add(exercise)
-    _apply_write(session, exercise, write)
+    _apply_write(session, user_id, exercise, write)
     session.flush()
-    return require_exercise(session, exercise.id)
+    return require_exercise(session, user_id, exercise.id)
 
 
-def update_exercise(session: Session, exercise_id: str, write: ExerciseWrite) -> Exercise:
-    exercise = require_exercise(session, exercise_id)
-    _apply_write(session, exercise, write)
+def update_exercise(
+    session: Session, user_id: str, exercise_id: str, write: ExerciseWrite
+) -> Exercise:
+    exercise = require_exercise(session, user_id, exercise_id)
+    if exercise.owner_user_id is None:
+        raise ApiError(403, "FORBIDDEN", "Global exercises are read-only.")
+    _apply_write(session, user_id, exercise, write)
     session.flush()
-    return require_exercise(session, exercise.id)
+    return require_exercise(session, user_id, exercise.id)
 
 
-def archive_exercise(session: Session, exercise_id: str) -> None:
-    exercise = require_exercise(session, exercise_id)
+def archive_exercise(session: Session, user_id: str, exercise_id: str) -> None:
+    exercise = require_exercise(session, user_id, exercise_id)
+    if exercise.owner_user_id is None:
+        raise ApiError(403, "FORBIDDEN", "Global exercises are read-only.")
     exercise.archived_at = datetime.now(UTC)
+
+
+def list_muscle_groups(session: Session) -> list[dict[str, object]]:
+    return [
+        {
+            "id": group.id,
+            "slug": group.slug,
+            "display_name": group.display_name,
+            "body_region": group.body_region,
+            "svg_region_ids": group.svg_region_ids,
+            "highlightable": group.highlightable,
+        }
+        for group in repository.all_muscle_groups(session)
+    ]

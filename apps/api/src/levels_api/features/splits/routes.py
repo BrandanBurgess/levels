@@ -5,7 +5,7 @@ from typing import Any
 from flask import Blueprint, Response, jsonify, request
 from pydantic import ValidationError
 
-from levels_api.auth import require_admin
+from levels_api.auth import current_user_id, require_user
 from levels_api.database import get_db, transaction
 from levels_api.errors import ApiError
 
@@ -39,42 +39,49 @@ def _write() -> SplitWrite:
 
 
 @split_blueprint.get("/splits")
+@require_user
 def get_splits() -> tuple[Response, int]:
-    return jsonify(list_splits(get_db())), 200
+    return jsonify(list_splits(get_db(), current_user_id())), 200
 
 
 @split_blueprint.post("/splits")
-@require_admin
+@require_user
 def post_split() -> tuple[Response, int]:
+    user_id = current_user_id()
     with transaction() as session:
-        result = serialize_split(create_split(session, _write()))
+        result = serialize_split(create_split(session, user_id, _write()), user_id)
     return jsonify(result), 201
 
 
 @split_blueprint.get("/splits/<split_id>")
+@require_user
 def get_split(split_id: str) -> tuple[Response, int]:
-    return jsonify(serialize_split(require_split(get_db(), split_id))), 200
+    user_id = current_user_id()
+    return jsonify(serialize_split(require_split(get_db(), user_id, split_id), user_id)), 200
 
 
 @split_blueprint.patch("/splits/<split_id>")
-@require_admin
+@require_user
 def patch_split(split_id: str) -> tuple[Response, int]:
+    user_id = current_user_id()
     with transaction() as session:
-        result = serialize_split(update_split(session, split_id, _write()))
+        result = serialize_split(update_split(session, user_id, split_id, _write()), user_id)
     return jsonify(result), 200
 
 
 @split_blueprint.delete("/splits/<split_id>")
-@require_admin
+@require_user
 def delete_split(split_id: str) -> tuple[str, int]:
+    user_id = current_user_id()
     with transaction() as session:
-        archive_split(session, split_id)
+        archive_split(session, user_id, split_id)
     return "", 204
 
 
 @split_blueprint.post("/splits/<split_id>/activate")
-@require_admin
+@require_user
 def post_activate_split(split_id: str) -> tuple[Response, int]:
+    user_id = current_user_id()
     with transaction() as session:
-        result = serialize_split(activate_split(session, split_id))
+        result = serialize_split(activate_split(session, user_id, split_id), user_id)
     return jsonify(result), 200

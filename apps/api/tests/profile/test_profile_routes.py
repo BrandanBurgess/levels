@@ -9,7 +9,7 @@ from flask import Flask
 from levels_api import Settings, create_app
 from levels_api.auth.service import create_access_token
 from levels_api.database import get_engine
-from levels_api.models import Base
+from levels_api.models import Base, User
 from levels_api.seed import seed_session
 
 JWT_SECRET = "tests-only-jwt-signing-key-32-characters-long"
@@ -31,8 +31,10 @@ def app(tmp_path: Path) -> Iterator[Flask]:
         from sqlalchemy.orm import Session
 
         with Session(engine) as session, session.begin():
-            seed_session(session)
-        token, _ = create_access_token("brandan")
+            seeded = seed_session(session)
+            user = session.get(User, seeded.user_id)
+            assert user is not None
+            token, _ = create_access_token(user)
         application.config["TEST_ACCESS_TOKEN"] = token
     yield application
     with application.app_context():
@@ -43,25 +45,17 @@ def _auth(app: Flask) -> dict[str, str]:
     return {"Authorization": f"Bearer {app.config['TEST_ACCESS_TOKEN']}"}
 
 
-def test_public_profile_is_anonymous_and_privacy_filtered(app: Flask) -> None:
-    response = app.test_client().get("/api/v1/public/profile")
-
-    assert response.status_code == 200
-    assert response.get_json() == {
-        "display_name": "Brandan Burgess",
-        "height_cm": 179,
-        "preferred_units": "imperial",
-        "timezone": "America/Toronto",
-        "avatar_variant": "brandan-original-v1",
-    }
+def test_profile_is_private(app: Flask) -> None:
+    assert app.test_client().get("/api/v1/me/profile").status_code == 401
+    assert app.test_client().get("/api/v1/public/profile").status_code == 404
 
 
 def test_owner_profile_requires_auth_and_persists_updates(app: Flask) -> None:
     client = app.test_client()
-    assert client.get("/api/v1/profile").status_code == 401
+    assert client.get("/api/v1/me/profile").status_code == 401
 
     response = client.patch(
-        "/api/v1/profile",
+        "/api/v1/me/profile",
         headers=_auth(app),
         json={
             "display_name": "Brandan B.",
@@ -74,12 +68,12 @@ def test_owner_profile_requires_auth_and_persists_updates(app: Flask) -> None:
 
     assert response.status_code == 200
     assert response.get_json()["body_weight_kg"] == 80.25
-    persisted = client.get("/api/v1/profile", headers=_auth(app))
+    persisted = client.get("/api/v1/me/profile", headers=_auth(app))
     assert persisted.get_json()["display_name"] == "Brandan B."
     assert persisted.get_json()["timezone"] == "UTC"
 
 
-def test_settings_update_controls_public_profile_immediately(app: Flask) -> None:
+def test_settings_update_persists(app: Flask) -> None:
     client = app.test_client()
     assert client.get("/api/v1/settings").status_code == 401
 
@@ -109,9 +103,6 @@ def test_settings_update_controls_public_profile_immediately(app: Flask) -> None
     )
     assert system_motion.status_code == 200
     assert system_motion.get_json()["reduced_motion_override"] is None
-    public = client.get("/api/v1/public/profile").get_json()
-    assert "height_cm" not in public
-    assert public["body_weight_kg"] == 79.38
 
 
 def test_active_split_must_exist(app: Flask) -> None:
@@ -121,18 +112,16 @@ def test_active_split_must_exist(app: Flask) -> None:
         json={"active_split_id": "does-not-exist"},
     )
 
-    assert response.status_code == 400
-    assert response.get_json()["error"]["field_errors"] == {
-        "active_split_id": "Split does not exist."
-    }
+    assert response.status_code == 404
+    assert response.get_json()["error"]["code"] == "NOT_FOUND"
 
 
 @pytest.mark.parametrize(
     ("route", "payload", "field"),
     [
-        ("profile", {"height_cm": 99}, "height_cm"),
-        ("profile", {"timezone": "Not/A_Timezone"}, "timezone"),
-        ("profile", {"unexpected": True}, "unexpected"),
+        ("me/profile", {"height_cm": 99}, "height_cm"),
+        ("me/profile", {"timezone": "Not/A_Timezone"}, "timezone"),
+        ("me/profile", {"unexpected": True}, "unexpected"),
         ("settings", {"default_water_goal_ml": 100}, "default_water_goal_ml"),
         ("settings", {"week_starts_on": 7}, "week_starts_on"),
         ("settings", {"water_quick_add_ml": []}, "water_quick_add_ml"),

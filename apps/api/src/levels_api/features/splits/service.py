@@ -7,8 +7,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from levels_api.errors import ApiError
+from levels_api.features.exercises.service import serialize_exercise
 from levels_api.features.profile.service import require_profile
-from levels_api.features.today.service import serialize_scheduled_day
 from levels_api.models import (
     Exercise,
     Split,
@@ -21,23 +21,59 @@ from . import repository
 from .schemas import SplitDayWrite, SplitItemWrite, SplitWrite
 
 
-def serialize_split(split: Split) -> dict[str, object]:
+def _serialize_day(day: SplitDay, user_id: str) -> dict[str, object]:
+    return {
+        "id": day.id,
+        "name": day.name,
+        "day_type": day.day_type,
+        "sequence": day.sequence,
+        "is_optional": day.is_optional,
+        "items": [
+            {
+                "id": item.id,
+                "exercise": serialize_exercise(item.exercise, user_id),
+                "sequence": item.sequence,
+                "item_type": item.item_type.value,
+                "sets": item.sets,
+                "rep_min": item.rep_min,
+                "rep_max": item.rep_max,
+                "duration_seconds": item.duration_seconds,
+                "distance_meters": (
+                    float(item.distance_meters) if item.distance_meters is not None else None
+                ),
+                "rounds_target": item.rounds_target,
+                "rest_seconds": item.rest_seconds,
+                "target_rir": float(item.target_rir) if item.target_rir is not None else None,
+                "superset_group": item.superset_group,
+                "notes": item.notes,
+                "optional": item.optional,
+                "alternatives": [
+                    serialize_exercise(alternative.exercise, user_id)
+                    for alternative in item.alternatives
+                ],
+            }
+            for item in day.items
+        ],
+    }
+
+
+def serialize_split(split: Split, user_id: str) -> dict[str, object]:
     return {
         "id": split.id,
         "name": split.name,
         "slug": split.slug,
         "description": split.description,
         "is_active": split.is_active,
-        "days": [serialize_scheduled_day(day) for day in split.days],
+        "days": [_serialize_day(day, user_id) for day in split.days],
     }
 
 
-def list_splits(session: Session) -> list[dict[str, object]]:
-    return [serialize_split(split) for split in repository.all_splits(session)]
+def list_splits(session: Session, user_id: str) -> list[dict[str, object]]:
+    return [serialize_split(split, user_id) for split in repository.all_splits(session, user_id)]
 
 
-def require_split(session: Session, split_id: str) -> Split:
-    split = repository.split_by_id(session, split_id)
+def require_split(session: Session, user_id: str, split_id: str) -> Split:
+    split = repository.split_by_id(session, user_id, split_id)
     if split is None:
         raise ApiError(404, "NOT_FOUND", "The requested split was not found.")
     return split
@@ -48,7 +84,9 @@ def _slug(name: str) -> str:
     return value or "training-split"
 
 
-def _exercise_map(session: Session, days: list[SplitDayWrite]) -> dict[str, Exercise]:
+def _exercise_map(
+    session: Session, user_id: str, days: list[SplitDayWrite]
+) -> dict[str, Exercise]:
     exercise_ids = {
         exercise_id
         for day in days
@@ -57,7 +95,13 @@ def _exercise_map(session: Session, days: list[SplitDayWrite]) -> dict[str, Exer
     }
     exercises = {
         exercise.id: exercise
-        for exercise in session.scalars(select(Exercise).where(Exercise.id.in_(exercise_ids)))
+        for exercise in session.scalars(
+            select(Exercise).where(
+                Exercise.id.in_(exercise_ids),
+                (Exercise.owner_user_id.is_(None)) | (Exercise.owner_user_id == user_id),
+                Exercise.archived_at.is_(None),
+            )
+        )
     }
     missing = sorted(exercise_ids - exercises.keys())
     if missing:
@@ -81,8 +125,9 @@ def _reconcile_item(
     item.sets = write.sets
     item.rep_min = write.rep_min
     item.rep_max = write.rep_max
-    item.duration_seconds = None
-    item.distance_meters = None
+    item.duration_seconds = write.duration_seconds
+    item.distance_meters = write.distance_meters
+    item.rounds_target = write.rounds_target
     item.rest_seconds = write.rest_seconds
     item.target_rir = write.target_rir
     item.superset_group = None
@@ -94,8 +139,10 @@ def _reconcile_item(
     ]
 
 
-def _reconcile_days(session: Session, split: Split, days: list[SplitDayWrite]) -> None:
-    exercises = _exercise_map(session, days)
+def _reconcile_days(
+    session: Session, user_id: str, split: Split, days: list[SplitDayWrite]
+) -> None:
+    exercises = _exercise_map(session, user_id, days)
     existing_days = {day.id: day for day in split.days}
     for day_index, day in enumerate(split.days, start=1):
         day.sequence = -day_index
@@ -136,52 +183,57 @@ def _reconcile_days(session: Session, split: Split, days: list[SplitDayWrite]) -
     split.days = reconciled_days
 
 
-def _apply_write(session: Session, split: Split, write: SplitWrite, *, creating: bool) -> None:
+def _apply_write(
+    session: Session, user_id: str, split: Split, write: SplitWrite, *, creating: bool
+) -> None:
     slug = write.slug or (_slug(write.name) if creating else split.slug)
-    existing = repository.split_by_slug(session, slug)
+    existing = repository.split_by_slug(session, user_id, slug)
     if existing is not None and existing.id != split.id:
         raise ApiError(409, "SLUG_CONFLICT", "A split already uses this slug.")
     split.name = write.name
     split.slug = slug
     split.description = write.description
     if write.days is not None:
-        _reconcile_days(session, split, write.days)
+        _reconcile_days(session, user_id, split, write.days)
 
 
-def create_split(session: Session, write: SplitWrite) -> Split:
-    order = session.scalar(select(func.coalesce(func.max(Split.display_order), -1)))
+def create_split(session: Session, user_id: str, write: SplitWrite) -> Split:
+    order = session.scalar(
+        select(func.coalesce(func.max(Split.display_order), -1)).where(Split.user_id == user_id)
+    )
     split = Split(
+        user_id=user_id,
         is_active=False,
         is_seeded=False,
         display_order=int(order or 0) + 1,
         archived_at=None,
     )
     session.add(split)
-    _apply_write(session, split, write, creating=True)
+    _apply_write(session, user_id, split, write, creating=True)
     session.flush()
     return split
 
 
-def update_split(session: Session, split_id: str, write: SplitWrite) -> Split:
-    split = require_split(session, split_id)
-    _apply_write(session, split, write, creating=False)
+def update_split(session: Session, user_id: str, split_id: str, write: SplitWrite) -> Split:
+    split = require_split(session, user_id, split_id)
+    _apply_write(session, user_id, split, write, creating=False)
     session.flush()
     return split
 
 
-def activate_split(session: Session, split_id: str) -> Split:
-    target = require_split(session, split_id)
-    for split in repository.all_splits(session):
+def activate_split(session: Session, user_id: str, split_id: str) -> Split:
+    target = require_split(session, user_id, split_id)
+    for split in repository.all_splits(session, user_id):
         split.is_active = split.id == target.id
-    profile = require_profile(session)
+    profile = require_profile(session, user_id)
     assert profile.settings is not None
     profile.settings.active_split_id = target.id
     session.flush()
     return target
 
 
-def archive_split(session: Session, split_id: str) -> None:
-    split = require_split(session, split_id)
+def archive_split(session: Session, user_id: str, split_id: str) -> None:
+    split = require_split(session, user_id, split_id)
     if split.is_active:
         raise ApiError(409, "ACTIVE_SPLIT", "Activate another split before archiving this one.")
     split.archived_at = datetime.now(UTC)

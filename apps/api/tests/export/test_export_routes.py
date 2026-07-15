@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Session
 from levels_api import Settings, create_app
 from levels_api.auth.service import create_access_token
 from levels_api.database import get_engine
-from levels_api.models import Base
+from levels_api.models import Base, PublicVisibility, SessionStatus, User, WorkoutSession
 from levels_api.seed import seed_session
 
 JWT_SECRET = "tests-only-jwt-signing-key-32-characters-long"
@@ -30,8 +31,11 @@ def app(tmp_path: Path) -> Iterator[Flask]:
         engine = get_engine()
         Base.metadata.create_all(engine)
         with Session(engine) as session, session.begin():
-            seed_session(session)
-        token, _ = create_access_token("brandan")
+            seeded = seed_session(session)
+            user = session.get(User, seeded.user_id)
+            assert user is not None
+            token, _ = create_access_token(user)
+            application.config["TEST_USER_ID"] = user.id
         application.config["TEST_ACCESS_TOKEN"] = token
     yield application
     with application.app_context():
@@ -43,18 +47,21 @@ def _auth(app: Flask) -> dict[str, str]:
 
 
 def _session_with_formula_notes(app: Flask) -> str:
-    client = app.test_client()
-    session = client.post(
-        "/api/v1/sessions",
-        json={"title": "@unsafe-title"},
-        headers=_auth(app),
-    ).get_json()
-    client.patch(
-        f"/api/v1/sessions/{session['id']}",
-        json={"notes_private": "=2+2", "notes_public": "+SUM(1,1)"},
-        headers=_auth(app),
-    )
-    return session["id"]
+    with app.app_context(), Session(get_engine()) as db, db.begin():
+        workout = WorkoutSession(
+            user_id=str(app.config["TEST_USER_ID"]),
+            version=0,
+            session_date_local=date(2026, 7, 13),
+            started_at=datetime.now(UTC),
+            status=SessionStatus.IN_PROGRESS,
+            title="@unsafe-title",
+            public_visibility=PublicVisibility.PRIVATE,
+            notes_private="=2+2",
+            notes_public="+SUM(1,1)",
+        )
+        db.add(workout)
+        db.flush()
+        return workout.id
 
 
 def test_export_is_owner_only_and_validates_format(app: Flask) -> None:
@@ -87,15 +94,21 @@ def test_json_export_is_complete_and_excludes_environment_secrets(app: Flask) ->
 
 def test_csv_export_escapes_spreadsheet_formula_prefixes(app: Flask) -> None:
     _session_with_formula_notes(app)
+    with app.app_context(), Session(get_engine()) as db, db.begin():
+        db.add(
+            WorkoutSession(
+                user_id=str(app.config["TEST_USER_ID"]),
+                version=0,
+                session_date_local=date(2026, 7, 14),
+                started_at=datetime.now(UTC),
+                status=SessionStatus.IN_PROGRESS,
+                title="-10+20",
+                public_visibility=PublicVisibility.PRIVATE,
+                notes_private="\t=unsafe",
+                notes_public="\r=unsafe",
+            )
+        )
     client = app.test_client()
-    second = client.post(
-        "/api/v1/sessions", json={"title": "-10+20"}, headers=_auth(app)
-    ).get_json()
-    client.patch(
-        f"/api/v1/sessions/{second['id']}",
-        json={"notes_private": "\t=unsafe", "notes_public": "\r=unsafe"},
-        headers=_auth(app),
-    )
     response = client.get("/api/v1/export?format=csv", headers=_auth(app))
 
     assert response.status_code == 200

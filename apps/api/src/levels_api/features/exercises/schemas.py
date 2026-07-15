@@ -12,10 +12,8 @@ class MuscleTargetWrite(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     slug: Annotated[str, Field(min_length=1, max_length=100)]
-    display_name: Annotated[str, Field(min_length=1, max_length=100)]
     role: MuscleRole
     intensity: Annotated[Decimal, Field(ge=0, le=1)]
-    svg_region_ids: list[str]
 
 
 class ExerciseWrite(BaseModel):

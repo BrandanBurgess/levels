@@ -18,6 +18,9 @@ class SplitItemWrite(BaseModel):
     sets: Annotated[int, Field(ge=1, le=20)]
     rep_min: Annotated[int, Field(ge=0)] | None = None
     rep_max: Annotated[int, Field(ge=0)] | None = None
+    duration_seconds: Annotated[int, Field(ge=0)] | None = None
+    distance_meters: Annotated[Decimal, Field(ge=0)] | None = None
+    rounds_target: Annotated[int, Field(ge=0)] | None = None
     rest_seconds: Annotated[int, Field(ge=0, le=3600)] | None = None
     target_rir: Annotated[Decimal, Field(ge=0, le=10)] | None = None
     optional: bool = False

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from levels_api import Settings, create_app
 from levels_api.auth.service import create_access_token
 from levels_api.database import get_engine
-from levels_api.models import Achievement, Base, PersonalRecord, RecordType
+from levels_api.models import Achievement, Base, PersonalRecord, RecordType, User
 from levels_api.seed import seed_session
 
 JWT_SECRET = "tests-only-jwt-signing-key-32-characters-long"
@@ -31,8 +31,10 @@ def app(tmp_path: Path) -> Iterator[Flask]:
         engine = get_engine()
         Base.metadata.create_all(engine)
         with Session(engine) as session, session.begin():
-            seed_session(session)
-        token, _ = create_access_token("brandan")
+            seeded = seed_session(session)
+            user = session.get(User, seeded.user_id)
+            assert user is not None
+            token, _ = create_access_token(user)
         application.config["TEST_ACCESS_TOKEN"] = token
     yield application
     with application.app_context():
@@ -48,11 +50,13 @@ def _session_exercise(
 ) -> tuple[str, str]:
     client = app.test_client()
     workout = client.post(
-        "/api/v1/sessions", json={"title": "Record test"}, headers=_auth(app)
+        "/api/v1/sessions",
+        json={"title": "Record test", "expected_schedule_version": 0},
+        headers={**_auth(app), "Idempotency-Key": f"record-session-{exercise_id}"},
     ).get_json()
     item = client.post(
         f"/api/v1/sessions/{workout['id']}/exercises",
-        json={"exercise_id": exercise_id},
+        json={"exercise_id": exercise_id, "expected_version": workout["version"]},
         headers=_auth(app),
     ).get_json()
     return workout["id"], item["id"]
@@ -177,11 +181,17 @@ def test_completion_adds_session_volume_once(app: Flask) -> None:
         )
 
     assert (
-        client.post(f"/api/v1/sessions/{workout_id}/complete", headers=_auth(app)).status_code
+        client.post(
+            f"/api/v1/sessions/{workout_id}/complete",
+            headers={**_auth(app), "Idempotency-Key": "record-complete-once"},
+        ).status_code
         == 200
     )
     assert (
-        client.post(f"/api/v1/sessions/{workout_id}/complete", headers=_auth(app)).status_code
+        client.post(
+            f"/api/v1/sessions/{workout_id}/complete",
+            headers={**_auth(app), "Idempotency-Key": "record-complete-once"},
+        ).status_code
         == 200
     )
     with app.app_context(), Session(get_engine()) as session:
