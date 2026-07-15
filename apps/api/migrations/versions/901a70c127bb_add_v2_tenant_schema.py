@@ -710,6 +710,108 @@ def downgrade() -> None:
     connection = op.get_bind()
     demo_user_id = _stable_id("user", DEMO_EMAIL)
     demo_profile_id = _stable_id("profile", demo_user_id)
+    # Remove only the synthetic demo tenant before restoring v1's singleton unique
+    # constraints. This also keeps downgrade safe after the idempotent demo seed ran.
+    for table_name in (
+        "achievements",
+        "personal_records",
+        "progression_suggestions",
+        "readiness_logs",
+        "water_logs",
+        "daily_plan_overrides",
+        "command_receipts",
+    ):
+        connection.execute(
+            sa.text(f"DELETE FROM {table_name} WHERE user_id = :user_id"),
+            {"user_id": demo_user_id},
+        )
+    connection.execute(
+        sa.text(
+            """
+            DELETE FROM set_logs WHERE session_exercise_id IN (
+                SELECT item.id FROM session_exercises AS item
+                JOIN workout_sessions AS workout ON workout.id = item.workout_session_id
+                WHERE workout.user_id = :user_id
+            )
+            """
+        ),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(
+        sa.text(
+            """
+            DELETE FROM session_exercises WHERE workout_session_id IN (
+                SELECT id FROM workout_sessions WHERE user_id = :user_id
+            )
+            """
+        ),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(
+        sa.text("DELETE FROM workout_sessions WHERE user_id = :user_id"),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(
+        sa.text(
+            """
+            DELETE FROM daily_exercise_plan_items WHERE daily_exercise_plan_id IN (
+                SELECT id FROM daily_exercise_plans WHERE user_id = :user_id
+            )
+            """
+        ),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(
+        sa.text("DELETE FROM daily_exercise_plans WHERE user_id = :user_id"),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(
+        sa.text(
+            """
+            DELETE FROM template_alternatives WHERE template_item_id IN (
+                SELECT item.id FROM workout_template_items AS item
+                JOIN split_days AS day ON day.id = item.split_day_id
+                JOIN splits AS split ON split.id = day.split_id
+                WHERE split.user_id = :user_id
+            )
+            """
+        ),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(
+        sa.text(
+            """
+            DELETE FROM workout_template_items WHERE split_day_id IN (
+                SELECT day.id FROM split_days AS day
+                JOIN splits AS split ON split.id = day.split_id
+                WHERE split.user_id = :user_id
+            )
+            """
+        ),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(
+        sa.text(
+            """
+            DELETE FROM split_days WHERE split_id IN (
+                SELECT id FROM splits WHERE user_id = :user_id
+            )
+            """
+        ),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(
+        sa.text("DELETE FROM splits WHERE user_id = :user_id"),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(
+        sa.text("DELETE FROM avatar_settings WHERE user_id = :user_id"),
+        {"user_id": demo_user_id},
+    )
+    connection.execute(
+        sa.text("DELETE FROM schedule_state WHERE user_id = :user_id"),
+        {"user_id": demo_user_id},
+    )
     connection.execute(
         sa.text("DELETE FROM visibility_settings WHERE profile_id = :profile_id"),
         {"profile_id": demo_profile_id},

@@ -9,8 +9,10 @@ from alembic.autogenerate import compare_metadata
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from sqlalchemy import MetaData, create_engine, inspect, select
+from sqlalchemy.orm import Session
 
 from levels_api.models import Base
+from levels_api.seed import seed_demo_session
 
 API_ROOT = Path(__file__).resolve().parents[2]
 
@@ -273,6 +275,9 @@ def test_empty_database_upgrade_downgrade_and_reupgrade(tmp_path: Path) -> None:
     engine = create_engine(database_url)
     expected_tables = set(Base.metadata.tables)
     assert set(inspect(engine).get_table_names()) == expected_tables | {"alembic_version"}
+
+    with Session(engine) as session, session.begin():
+        seed_demo_session(session)
 
     command.downgrade(config, "base")
     assert set(inspect(engine).get_table_names()) == {"alembic_version"}
