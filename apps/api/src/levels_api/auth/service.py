@@ -74,7 +74,7 @@ def create_access_token(user: User) -> tuple[str, int]:
     claims = {
         "sub": user.id,
         "role": user.role.value,
-        "ver": user.token_version,
+        "token_version": user.token_version,
         "iss": "levels-api",
         "iat": now,
         "exp": now + timedelta(seconds=expires_in),
@@ -104,13 +104,13 @@ def authenticated_user() -> User:
             _configured_value("JWT_SECRET_KEY"),
             algorithms=["HS256"],
             issuer="levels-api",
-            options={"require": ["sub", "role", "ver", "iss", "iat", "exp", "jti"]},
+            options={"require": ["sub", "role", "token_version", "iss", "iat", "exp", "jti"]},
         )
     except jwt.PyJWTError as error:
         raise ApiError(401, "UNAUTHORIZED", "The access token is invalid or expired.") from error
 
     user_id = claims.get("sub")
-    token_version = claims.get("ver")
+    token_version = claims.get("token_version")
     if not isinstance(user_id, str) or not isinstance(token_version, int):
         raise ApiError(401, "UNAUTHORIZED", "The access token is invalid or expired.")
     user = get_db().get(User, user_id)

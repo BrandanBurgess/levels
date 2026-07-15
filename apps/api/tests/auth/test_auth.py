@@ -86,7 +86,7 @@ def test_valid_credentials_return_member_token_and_current_user(app: Flask) -> N
     )
     assert claims["sub"] == payload["user"]["id"]
     assert claims["role"] == "member"
-    assert claims["ver"] == 0
+    assert claims["token_version"] == 0
     assert claims["exp"] - claims["iat"] == 1800
 
     headers = {"Authorization": f"Bearer {payload['access_token']}"}
@@ -131,7 +131,7 @@ def test_missing_invalid_expired_and_disabled_tokens_are_rejected(app: Flask) ->
         {
             "sub": "00000000-0000-0000-0000-000000000001",
             "role": "member",
-            "ver": 0,
+            "token_version": 0,
             "iss": "levels-api",
             "iat": now - timedelta(minutes=20),
             "exp": now - timedelta(minutes=5),
@@ -151,7 +151,7 @@ def test_missing_invalid_expired_and_disabled_tokens_are_rejected(app: Flask) ->
         {
             "sub": "00000000-0000-0000-0000-000000000001",
             "role": "member",
-            "ver": 0,
+            "token_version": 0,
             "iss": "levels-api",
             "iat": now,
             "exp": now + timedelta(minutes=5),
