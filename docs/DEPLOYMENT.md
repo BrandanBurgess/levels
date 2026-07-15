@@ -36,7 +36,9 @@ Create the service from **Render Dashboard → Blueprints → New Blueprint Inst
 
 - `DATABASE_URL`: the Turso `libsql://` database URL;
 - `TURSO_AUTH_TOKEN`: a database token scoped for this service;
-- `ADMIN_PASSWORD_HASH`: an Argon2 hash generated locally with `uv run --project apps/api python -m levels_api.scripts.hash_password`.
+- `ADMIN_PASSWORD_HASH`: an Argon2 hash generated locally with `uv run --project apps/api python -m levels_api.scripts.hash_password`;
+- `BOOTSTRAP_OWNER_EMAIL`: the owner email that receives populated v1 history during the v2 migration;
+- `BOOTSTRAP_OWNER_PASSWORD_HASH`: the owner's Argon2 hash, normally the same value as `ADMIN_PASSWORD_HASH` during the v1-to-v2 transition.
 
 Render generates `JWT_SECRET_KEY`. Do not replace it with a committed value. The Blueprint supplies the non-secret production mode, Toronto timezone, exact Pages CORS origin, Python version, and uv version. The build command installs that exact uv version before performing the frozen production dependency sync; setting `UV_VERSION` alone does not install the executable on Render.
 
@@ -56,7 +58,9 @@ Production uses the protected libSQL database named `levels-production`. Its URL
 In the GitHub `production` environment, configure:
 
 - `TURSO_DATABASE_URL`: the database's `libsql://` URL;
-- `TURSO_AUTH_TOKEN`: a token restricted to the production database.
+- `TURSO_AUTH_TOKEN`: a token restricted to the production database;
+- `BOOTSTRAP_OWNER_EMAIL`: the owner email configured on Render;
+- `BOOTSTRAP_OWNER_PASSWORD_HASH`: the corresponding Argon2 hash configured on Render.
 
 Add required reviewers to the environment before running **Migrate Production Database** on `main`. Enter `MIGRATE_LEVELS_PRODUCTION` when dispatching it. The workflow applies Alembic migrations, confirms the repository head, runs the idempotent seed loader, and verifies the exact catalog, split, profile, and no-deadlift invariants. Its status output contains counts and the migration revision, never credentials.
 

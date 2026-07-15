@@ -27,6 +27,8 @@ jobs:
     env:
       DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
       TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+      BOOTSTRAP_OWNER_EMAIL: ${{ secrets.BOOTSTRAP_OWNER_EMAIL }}
+      BOOTSTRAP_OWNER_PASSWORD_HASH: ${{ secrets.BOOTSTRAP_OWNER_PASSWORD_HASH }}
     steps:
       - name: Require explicit production confirmation
         shell: bash
@@ -38,6 +40,8 @@ jobs:
         run: |
           test -n "$DATABASE_URL"
           test -n "$TURSO_AUTH_TOKEN"
+          test -n "$BOOTSTRAP_OWNER_EMAIL"
+          test -n "$BOOTSTRAP_OWNER_PASSWORD_HASH"
           case "$DATABASE_URL" in
             libsql://*) ;;
             *) exit 1 ;;
