@@ -36,14 +36,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/public/dashboard": {
+    "/auth/register": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getPublicDashboard"];
+        get?: never;
+        put?: never;
+        post: operations["register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCurrentUser"];
         put?: never;
         post?: never;
         delete?: never;
@@ -52,14 +68,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/public/profile": {
+    "/auth/logout": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getPublicProfile"];
+        get?: never;
+        put?: never;
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/bootstrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDemoBootstrap"];
         put?: never;
         post?: never;
         delete?: never;
@@ -68,20 +100,116 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/profile": {
+    "/me/profile": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getProfile"];
+        get: operations["getMyProfile"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["updateProfile"];
+        patch: operations["updateMyProfile"];
+        trace?: never;
+    };
+    "/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMyAvatar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateMyAvatar"];
+        trace?: never;
+    };
+    "/me/streak": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMyStreak"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getToday"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/today/override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putTodayOverride"];
+        post?: never;
+        delete: operations["deleteTodayOverride"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/today/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["skipToday"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/today/exercises": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["replaceTodayExercisePlan"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/settings": {
@@ -107,9 +235,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listExercises"];
+        get: operations["listAvailableExercises"];
         put?: never;
         post: operations["createExercise"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/muscles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMuscleGroups"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -228,6 +372,41 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["addOrSubstituteSessionExercise"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{session_id}/exercises/{session_exercise_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["parameters"]["SessionId"];
+                session_exercise_id: components["parameters"]["SessionExerciseId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["removeSessionExercise"];
+        options?: never;
+        head?: never;
+        patch: operations["updateSessionExercise"];
+        trace?: never;
+    };
+    "/sessions/{session_id}/exercises/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reorderSessionExercises"];
         delete?: never;
         options?: never;
         head?: never;
@@ -382,19 +561,47 @@ export interface components {
                 field_errors?: {
                     [key: string]: string;
                 };
+                current_version?: number;
                 request_id?: string;
             };
         };
-        LoginRequest: {
-            username: string;
+        RegisterRequest: {
+            /** Format: email */
+            email: string;
+            password: string;
+            display_name: string;
+            /** @default America/Toronto */
+            timezone: string;
+            /**
+             * @default metric
+             * @enum {string}
+             */
+            preferred_units: "metric" | "imperial";
+        };
+        LoginRequestV2: {
+            /** Format: email */
+            email: string;
             password: string;
         };
-        LoginResponse: {
+        AuthResponse: {
             access_token: string;
-            expires_in_seconds: number;
-            admin: {
-                display_name: string;
-            };
+            /** @constant */
+            token_type: "Bearer";
+            expires_in: number;
+            user: components["schemas"]["CurrentUser"];
+        };
+        CurrentUser: {
+            id: string;
+            /** Format: email */
+            email: string;
+            display_name: string;
+            /** @enum {string} */
+            role: "member" | "admin";
+            /** @enum {string} */
+            readonly account_status: "active" | "disabled";
+            timezone: string;
+            /** @enum {string} */
+            preferred_units: "metric" | "imperial";
         };
         PublicProfile: {
             display_name: string;
@@ -403,10 +610,66 @@ export interface components {
             /** @enum {string} */
             preferred_units: "imperial" | "metric";
             timezone: string;
-            avatar_variant: string;
         };
-        AdminProfile: components["schemas"]["PublicProfile"] & {
+        Profile: {
             id: string;
+            display_name: string;
+            height_cm?: number | null;
+            body_weight_kg?: number | null;
+            /** @enum {string} */
+            preferred_units: "imperial" | "metric";
+            timezone: string;
+        };
+        AvatarSettings: {
+            /** @enum {string} */
+            base_presentation: "male" | "female";
+            /** @enum {string} */
+            skin_tone: "deep" | "rich" | "medium_deep" | "medium" | "light_medium" | "light";
+            /** @enum {string} */
+            hairstyle: "short_coils" | "fade" | "waves" | "locs" | "braids" | "bun" | "bob" | "short_straight" | "covered" | "bald";
+            /** @enum {string} */
+            hair_color: "black" | "dark_brown" | "brown" | "auburn" | "gray" | "blonde";
+            /** @enum {string} */
+            outfit_style: "training_tee" | "tank_and_shorts" | "long_sleeve" | "modest_activewear";
+            /** @enum {string} */
+            outfit_palette: "violet" | "teal" | "blue" | "rose" | "neutral";
+            /** @enum {string} */
+            accessory: "none" | "glasses" | "headband" | "wristbands";
+            /** @enum {string} */
+            background: "none" | "gradient" | "gym" | "dusk";
+            /** @enum {string} */
+            aura_style: "standard" | "rings" | "sparks";
+            aura_enabled: boolean;
+        };
+        AvatarSettingsUpdate: {
+            /** @enum {string} */
+            base_presentation?: "male" | "female";
+            /** @enum {string} */
+            skin_tone?: "deep" | "rich" | "medium_deep" | "medium" | "light_medium" | "light";
+            /** @enum {string} */
+            hairstyle?: "short_coils" | "fade" | "waves" | "locs" | "braids" | "bun" | "bob" | "short_straight" | "covered" | "bald";
+            /** @enum {string} */
+            hair_color?: "black" | "dark_brown" | "brown" | "auburn" | "gray" | "blonde";
+            /** @enum {string} */
+            outfit_style?: "training_tee" | "tank_and_shorts" | "long_sleeve" | "modest_activewear";
+            /** @enum {string} */
+            outfit_palette?: "violet" | "teal" | "blue" | "rose" | "neutral";
+            /** @enum {string} */
+            accessory?: "none" | "glasses" | "headband" | "wristbands";
+            /** @enum {string} */
+            background?: "none" | "gradient" | "gym" | "dusk";
+            /** @enum {string} */
+            aura_style?: "standard" | "rings" | "sparks";
+            aura_enabled?: boolean;
+        };
+        StreakSummary: {
+            current_count: number;
+            longest_count: number;
+            /** @enum {string} */
+            tier: "none" | "subtle" | "active" | "energized" | "legendary";
+            /** Format: date */
+            last_qualified_local_date: string | null;
+            next_milestone: number | null;
         };
         ProfileUpdate: {
             display_name?: string;
@@ -447,6 +710,14 @@ export interface components {
             reduced_motion_override?: boolean | null;
             visibility?: components["schemas"]["Visibility"];
         };
+        MuscleGroup: {
+            id: string;
+            slug: string;
+            display_name: string;
+            body_region: string;
+            svg_region_ids: string[];
+            highlightable: boolean;
+        };
         MuscleTarget: {
             slug: string;
             display_name: string;
@@ -457,6 +728,9 @@ export interface components {
         };
         Exercise: {
             id: string;
+            /** @enum {string} */
+            scope: "global" | "custom";
+            can_edit: boolean;
             slug: string;
             name: string;
             aliases: string[];
@@ -473,6 +747,12 @@ export interface components {
             automatic_progression_enabled: boolean;
             muscle_targets: components["schemas"]["MuscleTarget"][];
         };
+        MuscleTargetInput: {
+            slug: string;
+            /** @enum {string} */
+            role: "primary" | "secondary" | "stabilizer";
+            intensity: number;
+        };
         ExerciseWrite: {
             name: string;
             slug: string;
@@ -488,7 +768,7 @@ export interface components {
             default_rep_max?: number | null;
             default_rest_seconds?: number | null;
             automatic_progression_enabled?: boolean;
-            muscle_targets: components["schemas"]["MuscleTarget"][];
+            muscle_targets: components["schemas"]["MuscleTargetInput"][];
         };
         TemplateItem: {
             id: string;
@@ -499,6 +779,9 @@ export interface components {
             sets: number;
             rep_min?: number | null;
             rep_max?: number | null;
+            duration_seconds?: number | null;
+            distance_meters?: number | null;
+            rounds_target?: number | null;
             rest_seconds?: number | null;
             target_rir?: number | null;
             superset_group?: string | null;
@@ -540,12 +823,179 @@ export interface components {
                     sets: number;
                     rep_min?: number | null;
                     rep_max?: number | null;
+                    duration_seconds?: number | null;
+                    distance_meters?: number | null;
+                    rounds_target?: number | null;
                     rest_seconds?: number | null;
                     target_rir?: number | null;
                     optional?: boolean;
                     alternative_exercise_ids?: string[];
                 }[];
             }[];
+        };
+        ExerciseList: components["schemas"]["Exercise"][];
+        DailyPlanOverride: {
+            id: string;
+            /** Format: date */
+            local_date: string;
+            /** @enum {string} */
+            action: "replace" | "swap" | "rest" | "skip";
+            planned_split_day_id?: string | null;
+            effective_split_day_id?: string | null;
+            /** Format: date */
+            swap_target_local_date?: string | null;
+            /** @enum {string} */
+            schedule_effect: "one_time" | "continue_from_here" | "swap_forward" | "advance" | "keep";
+            reason?: string | null;
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        ExercisePlanItemInput: {
+            source_template_item_id?: string | null;
+            exercise_id: string;
+            sequence: number;
+            /**
+             * @default accessory
+             * @enum {string}
+             */
+            item_type: "activation" | "power" | "main" | "accessory" | "core" | "conditioning";
+            planned_sets: number;
+            rep_min?: number | null;
+            rep_max?: number | null;
+            duration_seconds?: number | null;
+            distance_meters?: number | null;
+            rounds_target?: number | null;
+            rest_seconds?: number | null;
+            target_rir?: number | null;
+            superset_group?: string | null;
+            /** @default false */
+            optional: boolean;
+            notes?: string | null;
+        };
+        ExercisePlanItem: {
+            id: string;
+            source_template_item_id?: string | null;
+            exercise: components["schemas"]["Exercise"];
+            sequence: number;
+            /** @enum {string} */
+            item_type: "activation" | "power" | "main" | "accessory" | "core" | "conditioning";
+            planned_sets: number;
+            rep_min?: number | null;
+            rep_max?: number | null;
+            duration_seconds?: number | null;
+            distance_meters?: number | null;
+            rounds_target?: number | null;
+            rest_seconds?: number | null;
+            target_rir?: number | null;
+            superset_group?: string | null;
+            optional: boolean;
+            notes?: string | null;
+        };
+        TodayOverrideRequest: {
+            /** Format: date */
+            local_date: string;
+            /** @constant */
+            action: "replace";
+            effective_split_day_id: string;
+            /** @enum {string} */
+            schedule_effect: "one_time" | "continue_from_here";
+            reason?: string | null;
+            expected_version: number;
+        } | {
+            /** Format: date */
+            local_date: string;
+            /** @constant */
+            action: "swap";
+            effective_split_day_id: string;
+            /** Format: date */
+            swap_target_local_date: string;
+            /** @constant */
+            schedule_effect: "swap_forward";
+            reason?: string | null;
+            expected_version: number;
+        } | {
+            /** Format: date */
+            local_date: string;
+            /** @constant */
+            action: "rest";
+            /** @constant */
+            schedule_effect: "one_time";
+            reason?: string | null;
+            expected_version: number;
+        };
+        SkipTodayRequest: {
+            /** Format: date */
+            local_date: string;
+            /** @enum {string} */
+            schedule_effect: "advance" | "keep";
+            reason?: string | null;
+            expected_version: number;
+        };
+        TodayExercisePlanUpdate: {
+            /** Format: date */
+            local_date: string;
+            source_split_day_id?: string | null;
+            items: components["schemas"]["ExercisePlanItemInput"][];
+            /**
+             * @default today_only
+             * @enum {string}
+             */
+            scope: "today_only" | "save_to_split";
+            expected_version: number;
+        } & unknown;
+        TodayV2: {
+            /** Format: date */
+            local_date: string;
+            user: components["schemas"]["CurrentUser"];
+            planned_day: components["schemas"]["SplitDay"] | null;
+            effective_day: components["schemas"]["SplitDay"] | null;
+            override: components["schemas"]["DailyPlanOverride"] | null;
+            schedule_version: number;
+            exercise_plan: components["schemas"]["ExercisePlanItem"][];
+            active_session: components["schemas"]["WorkoutSession"] | null;
+            muscle_targets: components["schemas"]["MuscleTarget"][];
+            water: components["schemas"]["WaterDay"];
+            latest_achievements: components["schemas"]["Achievement"][];
+            avatar: components["schemas"]["AvatarSettings"];
+            streak: components["schemas"]["StreakSummary"];
+        };
+        DemoToday: {
+            /** Format: date */
+            local_date: string;
+            profile: components["schemas"]["PublicProfile"];
+            effective_day: components["schemas"]["SplitDay"] | null;
+            exercise_plan: components["schemas"]["ExercisePlanItem"][];
+            muscle_targets: components["schemas"]["MuscleTarget"][];
+            avatar: components["schemas"]["AvatarSettings"];
+            streak: components["schemas"]["StreakSummary"];
+        };
+        DemoJournalSample: {
+            id: string;
+            /** Format: date */
+            session_date_local: string;
+            title: string;
+            /** Format: date-time */
+            completed_at: string;
+            exercises_completed: number;
+        };
+        DemoProgressSummary: {
+            completed_sessions: number;
+            current_records: components["schemas"]["PersonalRecord"][];
+        };
+        DemoBootstrap: {
+            /** @constant */
+            mode: "demo";
+            profile: components["schemas"]["PublicProfile"];
+            today: components["schemas"]["DemoToday"];
+            avatar: components["schemas"]["AvatarSettings"];
+            splits: components["schemas"]["Split"][];
+            exercises: components["schemas"]["ExerciseList"];
+            journal_samples: components["schemas"]["DemoJournalSample"][];
+            progress: components["schemas"]["DemoProgressSummary"];
+            streak: components["schemas"]["StreakSummary"];
         };
         SetLog: {
             id: string;
@@ -567,17 +1017,31 @@ export interface components {
         SessionExercise: {
             id: string;
             exercise_id: string;
+            source_template_item_id?: string | null;
             display_name: string;
-            variation_group?: string;
+            variation_group: string;
             sequence: number;
+            planned_sets: number;
+            /** @enum {string} */
+            item_type: "activation" | "power" | "main" | "accessory" | "core" | "conditioning";
             rep_min?: number | null;
             rep_max?: number | null;
+            duration_seconds?: number | null;
+            distance_meters?: number | null;
+            rounds_target?: number | null;
+            rest_seconds?: number | null;
             target_rir?: number | null;
+            optional: boolean;
+            notes?: string | null;
             substitution_reason?: string | null;
+            /** Format: date-time */
+            removed_at?: string | null;
+            removal_reason?: string | null;
             sets: components["schemas"]["SetLog"][];
         };
         WorkoutSession: {
             id: string;
+            version: number;
             split_day_id?: string | null;
             /** Format: date */
             session_date_local: string;
@@ -588,34 +1052,51 @@ export interface components {
             /** @enum {string} */
             status: "draft" | "in_progress" | "completed" | "cancelled";
             title: string;
-            /** @enum {string} */
-            public_visibility: "private" | "summary" | "full";
             perceived_effort?: number | null;
-            notes_public?: string | null;
             notes_private?: string | null;
             exercises: components["schemas"]["SessionExercise"][];
         };
         StartSession: {
+            expected_schedule_version: number;
             split_day_id?: string | null;
             title?: string | null;
             /** Format: date */
             date?: string | null;
-        } | unknown | unknown;
+        };
         SessionUpdate: {
             /** @enum {string} */
             status?: "in_progress" | "completed" | "cancelled";
             title?: string;
-            /** @enum {string} */
-            public_visibility?: "private" | "summary" | "full";
             perceived_effort?: number | null;
             notes_private?: string | null;
-            notes_public?: string | null;
         };
         AddSessionExercise: {
             exercise_id: string;
+            expected_version: number;
             replace_session_exercise_id?: string | null;
             substitution_reason?: string | null;
             sequence?: number | null;
+        };
+        SessionExerciseUpdate: {
+            expected_version: number;
+            exercise_id?: string;
+            planned_sets?: number;
+            /** @enum {string} */
+            item_type?: "activation" | "power" | "main" | "accessory" | "core" | "conditioning";
+            rep_min?: number | null;
+            rep_max?: number | null;
+            duration_seconds?: number | null;
+            distance_meters?: number | null;
+            rounds_target?: number | null;
+            rest_seconds?: number | null;
+            target_rir?: number | null;
+            optional?: boolean;
+            notes?: string | null;
+            substitution_reason?: string | null;
+        };
+        ReorderSessionExercises: {
+            expected_version: number;
+            ordered_session_exercise_ids: string[];
         };
         SetWrite: {
             session_exercise_id: string;
@@ -697,16 +1178,6 @@ export interface components {
             explanation: string[];
             source_session_ids: string[];
         };
-        PublicDashboard: {
-            /** Format: date */
-            date: string;
-            profile: components["schemas"]["PublicProfile"];
-            scheduled_day?: components["schemas"]["SplitDay"] | null;
-            active_session?: components["schemas"]["WorkoutSession"] | null;
-            muscle_targets: components["schemas"]["MuscleTarget"][];
-            water?: components["schemas"]["WaterDay"] | null;
-            latest_achievements: components["schemas"]["Achievement"][];
-        };
     };
     responses: {
         /** @description Invalid request. */
@@ -727,8 +1198,35 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
+        /** @description Authenticated actor is not allowed to perform this operation. */
+        Forbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description Not found. */
         NotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description Request conflicts with current state or optimistic-concurrency version. */
+        Conflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description Semantically invalid request. */
+        ValidationError: {
             headers: {
                 [name: string]: unknown;
             };
@@ -748,11 +1246,15 @@ export interface components {
     };
     parameters: {
         LocalDate: string;
+        LocalDateRequired: string;
         ExerciseId: string;
         SplitId: string;
         SessionId: string;
+        SessionExerciseId: string;
         SetId: string;
         IdempotencyKey: string;
+        IdempotencyKeyRequired: string;
+        ExpectedVersion: number;
     };
     requestBodies: never;
     headers: never;
@@ -789,7 +1291,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LoginRequest"];
+                "application/json": components["schemas"]["LoginRequestV2"];
             };
         };
         responses: {
@@ -799,36 +1301,43 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LoginResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
             429: components["responses"]["TooManyRequests"];
         };
     };
-    getPublicDashboard: {
+    register: {
         parameters: {
-            query?: {
-                date?: components["parameters"]["LocalDate"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
         responses: {
-            /** @description Public dashboard. */
-            200: {
+            /** @description Account created and authenticated. */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicDashboard"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
-    getPublicProfile: {
+    getCurrentUser: {
         parameters: {
             query?: never;
             header?: never;
@@ -837,18 +1346,20 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Public profile. */
+            /** @description Current authenticated user. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicProfile"];
+                    "application/json": components["schemas"]["CurrentUser"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
-    getProfile: {
+    logout: {
         parameters: {
             query?: never;
             header?: never;
@@ -857,19 +1368,58 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Owner profile. */
+            /** @description Local authentication state may be cleared. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getDemoBootstrap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Fictional read-only demo data. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AdminProfile"];
+                    "application/json": components["schemas"]["DemoBootstrap"];
+                };
+            };
+        };
+    };
+    getMyProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current user's profile. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
                 };
             };
             401: components["responses"]["Unauthorized"];
         };
     };
-    updateProfile: {
+    updateMyProfile: {
         parameters: {
             query?: never;
             header?: never;
@@ -888,11 +1438,217 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AdminProfile"];
+                    "application/json": components["schemas"]["Profile"];
                 };
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getMyAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current user's avatar appearance. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvatarSettings"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    updateMyAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AvatarSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated avatar appearance. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvatarSettings"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getMyStreak: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current user's schedule-aware streak. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StreakSummary"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getToday: {
+        parameters: {
+            query?: {
+                date?: components["parameters"]["LocalDate"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Planned and effective workout for the requested local date. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayV2"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    putTodayOverride: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyRequired"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TodayOverrideRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated effective plan. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayV2"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    deleteTodayOverride: {
+        parameters: {
+            query: {
+                local_date: components["parameters"]["LocalDateRequired"];
+                expected_version: components["parameters"]["ExpectedVersion"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Override removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    skipToday: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyRequired"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SkipTodayRequest"];
+            };
+        };
+        responses: {
+            /** @description Today skipped and schedule updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayV2"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    replaceTodayExercisePlan: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyRequired"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TodayExercisePlanUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated effective exercise plan. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayV2"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     getSettings: {
@@ -940,19 +1696,19 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
-    listExercises: {
+    listAvailableExercises: {
         parameters: {
             query?: {
-                q?: string;
-                primary_muscle?: string;
-                secondary_muscle?: string;
-                body_region?: string;
+                scope?: "available" | "global" | "mine";
+                search?: string;
+                muscle_id?: string;
                 movement_pattern?: string;
                 equipment?: string;
-                unilateral?: boolean;
-                include_archived?: boolean;
+                measurement_type?: "load_reps" | "bodyweight_reps" | "duration" | "distance" | "rounds";
             };
             header?: never;
             path?: never;
@@ -966,9 +1722,10 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Exercise"][];
+                    "application/json": components["schemas"]["ExerciseList"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     createExercise: {
@@ -994,6 +1751,30 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    listMuscleGroups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Shared read-only muscle catalog. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MuscleGroup"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
     getExercise: {
@@ -1016,6 +1797,7 @@ export interface operations {
                     "application/json": components["schemas"]["Exercise"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -1038,6 +1820,8 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     updateExercise: {
@@ -1065,7 +1849,10 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     listSplits: {
@@ -1086,6 +1873,7 @@ export interface operations {
                     "application/json": components["schemas"]["Split"][];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     createSplit: {
@@ -1111,6 +1899,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     getSplit: {
@@ -1133,6 +1923,7 @@ export interface operations {
                     "application/json": components["schemas"]["Split"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -1155,6 +1946,8 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     updateSplit: {
@@ -1182,6 +1975,9 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     activateSplit: {
@@ -1205,6 +2001,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     listSessions: {
@@ -1213,7 +2011,6 @@ export interface operations {
                 from?: string;
                 to?: string;
                 exercise_id?: string;
-                public_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -1230,13 +2027,14 @@ export interface operations {
                     "application/json": components["schemas"]["WorkoutSession"][];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     startSession: {
         parameters: {
             query?: never;
-            header?: {
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyRequired"];
             };
             path?: never;
             cookie?: never;
@@ -1257,6 +2055,9 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     getSession: {
@@ -1279,6 +2080,7 @@ export interface operations {
                     "application/json": components["schemas"]["WorkoutSession"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -1301,6 +2103,7 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     updateSession: {
@@ -1328,6 +2131,9 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     addOrSubstituteSessionExercise: {
@@ -1355,6 +2161,99 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    removeSessionExercise: {
+        parameters: {
+            query: {
+                expected_version: components["parameters"]["ExpectedVersion"];
+                confirm_logged_sets?: boolean;
+            };
+            header?: never;
+            path: {
+                session_id: components["parameters"]["SessionId"];
+                session_exercise_id: components["parameters"]["SessionExerciseId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Exercise soft-removed from the active session. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkoutSession"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    updateSessionExercise: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["parameters"]["SessionId"];
+                session_exercise_id: components["parameters"]["SessionExerciseId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionExerciseUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated active-session exercise snapshot. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkoutSession"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    reorderSessionExercises: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["parameters"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderSessionExercises"];
+            };
+        };
+        responses: {
+            /** @description Reordered active-session exercises. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkoutSession"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     createSet: {
@@ -1385,6 +2284,9 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     deleteSet: {
@@ -1406,6 +2308,8 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     updateSet: {
@@ -1433,13 +2337,16 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     completeSession: {
         parameters: {
             query?: never;
-            header?: {
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyRequired"];
             };
             path: {
                 session_id: components["parameters"]["SessionId"];
@@ -1458,6 +2365,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     getWaterToday: {
@@ -1480,6 +2389,7 @@ export interface operations {
                     "application/json": components["schemas"]["WaterDay"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     addWater: {
@@ -1507,6 +2417,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     undoWater: {
@@ -1528,6 +2440,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
         };
     };
     listRecords: {
@@ -1551,6 +2464,7 @@ export interface operations {
                     "application/json": components["schemas"]["PersonalRecord"][];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     getGrowthSuggestions: {
@@ -1574,6 +2488,7 @@ export interface operations {
                     "application/json": components["schemas"]["GrowthSuggestion"][];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     exportData: {
