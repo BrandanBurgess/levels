@@ -141,7 +141,7 @@ function MuscleRegions({
 function MaleBase({ view }: { view: "front" | "back" }) {
   return (
     <g data-base="male" data-layer="base">
-      <circle className="avatar__skin" cx="150" cy="70" r="37" />
+      <circle className="avatar__skin" cx="150" cy="70" data-avatar-face="skin" r="37" />
       <path className="avatar__skin" d="M128 101c-9 14-17 24-35 30l20 213h74l20-213c-18-6-26-16-35-30z" />
       <path className="avatar__skin" d="M100 130c-20 9-31 28-36 56L43 325c-3 19 23 24 29 6l37-123z" />
       <path className="avatar__skin" d="M200 130c20 9 31 28 36 56l21 139c3 19-23 24-29 6l-37-123z" />
@@ -154,7 +154,7 @@ function MaleBase({ view }: { view: "front" | "back" }) {
 function FemaleBase({ view }: { view: "front" | "back" }) {
   return (
     <g data-base="female" data-layer="base">
-      <ellipse className="avatar__skin" cx="150" cy="70" rx="34" ry="38" />
+      <ellipse className="avatar__skin" cx="150" cy="70" data-avatar-face="skin" rx="34" ry="38" />
       <path className="avatar__skin" d="M130 102c-8 13-17 21-32 28l16 120-13 94h98l-13-94 16-120c-15-7-24-15-32-28-12 8-28 8-40 0z" />
       <path className="avatar__skin" d="M101 130c-18 9-27 29-32 55L47 324c-3 18 21 23 27 6l35-122z" />
       <path className="avatar__skin" d="M199 130c18 9 27 29 32 55l22 139c3 18-21 23-27 6l-35-122z" />
@@ -164,16 +164,88 @@ function FemaleBase({ view }: { view: "front" | "back" }) {
   );
 }
 
-function HairLayer({ appearance, view }: { appearance: AvatarAppearance; view: "front" | "back" }) {
-  if (appearance.hairstyle === "bald") return null;
-  const longHair = ["locs", "braids", "bun", "bob", "long_straight"].includes(appearance.hairstyle);
+function RearHairLayer({ appearance }: { appearance: AvatarAppearance }) {
+  const hairstyle = appearance.hairstyle;
+  const hasRearLayer = ["short_locs", "locs", "braids", "long_curls", "curly_bob", "bun", "bob", "covered"].includes(hairstyle);
+  if (!hasRearLayer) return null;
+
   return (
-    <g className={`avatar__hair avatar__hair--${appearance.hairstyle}`} data-layer="hair">
-      <path d={longHair ? "M114 69c0-31 15-51 36-51s37 20 37 51l-5 70-18-30h-28l-18 30z" : "M115 65c0-25 14-43 35-43 22 0 37 18 37 43-9-12-19-17-36-18-16 0-27 5-36 18z"} />
-      {appearance.hairstyle === "bun" ? <circle cx="150" cy="16" r="17" /> : null}
-      {view === "front" && appearance.hairstyle === "short_coils" ? (
-        <g className="avatar__hair-detail"><circle cx="127" cy="39" r="5" /><circle cx="143" cy="32" r="6" /><circle cx="160" cy="33" r="6" /><circle cx="176" cy="41" r="5" /></g>
+    <g className={`avatar__hair avatar__hair--${hairstyle}`} data-hair-layer="rear" data-hairstyle={hairstyle} data-layer="hair">
+      {hairstyle === "short_locs" ? (
+        <g className="avatar__hair-strands avatar__hair-strands--short-locs" data-hair-texture="short-locs">
+          <path d="M116 45q-9 23-8 49M126 35q-7 28-5 57M139 29q-4 29-2 61M160 29q4 31 2 62M174 35q8 28 5 57M184 45q9 23 8 49" />
+        </g>
       ) : null}
+      {hairstyle === "locs" ? (
+        <g className="avatar__hair-strands avatar__hair-strands--locs" data-hair-texture="locs">
+          <path d="M119 48q-8 43-3 110M128 35q-7 67-2 139M139 28q-4 73-1 153M151 26q2 78 0 158M162 29q7 76 3 151M173 37q10 64 5 136M181 49q9 48 5 108" />
+        </g>
+      ) : null}
+      {hairstyle === "braids" ? (
+        <g className="avatar__hair-strands avatar__hair-strands--braids" data-hair-texture="braids">
+          <path d="M122 47q-8 45-4 129M134 32q-6 72-2 162M147 27q-3 80-1 174M159 29q5 83 3 169M172 37q9 69 5 151M181 50q10 49 7 124" />
+          <circle cx="118" cy="176" r="3" /><circle cx="132" cy="194" r="3" /><circle cx="146" cy="201" r="3" />
+          <circle cx="162" cy="198" r="3" /><circle cx="177" cy="188" r="3" /><circle cx="188" cy="174" r="3" />
+        </g>
+      ) : null}
+      {hairstyle === "long_curls" ? (
+        <>
+          <path d="M113 68c-2-31 14-53 37-53 25 0 40 23 38 54l10 35-9 28 9 30-13 19 5 30-25-7-15 12-15-12-25 7 5-30-13-19 9-30-9-28z" />
+          <g className="avatar__hair-detail avatar__hair-detail--stroke avatar__hair-detail--curls" data-hair-texture="long-curls">
+            <path d="M108 82q16-18 28 0t27 0t27 0M111 115q14-18 26 0t26 0t25 0M115 150q13-19 25 0t24 0t22 0M120 184q11-16 22 0t22 0" />
+          </g>
+        </>
+      ) : null}
+      {hairstyle === "curly_bob" ? (
+        <>
+          <path d="M113 67c-1-31 15-51 37-51 24 0 39 21 38 52l7 25-9 20 6 21-20 7-22-9-22 9-20-7 6-21-9-20z" />
+          <g className="avatar__hair-detail avatar__hair-detail--stroke avatar__hair-detail--curls" data-hair-texture="curly-bob">
+            <path d="M109 78q15-17 27 0t26 0t26 0M112 107q14-16 26 0t25 0t23 0" />
+          </g>
+        </>
+      ) : null}
+      {hairstyle === "bun" ? <circle cx="150" cy="15" r="18" /> : null}
+      {hairstyle === "bob" ? <path d="M113 69c0-31 15-51 37-51s38 20 38 51l4 56-21 18-8-34h-26l-8 34-21-18z" /> : null}
+      {hairstyle === "covered" ? <path className="avatar__hair-covering" d="M112 70c0-34 16-56 38-56 24 0 40 23 39 57l-5 48-20-18h-28l-20 18z" /> : null}
+    </g>
+  );
+}
+
+function FrontHairLayer({ appearance, view }: { appearance: AvatarAppearance; view: "front" | "back" }) {
+  const hairstyle = appearance.hairstyle;
+  if (hairstyle === "bald") return null;
+  const crown = <path d="M114 69c0-31 15-51 36-51s37 20 37 51c-9-13-20-19-36-19-17 0-28 6-37 19z" />;
+
+  return (
+    <g className={`avatar__hair avatar__hair--${hairstyle}`} data-hair-layer="front" data-hairstyle={hairstyle} data-layer="hair">
+      {hairstyle === "short_coils" ? (
+        <>
+          <path d="M115 65c0-25 14-43 35-43 22 0 37 18 37 43-9-12-19-17-36-18-16 0-27 5-36 18z" />
+          <g className="avatar__hair-detail avatar__hair-detail--coils" data-hair-texture="coils">
+            <circle cx="123" cy="43" r="5" /><circle cx="134" cy="33" r="6" /><circle cx="148" cy="29" r="6" />
+            <circle cx="162" cy="31" r="6" /><circle cx="175" cy="40" r="5" />
+          </g>
+        </>
+      ) : null}
+      {hairstyle === "fade" ? <path d="M117 62c2-23 15-37 33-37 20 0 33 15 35 37-10-9-21-13-34-13-14 0-25 4-34 13z" /> : null}
+      {hairstyle === "waves" ? (
+        <>
+          <path d="M116 63c1-24 15-39 34-39 21 0 35 16 36 39-10-10-21-14-35-14-15 0-26 4-35 14z" />
+          <g className="avatar__hair-detail avatar__hair-detail--stroke" data-hair-texture="waves"><path d="M125 45q9-9 18 0t18 0t17 0M130 34q8-6 16 0t16 0" /></g>
+        </>
+      ) : null}
+      {["short_locs", "locs", "braids", "bun", "bob"].includes(hairstyle) ? crown : null}
+      {["long_curls", "curly_bob"].includes(hairstyle) ? (
+        <>
+          {crown}
+          <g className="avatar__hair-detail avatar__hair-detail--stroke avatar__hair-detail--curls avatar__hair-detail--hairline" data-hair-texture={`${hairstyle}-hairline`}>
+            <path d="M118 50q13-16 25 0t25 0M127 34q10-10 20 0t19 0" />
+          </g>
+        </>
+      ) : null}
+      {hairstyle === "short_straight" ? <path d="M114 68c0-29 15-48 36-48 23 0 38 20 38 49l-10-14-10 8-10-9-10 9-11-8-14 14z" /> : null}
+      {hairstyle === "covered" ? <path className="avatar__hair-covering" d="M114 68c0-32 15-53 36-53 23 0 38 22 38 54-11-12-23-18-38-18-16 0-27 6-36 17z" /> : null}
+      {view === "back" && ["fade", "waves", "short_straight"].includes(hairstyle) ? <path className="avatar__hair-nape" d="M127 57q23 17 46 0l-4 39q-19 14-38 0z" /> : null}
     </g>
   );
 }
@@ -189,13 +261,19 @@ function OutfitLayer({ appearance, view }: { appearance: AvatarAppearance; view:
   );
 }
 
-function AccessoryLayer({ accessory }: { accessory: AvatarAppearance["accessory"] }) {
+function AccessoryLayer({ accessory, view }: { accessory: AvatarAppearance["accessory"]; view: "front" | "back" }) {
   if (accessory === "none") return null;
   return (
     <g className="avatar__accessory" data-accessory={accessory} data-layer="accessory">
       {accessory === "glasses" ? <path d="M123 66h22v14h-22zM155 66h22v14h-22zM145 71h10" /> : null}
       {accessory === "headband" ? <path d="M117 53q33-13 66 0l-2 9q-31-11-62 0z" /> : null}
       {accessory === "wristbands" ? <path d="M61 286l20 4-4 17-20-4zM239 286l-20 4 4 17 20-4z" /> : null}
+      {accessory === "cap" ? (
+        <g className="avatar__accessory-cap">
+          <path d="M116 52q4-35 34-35t35 35q-35-13-69 0z" />
+          <path d={view === "front" ? "M116 51q40-13 78 7-38 6-77 1z" : "M116 51q34-12 69 0l-2 9q-32-9-65 0z"} />
+        </g>
+      ) : null}
     </g>
   );
 }
@@ -214,10 +292,11 @@ export function Aura({ enabled, style, tier }: { enabled: boolean; style: Avatar
 function AppearanceLayers({ appearance, view }: { appearance: AvatarAppearance; view: "front" | "back" }) {
   return (
     <>
+      <RearHairLayer appearance={appearance} />
       {appearance.base_presentation === "male" ? <MaleBase view={view} /> : <FemaleBase view={view} />}
       <OutfitLayer appearance={appearance} view={view} />
-      <HairLayer appearance={appearance} view={view} />
-      <AccessoryLayer accessory={appearance.accessory} />
+      <FrontHairLayer appearance={appearance} view={view} />
+      <AccessoryLayer accessory={appearance.accessory} view={view} />
     </>
   );
 }
@@ -248,7 +327,7 @@ function AvatarView({
       <text className="avatar__view-label" x="150" y="24">{label}</text>
       <ellipse className="avatar__ground" cx="150" cy="520" rx="92" ry="12" />
       <Aura enabled={appearance.aura_enabled} style={appearance.aura_style} tier={auraTier} />
-      <g className={appearance.base_presentation === "female" ? "avatar__figure avatar__figure--female" : "avatar__figure"}>
+      <g className={appearance.base_presentation === "female" ? "avatar__figure avatar__figure--female" : "avatar__figure"} data-hairstyle={appearance.hairstyle}>
         <AppearanceLayers appearance={appearance} view={view} />
         <MuscleRegions definitions={definitions} interactiveRegionIds={interactiveRegionIds} onSelect={onSelect} targets={targets} />
       </g>

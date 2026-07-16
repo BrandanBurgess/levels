@@ -626,7 +626,7 @@ export interface components {
             /** @enum {string} */
             skin_tone: "deep" | "rich" | "medium_deep" | "medium" | "light_medium" | "light";
             /** @enum {string} */
-            hairstyle: "short_coils" | "fade" | "waves" | "locs" | "braids" | "bun" | "bob" | "short_straight" | "covered" | "bald";
+            hairstyle: "short_coils" | "fade" | "waves" | "short_locs" | "locs" | "braids" | "long_curls" | "curly_bob" | "bun" | "bob" | "short_straight" | "covered" | "bald";
             /** @enum {string} */
             hair_color: "black" | "dark_brown" | "brown" | "auburn" | "gray" | "blonde";
             /** @enum {string} */
@@ -634,7 +634,7 @@ export interface components {
             /** @enum {string} */
             outfit_palette: "violet" | "teal" | "blue" | "rose" | "neutral";
             /** @enum {string} */
-            accessory: "none" | "glasses" | "headband" | "wristbands";
+            accessory: "none" | "glasses" | "headband" | "wristbands" | "cap";
             /** @enum {string} */
             background: "none" | "gradient" | "gym" | "dusk";
             /** @enum {string} */
@@ -647,7 +647,7 @@ export interface components {
             /** @enum {string} */
             skin_tone?: "deep" | "rich" | "medium_deep" | "medium" | "light_medium" | "light";
             /** @enum {string} */
-            hairstyle?: "short_coils" | "fade" | "waves" | "locs" | "braids" | "bun" | "bob" | "short_straight" | "covered" | "bald";
+            hairstyle?: "short_coils" | "fade" | "waves" | "short_locs" | "locs" | "braids" | "long_curls" | "curly_bob" | "bun" | "bob" | "short_straight" | "covered" | "bald";
             /** @enum {string} */
             hair_color?: "black" | "dark_brown" | "brown" | "auburn" | "gray" | "blonde";
             /** @enum {string} */
@@ -655,7 +655,7 @@ export interface components {
             /** @enum {string} */
             outfit_palette?: "violet" | "teal" | "blue" | "rose" | "neutral";
             /** @enum {string} */
-            accessory?: "none" | "glasses" | "headband" | "wristbands";
+            accessory?: "none" | "glasses" | "headband" | "wristbands" | "cap";
             /** @enum {string} */
             background?: "none" | "gradient" | "gym" | "dusk";
             /** @enum {string} */

@@ -166,7 +166,7 @@ describe("CharacterPage", () => {
   it("loads Appearance, previews both bases, and persists controlled settings through /me/avatar", async () => {
     mockCharacterApi();
     const patch = vi.spyOn(apiClient, "PATCH").mockResolvedValue({
-      data: { ...avatar, base_presentation: "female", aura_enabled: false },
+      data: { ...avatar, base_presentation: "female", hairstyle: "long_curls", accessory: "cap", aura_enabled: false },
       response: new Response(),
     } as never);
     const { container } = renderPage();
@@ -176,14 +176,20 @@ describe("CharacterPage", () => {
     fireEvent.keyDown(overviewTab, { key: "ArrowRight" });
     expect(screen.getByRole("tab", { name: "Appearance" })).toHaveFocus();
     expect(await screen.findByRole("heading", { name: "Appearance" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Medium deep" })).toBeInTheDocument();
+    expect(screen.queryByText("Medium deep")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: "Female" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Hairstyle" }), { target: { value: "long_curls" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Accessory" }), { target: { value: "cap" } });
     fireEvent.click(screen.getByRole("checkbox", { name: /Show streak aura/ }));
     expect(container.querySelector('[data-base-presentation="female"]')).not.toBeNull();
+    expect(container.querySelector(".avatar__hair--long_curls")).not.toBeNull();
+    expect(container.querySelector('[data-accessory="cap"]')).not.toBeNull();
     expect(container.querySelector("[data-aura-tier]")).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Save appearance" }));
     await waitFor(() => expect(patch).toHaveBeenCalledWith("/me/avatar", {
-      body: { ...avatar, base_presentation: "female", aura_enabled: false },
+      body: { ...avatar, base_presentation: "female", hairstyle: "long_curls", accessory: "cap", aura_enabled: false },
     }));
     expect(await screen.findByText("Appearance saved.")).toHaveAttribute("role", "status");
   });

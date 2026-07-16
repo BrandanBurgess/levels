@@ -82,6 +82,34 @@ def test_avatar_read_and_patch_are_tenant_scoped(
     )
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("hairstyle", "short_locs"),
+        ("hairstyle", "long_curls"),
+        ("hairstyle", "curly_bob"),
+        ("accessory", "cap"),
+    ],
+)
+def test_avatar_accepts_and_persists_new_customization_options(
+    app_and_tokens: tuple[Flask, str, str],
+    field: str,
+    value: str,
+) -> None:
+    app, token, _ = app_and_tokens
+    client = app.test_client()
+
+    response = client.patch(
+        "/api/v1/me/avatar",
+        headers=_headers(token),
+        json={field: value},
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()[field] == value
+    assert client.get("/api/v1/me/avatar", headers=_headers(token)).get_json()[field] == value
+
+
 def test_avatar_rejects_uncontrolled_values(
     app_and_tokens: tuple[Flask, str, str],
 ) -> None:

@@ -13,11 +13,11 @@ type Settings = components["schemas"]["Settings"];
 const LABELS = {
   base_presentation: { male: "Male", female: "Female" },
   skin_tone: { deep: "Deep", rich: "Rich", medium_deep: "Medium deep", medium: "Medium", light_medium: "Light medium", light: "Light" },
-  hairstyle: { short_coils: "Short coils", fade: "Fade", waves: "Waves", locs: "Locs", braids: "Braids", bun: "Bun", bob: "Bob", short_straight: "Short straight", covered: "Covered", bald: "Bald" },
+  hairstyle: { short_coils: "Short coils", fade: "Fade", waves: "Waves", short_locs: "Short locs", locs: "Long locs", braids: "Long braids", long_curls: "Long curls", curly_bob: "Curly bob", bun: "Bun", bob: "Bob", short_straight: "Short straight", covered: "Covered", bald: "Bald" },
   hair_color: { black: "Black", dark_brown: "Dark brown", brown: "Brown", auburn: "Auburn", gray: "Gray", blonde: "Blonde" },
   outfit_style: { training_tee: "Training tee", tank_and_shorts: "Tank and shorts", long_sleeve: "Long sleeve", modest_activewear: "Modest activewear" },
   outfit_palette: { violet: "Violet", teal: "Teal", blue: "Blue", rose: "Rose", neutral: "Neutral" },
-  accessory: { none: "None", glasses: "Glasses", headband: "Headband", wristbands: "Wristbands" },
+  accessory: { none: "None", glasses: "Glasses", headband: "Headband", wristbands: "Wristbands", cap: "Cap" },
   background: { none: "None", gradient: "Gradient", gym: "Gym", dusk: "Dusk" },
   aura_style: { standard: "Standard glow", rings: "Rings", sparks: "Sparks" },
 } as const;
@@ -165,8 +165,8 @@ export function AppearancePanel() {
             <div className="appearance-swatch-row">
               {Object.entries(LABELS.skin_tone).map(([value, label]) => (
                 <label key={value}>
-                  <input checked={draft.skin_tone === value} name="skin-tone" onChange={() => update("skin_tone", value as AvatarAppearance["skin_tone"])} type="radio" />
-                  <span className={`appearance-swatch appearance-swatch--${value}`}><span className="sr-only">{label}</span></span>
+                  <input aria-label={label} checked={draft.skin_tone === value} name="skin-tone" onChange={() => update("skin_tone", value as AvatarAppearance["skin_tone"])} type="radio" />
+                  <span aria-hidden="true" className={`appearance-swatch appearance-swatch--${value}`} />
                 </label>
               ))}
             </div>

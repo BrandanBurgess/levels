@@ -8,6 +8,31 @@ Verified implementation commit: `de798bf`
 
 Overall result: **PASS**
 
+## Avatar customization follow-up
+
+Date: 2026-07-16
+
+Branch: `fix/skin-tone-swatch-labels`
+
+Verified implementation commit: `0deee61`
+
+Command: `npm run verify`
+
+Result: PASS (119.2 seconds)
+
+- Web lint, API Ruff, and E2E Ruff: PASS.
+- Web, generated client, API, and E2E type checks: PASS.
+- Web tests: PASS (`16` files, `69` tests).
+- Generated client tests: PASS (`1` file, `2` tests).
+- API tests: PASS (`143` tests, `92%` total coverage).
+- Canonical OpenAPI lint and generated-client drift check: PASS.
+- Vite production build: PASS (`357.94 kB` JavaScript and `63.97 kB` CSS before gzip).
+- Playwright: PASS (`9/9` journeys, including registration, sign-in, text-free accessible skin-tone swatches, and persistence of the new avatar options).
+- Focused avatar and Character tests: PASS (`14/14`).
+- Local visual review: PASS for female long curls and male short locs with a cap; hair frames the skin-filled face and swatch names are not visually rendered.
+
+The follow-up adds `short_locs`, `long_curls`, `curly_bob`, and `cap` to the canonical contract, retains distinct existing long-loc and braid options, and requires no schema migration because avatar choices are stored in existing bounded string columns.
+
 ## Full repository gate
 
 Command: `npm run verify`

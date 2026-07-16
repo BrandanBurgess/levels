@@ -1062,11 +1062,11 @@ components:
       properties:
         base_presentation: {type: string, enum: [male, female]}
         skin_tone: {type: string, enum: [deep, rich, medium_deep, medium, light_medium, light]}
-        hairstyle: {type: string, enum: [short_coils, fade, waves, locs, braids, bun, bob, short_straight, covered, bald]}
+        hairstyle: {type: string, enum: [short_coils, fade, waves, short_locs, locs, braids, long_curls, curly_bob, bun, bob, short_straight, covered, bald]}
         hair_color: {type: string, enum: [black, dark_brown, brown, auburn, gray, blonde]}
         outfit_style: {type: string, enum: [training_tee, tank_and_shorts, long_sleeve, modest_activewear]}
         outfit_palette: {type: string, enum: [violet, teal, blue, rose, neutral]}
-        accessory: {type: string, enum: [none, glasses, headband, wristbands]}
+        accessory: {type: string, enum: [none, glasses, headband, wristbands, cap]}
         background: {type: string, enum: [none, gradient, gym, dusk]}
         aura_style: {type: string, enum: [standard, rings, sparks]}
         aura_enabled: {type: boolean}
@@ -1077,11 +1077,11 @@ components:
       properties:
         base_presentation: {type: string, enum: [male, female]}
         skin_tone: {type: string, enum: [deep, rich, medium_deep, medium, light_medium, light]}
-        hairstyle: {type: string, enum: [short_coils, fade, waves, locs, braids, bun, bob, short_straight, covered, bald]}
+        hairstyle: {type: string, enum: [short_coils, fade, waves, short_locs, locs, braids, long_curls, curly_bob, bun, bob, short_straight, covered, bald]}
         hair_color: {type: string, enum: [black, dark_brown, brown, auburn, gray, blonde]}
         outfit_style: {type: string, enum: [training_tee, tank_and_shorts, long_sleeve, modest_activewear]}
         outfit_palette: {type: string, enum: [violet, teal, blue, rose, neutral]}
-        accessory: {type: string, enum: [none, glasses, headband, wristbands]}
+        accessory: {type: string, enum: [none, glasses, headband, wristbands, cap]}
         background: {type: string, enum: [none, gradient, gym, dusk]}
         aura_style: {type: string, enum: [standard, rings, sparks]}
         aura_enabled: {type: boolean}
