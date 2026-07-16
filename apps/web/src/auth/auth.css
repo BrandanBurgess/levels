@@ -51,6 +51,7 @@
 .auth-button:disabled { cursor: wait; opacity: 0.68; }
 .auth-button--primary { background: linear-gradient(135deg, var(--purple-600), var(--purple-700)); }
 .auth-error { margin: 0.35rem 0; color: var(--danger); line-height: 1.5; }
+.auth-progress { margin: 0.35rem 0; color: var(--purple-150); line-height: 1.5; }
 .auth-switch { margin: 1.3rem 0 0; color: var(--text-muted); }
 .auth-switch a { color: var(--purple-150); font-weight: 800; }
 .auth-limitation { margin: 0.7rem 0 0; }

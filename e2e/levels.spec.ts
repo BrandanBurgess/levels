@@ -101,6 +101,7 @@ test.describe("LEVELS v2 acceptance journeys", () => {
       (response) => response.url().endsWith("/api/v1/auth/register") && response.request().method() === "POST",
     );
     await page.getByRole("button", { name: "Create account" }).click();
+    await expect(page.getByRole("status")).toContainText("starter plan");
     expect((await registerResponse).status()).toBe(201);
     await expect(page.getByRole("heading", { name: /Ready for Upper A/ })).toBeVisible();
 

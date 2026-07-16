@@ -66,8 +66,8 @@ describe("AuthProvider", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Register" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("could not be created with those details");
-    expect(screen.getByRole("alert")).not.toHaveTextContent("already exists");
+    expect(await screen.findByRole("alert")).toHaveTextContent("try signing in");
+    expect(screen.getByRole("alert")).not.toHaveTextContent("account exists");
   });
 
   it("always clears local authentication when logout cannot reach the API", async () => {

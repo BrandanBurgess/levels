@@ -18,7 +18,7 @@ const GENERIC_LOGIN_ERROR = "Sign in failed. Check your credentials and try agai
 
 function registrationError(status: number | undefined) {
   if (status === 403) return "Account creation is not available right now.";
-  if (status === 409) return "An account could not be created with those details.";
+  if (status === 409) return "Account creation could not be completed. If you already submitted this form, try signing in.";
   if (status === 429) return "Too many attempts. Please wait a moment and try again.";
   return "Account creation failed. Check your details and try again.";
 }

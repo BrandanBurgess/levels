@@ -97,6 +97,11 @@ export function RegisterPage() {
             <span>I agree to the basic terms and privacy notice.</span>
           </label>
           {error ? <p className="auth-error auth-form__full" role="alert">{error}</p> : null}
+          {isSubmitting ? (
+            <p className="auth-progress auth-form__full" role="status">
+              Creating your private account and starter plan. This can take a few seconds.
+            </p>
+          ) : null}
           <button className="auth-button auth-button--primary auth-form__full" disabled={isSubmitting} type="submit">
             {isSubmitting ? "Creating account…" : "Create account"}
           </button>

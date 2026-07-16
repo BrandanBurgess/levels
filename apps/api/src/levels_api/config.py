@@ -73,9 +73,12 @@ class Settings:
         admin_username = values.get("ADMIN_USERNAME", "").strip() or None
         admin_password_hash = values.get("ADMIN_PASSWORD_HASH", "").strip() or None
         jwt_secret_key = values.get("JWT_SECRET_KEY", "").strip() or None
-        registration_enabled = _parse_bool(
-            "REGISTRATION_ENABLED", values.get("REGISTRATION_ENABLED", "true")
-        )
+        registration_value = values.get("REGISTRATION_ENABLED")
+        if app_env == "production" and (
+            registration_value is None or not registration_value.strip()
+        ):
+            raise ConfigurationError("REGISTRATION_ENABLED must be set explicitly in production")
+        registration_enabled = _parse_bool("REGISTRATION_ENABLED", registration_value or "true")
         bootstrap_owner_email = values.get("BOOTSTRAP_OWNER_EMAIL", "").strip().casefold() or None
         bootstrap_owner_password_hash = (
             values.get("BOOTSTRAP_OWNER_PASSWORD_HASH", "").strip() or None
