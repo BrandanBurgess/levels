@@ -35,4 +35,11 @@ describe("account forms", () => {
 
     expect(register).toHaveBeenCalledWith(expect.objectContaining({ displayName: "Avery", email: "avery@example.com", password: "ten-characters", preferredUnits: "metric" }));
   });
+
+  it("explains that starter setup can take a few seconds", () => {
+    render(<MemoryRouter><AuthContext.Provider value={state({ isSubmitting: true })}><RegisterPage /></AuthContext.Provider></MemoryRouter>);
+
+    expect(screen.getByRole("status")).toHaveTextContent("starter plan");
+    expect(screen.getByRole("button", { name: /Creating account/ })).toBeDisabled();
+  });
 });

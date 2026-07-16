@@ -40,7 +40,7 @@ Create the service from **Render Dashboard → Blueprints → New Blueprint Inst
 - `BOOTSTRAP_OWNER_EMAIL`: the owner email that receives populated v1 history during the v2 migration;
 - `BOOTSTRAP_OWNER_PASSWORD_HASH`: the owner's Argon2 hash, normally the same value as `ADMIN_PASSWORD_HASH` during the v1-to-v2 transition.
 
-Render generates `JWT_SECRET_KEY`. Do not replace it with a committed value. The Blueprint supplies the non-secret production mode, Toronto timezone, exact Pages CORS origin, Python version, and uv version. The build command installs that exact uv version before performing the frozen production dependency sync; setting `UV_VERSION` alone does not install the executable on Render.
+Render generates `JWT_SECRET_KEY`. Do not replace it with a committed value. The Blueprint supplies the non-secret production mode, explicit registration policy, Toronto timezone, exact Pages CORS origin, Python version, and uv version. Production startup fails closed when `REGISTRATION_ENABLED` is omitted, so enabling or disabling public account creation is always an intentional deployment setting. The build command installs that exact uv version before performing the frozen production dependency sync; setting `UV_VERSION` alone does not install the executable on Render.
 
 After the first successful deploy:
 

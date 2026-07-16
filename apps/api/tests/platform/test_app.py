@@ -178,10 +178,24 @@ def test_unsafe_configuration_fails_closed(overrides: dict[str, str], message: s
         "ADMIN_USERNAME": "owner",
         "ADMIN_PASSWORD_HASH": "$argon2id$test-placeholder",
         "JWT_SECRET_KEY": "test-only-key-with-at-least-32-characters",
+        "REGISTRATION_ENABLED": "true",
         **overrides,
     }
     with pytest.raises(ConfigurationError, match=message):
         Settings.from_mapping(values)
+
+
+def test_production_requires_explicit_registration_policy() -> None:
+    with pytest.raises(ConfigurationError, match="REGISTRATION_ENABLED"):
+        Settings.from_mapping(
+            {
+                "APP_ENV": "production",
+                "DATABASE_URL": "sqlite+pysqlite:///:memory:",
+                "CORS_ALLOWED_ORIGINS": "https://levels.example",
+                "PUBLIC_WEB_ORIGIN": "https://levels.example",
+                "JWT_SECRET_KEY": "test-only-key-with-at-least-32-characters",
+            }
+        )
 
 
 def test_json_formatter_emits_machine_readable_context() -> None:
