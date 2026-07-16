@@ -108,8 +108,11 @@ test.describe("LEVELS v2 acceptance journeys", () => {
     await page.getByRole("link", { name: "Character" }).first().click();
     await page.getByRole("tab", { name: "Appearance" }).click();
     await expect(page.getByRole("heading", { name: "Appearance" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Medium deep" })).toBeAttached();
+    await expect(page.getByText("Medium deep", { exact: true })).toHaveCount(0);
     await page.getByRole("radio", { name: "Female", exact: true }).check();
-    await page.getByLabel("Hairstyle").selectOption("braids");
+    await page.getByLabel("Hairstyle").selectOption("long_curls");
+    await page.getByLabel("Accessory").selectOption("cap");
     await page.getByRole("button", { name: "Back" }).click();
     const avatarResponse = page.waitForResponse(
       (response) => response.url().endsWith("/api/v1/me/avatar") && response.request().method() === "PATCH",
@@ -122,7 +125,8 @@ test.describe("LEVELS v2 acceptance journeys", () => {
     await page.getByRole("link", { name: "Character" }).first().click();
     await page.getByRole("tab", { name: "Appearance" }).click();
     await expect(page.getByRole("radio", { name: "Female", exact: true })).toBeChecked();
-    await expect(page.getByLabel("Hairstyle")).toHaveValue("braids");
+    await expect(page.getByLabel("Hairstyle")).toHaveValue("long_curls");
+    await expect(page.getByLabel("Accessory")).toHaveValue("cap");
 
     await signOut(page);
     await login(page, newMember.email, newMember.password);
