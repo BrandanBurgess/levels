@@ -38,9 +38,9 @@
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
     "@playwright/test": "1.61.1",
-    "@redocly/cli": "2.39.0",
+    "@redocly/cli": "2.40.0",
     "@vitest/coverage-v8": "4.1.10",
-    "concurrently": "9.2.0",
+    "concurrently": "10.0.3",
     "vitest": "4.1.10"
   }
 }
