@@ -10,6 +10,49 @@ Base: `main` at `bde50c3` (`v0.2.0`)
 
 Prepared: 2026-07-15 (America/Toronto)
 
+## 2026-07-22 post-v2 usability amendment
+
+Status: implemented and locally verified on `feature/workout-flexibility-ui-audit`
+
+This amendment covers a focused usability release after the v2 foundation shipped. It does not
+change tenant ownership, migrations, the canonical OpenAPI contract, or generated client. The
+existing active-session endpoints already freeze the required interface: add/substitute, patch,
+soft-remove, and exact-list reorder all use the session version for optimistic concurrency.
+
+### User outcomes and acceptance criteria
+
+- An in-progress workout exposes one explicit **Edit workout** mode. In that mode the member can
+  substitute, add, remove, and move exercises without abandoning or restarting the session.
+- Removing an exercise with logged sets requires explicit confirmation and uses the existing
+  `confirm_logged_sets` contract. Completed session snapshots remain immutable unless the member
+  explicitly resumes the workout through the existing flow.
+- Every active-session edit reports success, validation failure, or stale-version conflict in a
+  programmatically announced status. A successful write refreshes the authoritative session and
+  its version before the next command.
+- User-facing weight entry and output use pounds for imperial profiles, including workout sets,
+  prior-set summaries, growth increments, records, profile measurements, and load-increment
+  settings. API payloads and stored history remain kilograms; conversion is centralized and
+  round-trips without cumulative conversion drift.
+- Imperial is the default on new registration while metric remains a supported explicit account
+  preference. Existing users keep their saved preference.
+- The UI audit targets WCAG 2.2 AA: 4.5:1 normal-text contrast, 320 CSS-pixel reflow, visible and
+  unobscured keyboard focus, 24-by-24 CSS-pixel minimum pointer targets or sufficient spacing,
+  persistent labels/instructions, and programmatically determinable status messages. Workout
+  completion dialogs also follow the WAI-ARIA modal-dialog keyboard pattern, including focus
+  containment, Escape dismissal, and focus restoration.
+- The visual cleanup is intentionally targeted: consolidate weight formatting, simplify the active
+  workout hierarchy, make edit actions visually distinct from set logging, normalize control
+  height/spacing/focus treatment, and preserve the established dark LEVELS design language.
+
+### Verification and rollout
+
+- Add focused unit tests for unit conversion and each active-session command, including logged-set
+  removal confirmation and `409` refresh behavior.
+- Update affected feature tests and Playwright coverage for active-workout editing and pounds.
+- Run the complete repository gate, record exact results in `VERIFICATION_REPORT_V2.md`, push the
+  feature branch, merge through the repository workflow, deploy API/web only after green `main`
+  CI, and smoke-check production health plus the authenticated workout journey.
+
 ## 1. Authority, scope, and implementation gate
 
 This plan applies the v2 delta in `docs/levels_v2_handoff` to the existing LEVELS v1 repository. Conflicts are resolved in this order:

@@ -6,6 +6,7 @@ import { apiClient } from "../../api/client";
 import { downloadExport } from "../../api/export";
 import { useAuth } from "../../auth/context";
 import { EmptyState, ErrorState, LoadingState } from "../../ui/AsyncState";
+import { formatRecordValue, type UnitPreference } from "../../utils/units";
 
 type Exercise = components["schemas"]["Exercise"];
 type RecordItem = components["schemas"]["PersonalRecord"];
@@ -40,12 +41,11 @@ async function fetchProgress() {
   };
 }
 
-function recordValue(record: RecordItem) {
-  const value = Number(record.value_numeric.toFixed(2));
-  return `${value.toLocaleString()} ${record.unit}`;
+function recordValue(record: RecordItem, units: UnitPreference) {
+  return formatRecordValue(record.value_numeric, record.unit, units);
 }
 
-function TrendChart({ metric, points }: { metric: Metric; points: RecordItem[] }) {
+function TrendChart({ metric, points, units }: { metric: Metric; points: RecordItem[]; units: UnitPreference }) {
   const ordered = [...points].sort((a, b) => a.achieved_at.localeCompare(b.achieved_at));
   const values = ordered.map((point) => point.value_numeric);
   const min = Math.min(...values);
@@ -57,7 +57,7 @@ function TrendChart({ metric, points }: { metric: Metric; points: RecordItem[] }
     return `${x},${y}`;
   });
   const summary = ordered.length
-    ? `${metricLabels[metric]} moved from ${recordValue(ordered[0]!)} to ${recordValue(ordered.at(-1)!)} across ${ordered.length} record points.`
+    ? `${metricLabels[metric]} moved from ${recordValue(ordered[0]!, units)} to ${recordValue(ordered.at(-1)!, units)} across ${ordered.length} record points.`
     : `No ${metricLabels[metric].toLowerCase()} history is visible for these filters.`;
 
   return (
@@ -78,7 +78,7 @@ function TrendChart({ metric, points }: { metric: Metric; points: RecordItem[] }
           })}
         </svg>
       ) : <div className="progress-chart__empty">More visible history will form this trend.</div>}
-      {ordered.length ? <ol className="chart-values">{ordered.map((point) => <li key={point.id}><time dateTime={point.achieved_at}>{new Date(point.achieved_at).toLocaleDateString()}</time><span>{recordValue(point)}</span></li>)}</ol> : null}
+      {ordered.length ? <ol className="chart-values">{ordered.map((point) => <li key={point.id}><time dateTime={point.achieved_at}>{new Date(point.achieved_at).toLocaleDateString()}</time><span>{recordValue(point, units)}</span></li>)}</ol> : null}
     </figure>
   );
 }
@@ -106,7 +106,8 @@ function ConsistencyCalendar({ sessions }: { sessions: WorkoutSession[] }) {
 }
 
 export function ProgressPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const units = user?.preferred_units ?? "metric";
   const [exerciseId, setExerciseId] = useState("");
   const [muscle, setMuscle] = useState("");
   const [day, setDay] = useState("");
@@ -163,11 +164,11 @@ export function ProgressPage() {
 
         <section className="record-section" aria-labelledby="records-heading">
           <div><p className="card-label">Current bests</p><h2 id="records-heading">Personal records</h2></div>
-          {visibleCurrent.length ? <div className="record-grid">{visibleCurrent.map((record) => <article className="record-card" key={record.id}><span>{metricLabels[record.record_type]}</span><strong>{recordValue(record)}</strong><small>{record.exercise_name}</small>{record.record_type === "estimated_1rm" ? <em>Estimate, not a measured max</em> : null}</article>)}</div> : <EmptyState title="No visible records">No personal records match these filters, or the owner has kept them private.</EmptyState>}
-          {repRanges.length ? <div className="rep-range-records"><h3>Best record-setting load by rep range</h3><dl>{repRanges.map((range) => <div key={range.label}><dt>{range.label}</dt><dd>{recordValue(range.best!)}</dd></div>)}</dl></div> : null}
+          {visibleCurrent.length ? <div className="record-grid">{visibleCurrent.map((record) => <article className="record-card" key={record.id}><span>{metricLabels[record.record_type]}</span><strong>{recordValue(record, units)}</strong><small>{record.exercise_name}</small>{record.record_type === "estimated_1rm" ? <em>Estimate, not a measured max</em> : null}</article>)}</div> : <EmptyState title="No visible records">No personal records match these filters, or the owner has kept them private.</EmptyState>}
+          {repRanges.length ? <div className="rep-range-records"><h3>Best record-setting load by rep range</h3><dl>{repRanges.map((range) => <div key={range.label}><dt>{range.label}</dt><dd>{recordValue(range.best!, units)}</dd></div>)}</dl></div> : null}
         </section>
 
-        {visibleHistory.length ? <section className="trend-section" aria-labelledby="trend-heading"><div className="trend-heading"><div><p className="card-label">Historical improvements</p><h2 id="trend-heading">Trend</h2></div><label><span>Metric</span><select onChange={(event) => setMetric(event.target.value as Metric)} value={activeMetric}>{chartMetrics.map((item) => <option key={item} value={item}>{metricLabels[item]}</option>)}</select></label></div><TrendChart metric={activeMetric} points={visibleHistory.filter((record) => record.record_type === activeMetric)} /></section> : null}
+        {visibleHistory.length ? <section className="trend-section" aria-labelledby="trend-heading"><div className="trend-heading"><div><p className="card-label">Historical improvements</p><h2 id="trend-heading">Trend</h2></div><label><span>Metric</span><select onChange={(event) => setMetric(event.target.value as Metric)} value={activeMetric}>{chartMetrics.map((item) => <option key={item} value={item}>{metricLabels[item]}</option>)}</select></label></div><TrendChart metric={activeMetric} points={visibleHistory.filter((record) => record.record_type === activeMetric)} units={units} /></section> : null}
         {data.history.length ? <ConsistencyCalendar sessions={visibleSessions} /> : null}
 
         <section className="history-card" aria-labelledby="history-heading"><p className="card-label">Visible sessions</p><h2 id="history-heading">Exercise history</h2>{visibleSessions.length ? <ol>{visibleSessions.map((session) => <li key={session.id}><time dateTime={session.session_date_local}>{new Date(`${session.session_date_local}T12:00:00`).toLocaleDateString()}</time><strong>{session.title}</strong><span>{session.exercises.length ? `${session.exercises.length} exercises` : "Summary shared"}</span></li>)}</ol> : <p>No visible sessions match these filters.</p>}</section>

@@ -76,10 +76,10 @@ const today = {
   streak,
 } as Today;
 
-function mockCharacterApi() {
+function mockCharacterApi(profileData: Profile = profile) {
   return vi.spyOn(apiClient, "GET").mockImplementation(async (path) => {
     const data = path === "/me/profile"
-      ? profile
+      ? profileData
       : path === "/settings"
         ? settings
         : path === "/me/avatar"
@@ -109,7 +109,7 @@ describe("CharacterPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Brandan Burgess" })).toBeInTheDocument();
     expect(screen.getByText("5 ft 10 in")).toBeInTheDocument();
-    expect(screen.getByText("175 lb")).toBeInTheDocument();
+    expect(screen.getAllByText("175 lb")).toHaveLength(2);
     expect(screen.getByText("Upper A")).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Muscles targeted today" })).toHaveTextContent("Upper Chest");
     expect(container.querySelector('[data-aura-tier="active"]')).not.toBeNull();
@@ -130,13 +130,31 @@ describe("CharacterPage", () => {
     renderPage();
 
     fireEvent.change(await screen.findByRole("spinbutton", { name: "Height in centimetres" }), { target: { value: "180" } });
-    fireEvent.change(screen.getByRole("spinbutton", { name: "Body weight in kilograms" }), { target: { value: "80" } });
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Body weight in pounds" }), { target: { value: "176.3698097" } });
     fireEvent.click(screen.getByRole("button", { name: "Save measurements" }));
 
     await waitFor(() => expect(patch).toHaveBeenCalledWith("/me/profile", {
       body: { height_cm: 180, body_weight_kg: 80 },
     }));
     expect(await screen.findByText("Profile measurements saved.")).toHaveAttribute("role", "status");
+  });
+
+  it("keeps metric profile editing in kilograms", async () => {
+    mockCharacterApi({ ...profile, body_weight_kg: 80, preferred_units: "metric" });
+    const patch = vi.spyOn(apiClient, "PATCH").mockResolvedValue({
+      data: { ...profile, body_weight_kg: 81, preferred_units: "metric" },
+      response: new Response(),
+    } as never);
+    renderPage();
+
+    const input = await screen.findByRole("spinbutton", { name: "Body weight in kilograms" });
+    expect(input).toHaveValue(80);
+    fireEvent.change(input, { target: { value: "81" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save measurements" }));
+
+    await waitFor(() => expect(patch).toHaveBeenCalledWith("/me/profile", {
+      body: { height_cm: 179, body_weight_kg: 81 },
+    }));
   });
 
   it("skips from Character using the same effective schedule command", async () => {

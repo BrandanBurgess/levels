@@ -8,6 +8,7 @@ import { downloadExport } from "../../api/export";
 import { applyMotionPreference } from "../../app/motionPreference";
 import { useAuth } from "../../auth/context";
 import { ErrorState, LoadingState } from "../../ui/AsyncState";
+import { weightFromKilograms, weightToKilograms, weightUnit } from "../../utils/units";
 
 type Profile = components["schemas"]["Profile"];
 type Settings = components["schemas"]["Settings"];
@@ -42,18 +43,20 @@ async function loadSettingsPage(): Promise<{ profile: Profile; settings: Setting
 function SettingsForm({ profile, settings, splits }: { profile: Profile; settings: Settings; splits: Split[] }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, updateCurrentUser } = useAuth();
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [height, setHeight] = useState(profile.height_cm?.toString() ?? "");
-  const [bodyWeight, setBodyWeight] = useState(profile.body_weight_kg?.toString() ?? "");
   const [preferredUnits, setPreferredUnits] = useState(profile.preferred_units);
+  const [bodyWeightKilograms, setBodyWeightKilograms] = useState(profile.body_weight_kg ?? null);
+  const [bodyWeight, setBodyWeight] = useState(() => profile.body_weight_kg == null ? "" : weightFromKilograms(profile.body_weight_kg, profile.preferred_units).toString());
   const [timezone, setTimezone] = useState(profile.timezone);
   const [activeSplitId, setActiveSplitId] = useState(settings.active_split_id ?? "");
   const [weekStartsOn, setWeekStartsOn] = useState(settings.week_starts_on);
   const [waterGoal, setWaterGoal] = useState(settings.default_water_goal_ml.toString());
   const [quickAdds, setQuickAdds] = useState(settings.water_quick_add_ml.join(", "));
   const [targetRir, setTargetRir] = useState((settings.default_target_rir ?? 2).toString());
-  const [loadIncrement, setLoadIncrement] = useState((settings.default_load_increment_kg ?? 2.5).toString());
+  const [loadIncrementKilograms, setLoadIncrementKilograms] = useState(settings.default_load_increment_kg ?? 2.5);
+  const [loadIncrement, setLoadIncrement] = useState(() => weightFromKilograms(settings.default_load_increment_kg ?? 2.5, profile.preferred_units).toString());
   const [motion, setMotion] = useState<"system" | "reduce" | "full">(
     settings.reduced_motion_override === null
       ? "system"
@@ -69,6 +72,28 @@ function SettingsForm({ profile, settings, splits }: { profile: Profile; setting
 
   function toggleVisibility(key: VisibilityKey, checked: boolean) {
     setVisibility((current) => ({ ...current, [key]: checked }));
+  }
+
+  function changePreferredUnits(units: Profile["preferred_units"]) {
+    setPreferredUnits(units);
+    setBodyWeight(bodyWeightKilograms == null ? "" : weightFromKilograms(bodyWeightKilograms, units).toString());
+    setLoadIncrement(weightFromKilograms(loadIncrementKilograms, units).toString());
+  }
+
+  function changeBodyWeight(value: string) {
+    setBodyWeight(value);
+    if (value === "") {
+      setBodyWeightKilograms(null);
+    } else if (Number.isFinite(Number(value))) {
+      setBodyWeightKilograms(weightToKilograms(Number(value), preferredUnits));
+    }
+  }
+
+  function changeLoadIncrement(value: string) {
+    setLoadIncrement(value);
+    if (value !== "" && Number.isFinite(Number(value))) {
+      setLoadIncrementKilograms(weightToKilograms(Number(value), preferredUnits));
+    }
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -97,7 +122,7 @@ function SettingsForm({ profile, settings, splits }: { profile: Profile; setting
           body: {
             display_name: displayName,
             height_cm: height === "" ? null : Number(height),
-            body_weight_kg: bodyWeight === "" ? null : Number(bodyWeight),
+            body_weight_kg: bodyWeightKilograms,
             preferred_units: preferredUnits,
             timezone,
           },
@@ -109,7 +134,7 @@ function SettingsForm({ profile, settings, splits }: { profile: Profile; setting
             default_water_goal_ml: Number(waterGoal),
             water_quick_add_ml: parsedQuickAdds,
             default_target_rir: Number(targetRir),
-            default_load_increment_kg: Number(loadIncrement),
+            default_load_increment_kg: loadIncrementKilograms,
             reduced_motion_override: reducedMotion,
             visibility,
           },
@@ -118,6 +143,11 @@ function SettingsForm({ profile, settings, splits }: { profile: Profile; setting
       if (!profileResult.data || profileResult.error || !settingsResult.data || settingsResult.error) {
         throw new Error("Settings update failed");
       }
+      updateCurrentUser?.({
+        display_name: profileResult.data.display_name,
+        preferred_units: profileResult.data.preferred_units,
+        timezone: profileResult.data.timezone,
+      });
       applyMotionPreference(reducedMotion);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["public-dashboard"] }),
@@ -148,10 +178,10 @@ function SettingsForm({ profile, settings, splits }: { profile: Profile; setting
           <h2 id="profile-settings-heading">Profile and display</h2>
           <div className="settings-fields">
             <label>Display name<input maxLength={100} onChange={(event) => setDisplayName(event.target.value)} required value={displayName} /></label>
-            <label>Preferred units<select onChange={(event) => setPreferredUnits(event.target.value as Profile["preferred_units"])} value={preferredUnits}><option value="imperial">Imperial</option><option value="metric">Metric</option></select></label>
+            <label>Preferred units<select onChange={(event) => changePreferredUnits(event.target.value as Profile["preferred_units"])} value={preferredUnits}><option value="imperial">Imperial</option><option value="metric">Metric</option></select></label>
             <label>Time zone<input onChange={(event) => setTimezone(event.target.value)} placeholder="America/Toronto" required value={timezone} /></label>
             <label>Height (cm)<input inputMode="numeric" max="250" min="100" onChange={(event) => setHeight(event.target.value)} type="number" value={height} /></label>
-            <label>Body weight (kg)<input inputMode="decimal" max="400" min="20" onChange={(event) => setBodyWeight(event.target.value)} step="0.01" type="number" value={bodyWeight} /></label>
+            <label>Body weight ({weightUnit(preferredUnits)})<input inputMode="decimal" max={weightFromKilograms(400, preferredUnits)} min={weightFromKilograms(20, preferredUnits)} onChange={(event) => changeBodyWeight(event.target.value)} step="any" type="number" value={bodyWeight} /></label>
           </div>
         </section>
 
@@ -162,7 +192,7 @@ function SettingsForm({ profile, settings, splits }: { profile: Profile; setting
             <label>Active split<select onChange={(event) => setActiveSplitId(event.target.value)} value={activeSplitId}><option value="">No active split</option>{splits.map((split) => <option key={split.id} value={split.id}>{split.name}</option>)}</select></label>
             <label>Week starts on<select onChange={(event) => setWeekStartsOn(Number(event.target.value))} value={weekStartsOn}><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></label>
             <label>Default target RIR<input inputMode="decimal" max="10" min="0" onChange={(event) => setTargetRir(event.target.value)} step="0.5" type="number" value={targetRir} /></label>
-            <label>Load increment (kg)<input inputMode="decimal" min="0.000001" onChange={(event) => setLoadIncrement(event.target.value)} step="any" type="number" value={loadIncrement} /></label>
+            <label>Load increment ({weightUnit(preferredUnits)})<input inputMode="decimal" min={weightFromKilograms(0.000001, preferredUnits, 8)} onChange={(event) => changeLoadIncrement(event.target.value)} step="any" type="number" value={loadIncrement} /></label>
           </div>
         </section>
 

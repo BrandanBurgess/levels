@@ -208,6 +208,18 @@
 .avatar-region:focus-visible > path {
   stroke: #fff;
   stroke-width: 5;
+  filter: drop-shadow(0 0 5px #5b1fa6);
+}
+
+.avatar-region:focus-visible { box-shadow: none; }
+
+@media (hover: hover) {
+  .avatar-region--primary:hover > path,
+  .avatar-region--secondary:hover > path,
+  .avatar-region--stabilizer:hover > path {
+    stroke: #fff;
+    stroke-width: 4;
+  }
 }
 
 .avatar-aura {
@@ -286,6 +298,7 @@
   margin: 0;
   color: var(--text-muted);
   font-size: 0.83rem;
+  line-height: 1.5;
   text-align: center;
 }
 

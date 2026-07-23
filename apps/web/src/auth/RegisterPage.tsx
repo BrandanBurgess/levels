@@ -14,7 +14,7 @@ export function RegisterPage() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [preferredUnits, setPreferredUnits] = useState<"metric" | "imperial">("metric");
+  const [preferredUnits, setPreferredUnits] = useState<"metric" | "imperial">("imperial");
   const [timezone, setTimezone] = useState(localTimezone);
 
   useEffect(() => {
@@ -81,8 +81,8 @@ export function RegisterPage() {
             onChange={(event) => setPreferredUnits(event.target.value as "metric" | "imperial")}
             value={preferredUnits}
           >
-            <option value="metric">Metric</option>
             <option value="imperial">Imperial</option>
+            <option value="metric">Metric</option>
           </select>
           <label htmlFor="timezone">Timezone</label>
           <input

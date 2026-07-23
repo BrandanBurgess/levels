@@ -8,7 +8,8 @@ The suite covers:
 - registration, starter data, email login, `/auth/me`, logout token invalidation, and a fresh sign-in;
 - per-member Appearance persistence across navigation and sign-in;
 - Lower-to-Upper Continue from here, two exercise swaps, reorder, and Today-only save;
-- starting and completing the effective workout and verifying it after another sign-in;
+- starting the effective workout, confirming pound inputs, substituting an exercise mid-session,
+  completing it, and verifying it after another sign-in;
 - Character Skip with keep-next behavior;
 - critical WCAG checks and horizontal-overflow checks at 375×812, 390×844, and 1440×900;
 - a static streak aura under `prefers-reduced-motion`;

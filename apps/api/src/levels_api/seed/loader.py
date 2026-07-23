@@ -8,6 +8,7 @@ from decimal import Decimal
 from importlib.resources import files
 from typing import Any, cast
 from uuid import NAMESPACE_URL, uuid5
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import Engine, delete, func, select
 from sqlalchemy.orm import Session
@@ -359,7 +360,9 @@ def seed_user_starter(
                 user_id=user.id,
                 active_split_id=active_split.id,
                 cursor_split_day_id=first_day.id if first_day else None,
-                cursor_effective_date=datetime.now(UTC).date(),
+                cursor_effective_date=datetime.now(UTC)
+                .astimezone(ZoneInfo(profile.timezone))
+                .date(),
                 version=0,
             )
         )

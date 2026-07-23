@@ -7,12 +7,13 @@
   gap: 0.25rem;
   margin: 0 0 1rem;
   padding: 0.25rem;
-  border: 1px solid rgb(196 154 255 / 20%);
+  border: 1px solid var(--control-border);
   border-radius: 0.85rem;
   background: var(--surface-1);
 }
 
 .character-tabs button {
+  min-height: 2.75rem;
   padding: 0.62rem 0.95rem;
   border: 0;
   border-radius: 0.65rem;
@@ -31,6 +32,7 @@
 .character-tabs button:focus-visible {
   outline: 3px solid #fff;
   outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--purple-700);
 }
 
 .character-overview,
@@ -67,6 +69,7 @@
 
 .character-skip label {
   display: grid;
+  min-height: 2.75rem;
   gap: 0.35rem;
   color: var(--text-muted);
   font-size: 0.78rem;
@@ -75,7 +78,7 @@
 .character-skip select {
   min-width: 0;
   padding: 0.55rem;
-  border: 1px solid rgb(196 154 255 / 24%);
+  border: 1px solid var(--control-border);
   border-radius: 0.55rem;
   color: var(--text-strong);
   background: var(--surface-1);

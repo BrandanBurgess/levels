@@ -1,5 +1,58 @@
 # LEVELS v2 Verification Report
 
+## Workout flexibility, imperial units, and UI audit follow-up
+
+Date: 2026-07-22
+
+Branch: `feature/workout-flexibility-ui-audit`
+
+Overall result: **PASS — ready for review and deployment through the protected-branch workflow**
+
+### Delivered behavior
+
+- Members can add, substitute, remove, and reorder exercises after a workout has started. Removing
+  an exercise that already has logged sets requires explicit confirmation, and stale-version
+  conflicts refresh the active session before another edit.
+- New accounts default to imperial units. Workout logging, previous sets, records, growth guidance,
+  body weight, and load-increment settings render and accept pounds for imperial profiles while the
+  API and stored history retain canonical kilograms. Saving a unit preference updates the active
+  account context immediately, without requiring a reload.
+- A timezone edge case in member starter schedules was fixed so the initial workout is selected
+  from the profile's local date rather than the server's UTC date.
+- The UI pass normalized control sizing, spacing, contrast, focus visibility, status announcements,
+  narrow-screen reflow, reduced motion, and modal keyboard behavior. The acceptance target was
+  WCAG 2.2 AA plus the WAI-ARIA Authoring Practices modal-dialog pattern.
+
+### Exact verification results
+
+- `npm run bootstrap`: PASS (7.7 seconds). npm reported two existing high-severity dependency
+  advisories; the lockfile was not changed as part of this focused feature.
+- `npm run openapi:check`: PASS (9.1 seconds); the canonical contract is valid and the generated
+  client has no drift.
+- `npm run lint`: PASS (15.1 seconds); web ESLint, API Ruff, and E2E Ruff all passed.
+- `npm run typecheck`: PASS (17.1 seconds); web, generated client, and API passed (`84` Python
+  source files).
+- `npm run test`: PASS (standalone run: 101.7 seconds; repeated by the final aggregate gate): web
+  `17/17` files and `80/80` tests, generated client `1/1` file and `2/2` tests, API `144/144` tests.
+  Final web coverage was 80.59% statements, 71.99% branches, 78.98% functions, and 85.04% lines;
+  API coverage was 92%.
+- `npm run build`: PASS (6.1 seconds); production output was 363.39 kB JavaScript and 68.55 kB CSS
+  before gzip.
+- `npm run e2e`: PASS (27.5 seconds); all `9/9` Playwright acceptance journeys passed, including
+  editing an active workout, pound-based set entry, persistence after sign-in, accessibility scans,
+  viewport overflow checks, reduced motion, and demo cold-start retry.
+- `npm run verify`: PASS (final run: 167.0 seconds); the aggregate gate repeated lint, application and E2E
+  type checks (`85` Python/E2E source files), all tests, OpenAPI/client parity, production build, and
+  all Playwright journeys successfully.
+
+### Standards references
+
+- [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/)
+- [WCAG target size (minimum)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum)
+- [WCAG focus not obscured](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum)
+- [WCAG status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages)
+- [WAI-ARIA modal dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
+
 Date: 2026-07-15
 
 Branch: `feature/lv2-101-205-tenant-foundation`

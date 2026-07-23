@@ -33,7 +33,21 @@ describe("account forms", () => {
     fireEvent.click(screen.getByLabelText(/basic terms and privacy notice/i));
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
-    expect(register).toHaveBeenCalledWith(expect.objectContaining({ displayName: "Avery", email: "avery@example.com", password: "ten-characters", preferredUnits: "metric" }));
+    expect(register).toHaveBeenCalledWith(expect.objectContaining({ displayName: "Avery", email: "avery@example.com", password: "ten-characters", preferredUnits: "imperial" }));
+  });
+
+  it("keeps metric registration selectable", async () => {
+    const register = vi.fn(async () => false);
+    render(<MemoryRouter><AuthContext.Provider value={state({ register })}><RegisterPage /></AuthContext.Provider></MemoryRouter>);
+
+    fireEvent.change(screen.getByLabelText("Display name"), { target: { value: "Avery" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "avery@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "ten-characters" } });
+    fireEvent.change(screen.getByLabelText("Preferred units"), { target: { value: "metric" } });
+    fireEvent.click(screen.getByLabelText(/basic terms and privacy notice/i));
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(register).toHaveBeenCalledWith(expect.objectContaining({ preferredUnits: "metric" }));
   });
 
   it("explains that starter setup can take a few seconds", () => {

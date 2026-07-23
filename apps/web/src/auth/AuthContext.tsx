@@ -141,6 +141,9 @@ export function AuthProvider({
   }, [clearLocalAuth, client]);
 
   const clearError = useCallback(() => setError(undefined), []);
+  const updateCurrentUser = useCallback((updates: Partial<CurrentUser>) => {
+    setUser((current) => current ? { ...current, ...updates } : current);
+  }, []);
   const value = useMemo<AuthState>(
     () => ({
       ...(user ? { admin: { displayName: user.display_name }, user } : {}),
@@ -149,11 +152,12 @@ export function AuthProvider({
       isRestoring,
       isSubmitting,
       clearError,
+      updateCurrentUser,
       login,
       logout,
       register,
     }),
-    [clearError, error, isRestoring, isSubmitting, login, logout, register, user],
+    [clearError, error, isRestoring, isSubmitting, login, logout, register, updateCurrentUser, user],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

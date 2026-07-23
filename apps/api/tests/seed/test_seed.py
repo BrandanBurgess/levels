@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import UTC, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from sqlalchemy import create_engine, func, select
@@ -15,13 +17,16 @@ from levels_api.models import (
     MuscleGroup,
     MuscleRole,
     Profile,
+    ScheduleState,
     Split,
     SplitDay,
     User,
+    UserRole,
+    UserStatus,
     VisibilitySettings,
     WorkoutTemplateItem,
 )
-from levels_api.seed import seed_database, seed_session
+from levels_api.seed import seed_database, seed_session, seed_user_starter
 
 REPO_ROOT = Path(__file__).parents[4]
 HANDOFF_ROOT = REPO_ROOT / "docs" / "levels_product_handoff" / "levels_product_handoff"
@@ -87,6 +92,32 @@ def test_deployment_seed_creates_only_fictional_demo_tenant(tmp_path: Path) -> N
         assert demo.is_demo is True
         assert demo.email_normalized == "demo@levels.invalid"
         assert session.scalar(select(func.count()).select_from(Split)) == 2
+    engine.dispose()
+
+
+def test_member_starter_schedule_uses_the_profile_local_date(tmp_path: Path) -> None:
+    engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'local-starter.db'}")
+    Base.metadata.create_all(engine)
+    timezone = "Pacific/Honolulu"
+    local_before = datetime.now(UTC).astimezone(ZoneInfo(timezone)).date()
+
+    with Session(engine) as session, session.begin():
+        user = User(
+            email_normalized="local-starter@example.com",
+            password_hash="tests-only-hash",
+            status=UserStatus.ACTIVE,
+            role=UserRole.MEMBER,
+            token_version=0,
+            is_demo=False,
+        )
+        session.add(user)
+        session.flush()
+        seed_user_starter(session, user, timezone=timezone)
+        schedule = session.get(ScheduleState, user.id)
+        assert schedule is not None
+        local_after = datetime.now(UTC).astimezone(ZoneInfo(timezone)).date()
+        assert schedule.cursor_effective_date in {local_before, local_after}
+
     engine.dispose()
 
 
