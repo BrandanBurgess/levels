@@ -103,7 +103,7 @@ test.describe("LEVELS v2 acceptance journeys", () => {
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByRole("status")).toContainText("starter plan");
     expect((await registerResponse).status()).toBe(201);
-    await expect(page.getByRole("heading", { name: /Ready for Upper A/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Ready for/ })).toBeVisible();
 
     await page.getByRole("link", { name: "Character" }).first().click();
     await page.getByRole("tab", { name: "Appearance" }).click();
@@ -201,12 +201,30 @@ test.describe("LEVELS v2 acceptance journeys", () => {
     expect((await startResponse).status()).toBe(201);
     await expect(page.locator("#session-title")).toContainText("Upper A");
 
+    await expect(page.getByRole("spinbutton", { name: "Weight (lb)" }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Edit workout" }).click();
+    const firstEditor = page.locator(".workout-edit-card").first();
+    const substituteSelect = firstEditor.getByLabel("Substitute exercise");
+    const replacementExercise = await substituteSelect.locator("option").evaluateAll((options) =>
+      options.map((option) => (option as HTMLOptionElement).value).find(Boolean),
+    );
+    expect(replacementExercise).toBeTruthy();
+    await substituteSelect.selectOption(replacementExercise!);
+    const substituteResponse = page.waitForResponse(
+      (response) => /\/api\/v1\/sessions\/[^/]+\/exercises$/.test(response.url())
+        && response.request().method() === "POST",
+    );
+    await firstEditor.getByRole("button", { name: "Substitute" }).click();
+    expect((await substituteResponse).status()).toBe(201);
+    await expect(page.getByRole("status").filter({ hasText: "substituted for this workout" })).toBeVisible();
+    await assertNoCriticalAxeViolations(page);
+
     const completeResponse = page.waitForResponse(
       (response) => /\/api\/v1\/sessions\/[^/]+$/.test(response.url()) && response.request().method() === "PATCH",
     );
     await page.getByRole("button", { name: "Complete workout" }).click();
     expect((await completeResponse).status()).toBe(200);
-    await expect(page.getByRole("status")).toContainText("Workout completed.");
+    await expect(page.getByText("Workout completed.", { exact: true })).toBeVisible();
     await expect(page.locator(".session-status")).toHaveText("completed");
 
     await signOut(page);

@@ -51,15 +51,18 @@ const splits = [
 function renderPage(isAuthenticated: boolean) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const logout = vi.fn();
+  const updateCurrentUser = vi.fn();
   const auth: AuthState = {
     ...(isAuthenticated ? { admin: { displayName: "Brandan Burgess" } } : {}),
     isAuthenticated,
     isSubmitting: false,
     login: vi.fn(async () => false),
     logout,
+    updateCurrentUser,
   };
   return {
     logout,
+    updateCurrentUser,
     ...render(
       <MemoryRouter>
         <AuthContext.Provider value={auth}>
@@ -110,7 +113,7 @@ describe("SettingsPage", () => {
         response: new Response(),
       };
     });
-    renderPage(true);
+    const { updateCurrentUser } = renderPage(true);
 
     fireEvent.change(await screen.findByRole("textbox", { name: "Display name" }), {
       target: { value: "Brandan B." },
@@ -131,7 +134,7 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(patch).toHaveBeenCalledTimes(2));
     expect(patch).toHaveBeenCalledWith(
       "/me/profile",
-      expect.objectContaining({ body: expect.objectContaining({ display_name: "Brandan B." }) }),
+      expect.objectContaining({ body: expect.objectContaining({ display_name: "Brandan B.", body_weight_kg: 79.38 }) }),
     );
     expect(patch).toHaveBeenCalledWith(
       "/settings",
@@ -141,12 +144,46 @@ describe("SettingsPage", () => {
           default_water_goal_ml: 3200,
           water_quick_add_ml: [300, 600],
           reduced_motion_override: true,
+          default_load_increment_kg: 2.5,
           visibility: expect.objectContaining({ show_water: true }),
         }),
       }),
     );
     expect(await screen.findByRole("status")).toHaveTextContent("Settings saved");
+    expect(updateCurrentUser).toHaveBeenCalledWith(expect.objectContaining({ display_name: "Brandan B." }));
     expect(document.documentElement).toHaveAttribute("data-reduced-motion", "true");
+  });
+
+  it("edits imperial weights while preserving canonical kilograms without toggle drift", async () => {
+    mockSettingsReads();
+    const patch = vi.spyOn(apiClient, "PATCH").mockImplementation(async (path) => {
+      if (path === "/me/profile") return { data: { ...profile, body_weight_kg: 80 }, response: new Response() };
+      return { data: settings, response: new Response() };
+    });
+    renderPage(true);
+
+    const bodyWeight = await screen.findByRole("spinbutton", { name: "Body weight (lb)" });
+    const loadIncrement = screen.getByRole("spinbutton", { name: "Load increment (lb)" });
+    expect(bodyWeight).toHaveValue(175);
+    expect(loadIncrement).toHaveValue(5.51);
+
+    fireEvent.change(bodyWeight, { target: { value: "176.3698097" } });
+    fireEvent.change(loadIncrement, { target: { value: "5.5115566" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Preferred units" }), { target: { value: "metric" } });
+    expect(screen.getByRole("spinbutton", { name: "Body weight (kg)" })).toHaveValue(80);
+    expect(screen.getByRole("spinbutton", { name: "Load increment (kg)" })).toHaveValue(2.5);
+    fireEvent.change(screen.getByRole("combobox", { name: "Preferred units" }), { target: { value: "imperial" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
+
+    await waitFor(() => expect(patch).toHaveBeenCalledTimes(2));
+    expect(patch).toHaveBeenCalledWith(
+      "/me/profile",
+      expect.objectContaining({ body: expect.objectContaining({ body_weight_kg: 80, preferred_units: "imperial" }) }),
+    );
+    expect(patch).toHaveBeenCalledWith(
+      "/settings",
+      expect.objectContaining({ body: expect.objectContaining({ default_load_increment_kg: 2.5 }) }),
+    );
   });
 
   it("signs the owner out from account tools", async () => {

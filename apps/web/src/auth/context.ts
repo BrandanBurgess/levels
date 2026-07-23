@@ -22,6 +22,7 @@ export type AuthState = {
   isSubmitting: boolean;
   error?: string;
   clearError?: () => void;
+  updateCurrentUser?: (updates: Partial<CurrentUser>) => void;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   register?: (input: RegistrationInput) => Promise<boolean>;

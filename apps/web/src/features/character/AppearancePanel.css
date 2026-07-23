@@ -38,6 +38,7 @@
 .appearance-highlight-toggle,
 .appearance-aura-toggle {
   display: flex;
+  min-height: 2.75rem;
   align-items: center;
   gap: 0.65rem;
   color: var(--text);
@@ -47,6 +48,7 @@
   justify-content: center;
   margin-top: 0.8rem;
   font-size: 0.84rem;
+  cursor: pointer;
 }
 
 .appearance-streak-copy {
@@ -100,9 +102,11 @@
 }
 
 .appearance-choice-row span {
-  display: block;
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
   padding: 0.55rem 0.85rem;
-  border: 1px solid rgb(196 154 255 / 25%);
+  border: 1px solid var(--control-border);
   border-radius: 999px;
   color: var(--text-muted);
   background: var(--surface-1);
@@ -118,12 +122,13 @@
 .appearance-swatch-row input:focus-visible + span {
   outline: 3px solid #fff;
   outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--purple-700);
 }
 
 .appearance-swatch {
   display: block;
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border: 2px solid transparent;
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 30%);
@@ -150,7 +155,7 @@
   width: 100%;
   min-height: 2.75rem;
   padding: 0.55rem 0.7rem;
-  border: 1px solid rgb(196 154 255 / 24%);
+  border: 1px solid var(--control-border);
   border-radius: 0.7rem;
   color: var(--text-strong);
   background: var(--surface-1);
@@ -162,7 +167,11 @@
   border: 1px solid rgb(196 154 255 / 18%);
   border-radius: 0.8rem;
   background: rgb(139 61 255 / 7%);
+  cursor: pointer;
 }
+
+.appearance-highlight-toggle input,
+.appearance-aura-toggle input { flex: 0 0 auto; }
 
 .appearance-aura-toggle small {
   display: block;

@@ -4,10 +4,10 @@
 .demo-brand span { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--purple-400); border-radius: 0.6rem 0.2rem; background: var(--purple-700); }
 .demo-badge { justify-self: center; margin: 0; padding: 0.42rem 0.65rem; border: 1px solid rgb(240 201 109 / 42%); border-radius: 999px; color: var(--warning); font-size: 0.67rem; font-weight: 900; letter-spacing: 0.06em; text-align: center; text-transform: uppercase; }
 .demo-header__actions { display: none; align-items: center; gap: 0.65rem; }
-.demo-header__actions a { color: var(--text); font-size: 0.8rem; font-weight: 800; text-decoration: none; }
-.demo-header__actions .demo-create-link { padding: 0.6rem 0.75rem; border-radius: 0.6rem; color: var(--text-strong); background: var(--purple-700); }
+.demo-header__actions a { display: inline-flex; min-height: 2.75rem; align-items: center; padding-inline: 0.65rem; color: var(--text); font-size: 0.8rem; font-weight: 800; text-decoration: none; }
+.demo-header__actions .demo-create-link { padding: 0.6rem 0.75rem; border: 1px solid var(--purple-400); border-radius: 0.6rem; color: var(--text-strong); background: var(--purple-700); }
 .demo-nav { display: flex; gap: 0.25rem; overflow-x: auto; padding: 0.6rem max(0.7rem, calc((100% - 72rem) / 2)); border-bottom: 1px solid rgb(196 154 255 / 12%); scrollbar-width: thin; }
-.demo-nav a { flex: 0 0 auto; padding: 0.65rem 0.8rem; border-radius: 0.6rem; color: var(--text-muted); font-size: 0.78rem; font-weight: 800; text-decoration: none; }
+.demo-nav a { display: inline-flex; flex: 0 0 auto; min-height: 2.75rem; align-items: center; padding: 0.65rem 0.8rem; border-radius: 0.6rem; color: var(--text-muted); font-size: 0.78rem; font-weight: 800; text-decoration: none; }
 .demo-nav a.is-active { color: var(--purple-150); background: rgb(116 48 215 / 20%); }
 .demo-main { width: min(100%, 72rem); margin: 0 auto; padding: clamp(1.5rem, 5vw, 3.5rem) clamp(1rem, 4vw, 2.5rem) 6rem; }
 .demo-heading { max-width: 48rem; }
@@ -30,12 +30,22 @@
 .demo-silhouette i:first-child { position: absolute; top: 0; left: 2.2rem; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: var(--purple-300); }
 .demo-silhouette i:last-child { position: absolute; inset: 2.3rem 0 0; border-radius: 50% 50% 1rem 1rem; background: linear-gradient(var(--purple-500), var(--purple-850)); clip-path: polygon(25% 0, 75% 0, 100% 42%, 73% 50%, 68% 100%, 32% 100%, 27% 50%, 0 42%); }
 .demo-state { margin-top: 2rem; padding: 2rem; border: 1px solid rgb(196 154 255 / 16%); border-radius: 1rem; color: var(--text-muted); background: var(--surface-1); text-align: center; }
-.demo-state button { min-height: 2.6rem; padding: 0.5rem 0.8rem; border: 0; border-radius: 0.6rem; color: var(--text-strong); background: var(--purple-700); font-weight: 800; }
+.demo-state button { min-height: 2.75rem; padding: 0.5rem 0.8rem; border: 1px solid var(--purple-400); border-radius: 0.6rem; color: var(--text-strong); background: var(--purple-700); font-weight: 800; }
 .demo-save-prompt { position: fixed; z-index: 70; right: 1rem; bottom: 1rem; left: 1rem; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 0.8rem; max-width: 42rem; margin-left: auto; padding: 1rem; border: 1px solid var(--purple-300); border-radius: 1rem; background: var(--surface-2); box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 58%); }
 .demo-save-prompt > div { display: grid; gap: 0.25rem; }
 .demo-save-prompt span { color: var(--text-muted); font-size: 0.75rem; }
-.demo-save-prompt a { padding: 0.65rem 0.8rem; border-radius: 0.6rem; color: var(--text-strong); background: var(--purple-700); font-size: 0.78rem; font-weight: 800; text-decoration: none; }
-.demo-save-prompt button { border: 0; color: var(--text-muted); background: transparent; font-size: 1.5rem; cursor: pointer; }
+.demo-save-prompt a { display: inline-flex; min-height: 2.75rem; align-items: center; padding: 0.65rem 0.8rem; border: 1px solid var(--purple-400); border-radius: 0.6rem; color: var(--text-strong); background: var(--purple-700); font-size: 0.78rem; font-weight: 800; text-decoration: none; }
+.demo-save-prompt button { min-width: 2.75rem; min-height: 2.75rem; border: 1px solid transparent; border-radius: 0.6rem; color: var(--text-muted); background: transparent; font-size: 1.5rem; cursor: pointer; }
+
+@media (hover: hover) {
+  .demo-nav a:hover, .demo-header__actions a:hover { color: var(--text-strong); background: var(--surface-2); }
+  .demo-action:hover, .demo-save-prompt a:hover { background: var(--purple-700); }
+}
+
+@media (max-width: 35rem) {
+  .demo-save-prompt { grid-template-columns: minmax(0, 1fr) auto; }
+  .demo-save-prompt > div { grid-column: 1 / -1; }
+}
 
 @media (min-width: 42rem) {
   .demo-header__actions { display: flex; }

@@ -18,13 +18,22 @@ const history: RecordItem[] = [
 const exercises = [{ id: "press", slug: "incline_press", name: "Incline Press", aliases: [], variation_group: "incline_press", movement_pattern: "horizontal_push", equipment: "barbell", measurement_type: "load_reps" as const, compound: true, unilateral: false, automatic_progression_enabled: true, muscle_targets: [{ slug: "upper_chest", display_name: "Upper Chest", role: "primary" as const, intensity: 1, svg_region_ids: ["chest_upper"] }] }];
 const sessions = [{ id: "session-1", version: 1, split_day_id: "upper-a", session_date_local: "2026-07-10", started_at: "2026-07-10T12:00:00Z", completed_at: "2026-07-10T13:00:00Z", status: "completed" as const, title: "Upper A", perceived_effort: 7, exercises: [{ id: "item", exercise_id: "press", display_name: "Incline Press", variation_group: "press", sequence: 1, planned_sets: 3, item_type: "main" as const, optional: false, sets: [] }] }];
 
-function renderPage(isAuthenticated = false, records = { current, history }) {
+function renderPage(isAuthenticated = false, records = { current, history }, units: "metric" | "imperial" = "metric") {
   vi.spyOn(apiClient, "GET")
     .mockResolvedValueOnce({ data: [...records.current], response: new Response() } as never)
     .mockResolvedValueOnce({ data: [...records.history], response: new Response() } as never)
     .mockResolvedValueOnce({ data: exercises, response: new Response() } as never)
     .mockResolvedValueOnce({ data: sessions, response: new Response() } as never);
-  const auth: AuthState = { ...(isAuthenticated ? { admin: { displayName: "Brandan" } } : {}), isAuthenticated, isSubmitting: false, login: vi.fn(async () => false), logout: vi.fn() };
+  const auth: AuthState = {
+    ...(isAuthenticated ? {
+      admin: { displayName: "Brandan" },
+      user: { id: "user-1", email: "member@example.com", display_name: "Brandan", role: "member" as const, account_status: "active" as const, timezone: "America/Toronto", preferred_units: units },
+    } : {}),
+    isAuthenticated,
+    isSubmitting: false,
+    login: vi.fn(async () => false),
+    logout: vi.fn(),
+  };
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(<AuthContext.Provider value={auth}><QueryClientProvider client={client}><ProgressPage /></QueryClientProvider></AuthContext.Provider>);
 }
@@ -49,6 +58,15 @@ describe("ProgressPage", () => {
     fireEvent.change(screen.getByLabelText("Muscle"), { target: { value: "upper_chest" } });
     expect(screen.getAllByText("Incline Press")).not.toHaveLength(0);
     expect(apiClient.GET).toHaveBeenCalledWith("/sessions", { params: { query: {} } });
+  });
+
+  it("converts weight-derived records using the owner's persisted imperial preference", async () => {
+    const maxLoad: RecordItem = { ...currentRecord, id: "max-load", record_type: "max_load", unit: "kg reps", value_numeric: 100 };
+    renderPage(true, { current: [currentRecord, maxLoad], history }, "imperial");
+
+    expect(await screen.findAllByText("176.37 lb estimated")).not.toHaveLength(0);
+    expect(screen.getByText("220.46 lb reps")).toBeInTheDocument();
+    expect(screen.getAllByText(/moved from 165.35 lb estimated to 176.37 lb estimated/)).not.toHaveLength(0);
   });
 
   it("explains a privacy-safe empty records state", async () => {

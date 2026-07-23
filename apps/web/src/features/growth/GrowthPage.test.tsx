@@ -33,11 +33,12 @@ const insufficient: Suggestion = {
   source_session_ids: ["session-one"],
 };
 
-function renderPage(isAuthenticated: boolean, data: Suggestion[] = [increase, insufficient]) {
+function renderPage(isAuthenticated: boolean, data: Suggestion[] = [increase, insufficient], units: "metric" | "imperial" = "metric") {
   vi.spyOn(apiClient, "GET").mockResolvedValue({ data, response: new Response() });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const auth: AuthState = {
     ...(isAuthenticated ? { admin: { displayName: "Brandan" } } : {}),
+    ...(isAuthenticated ? { user: { id: "user-1", email: "member@example.com", display_name: "Brandan", role: "member" as const, account_status: "active" as const, timezone: "America/Toronto", preferred_units: units } } : {}),
     isAuthenticated,
     isSubmitting: false,
     login: vi.fn(async () => false),
@@ -64,7 +65,7 @@ describe("GrowthPage", () => {
     renderPage(false);
 
     expect(await screen.findByRole("heading", { name: "Incline Press" })).toBeInTheDocument();
-    expect(screen.getByText("Increase by 1.133981 kg")).toBeInTheDocument();
+    expect(screen.getByText("Increase by 1.13 kg")).toBeInTheDocument();
     expect(screen.getByLabelText("high confidence")).toBeInTheDocument();
     expect(screen.getByText(/smallest configured load increment/)).toBeInTheDocument();
     expect(screen.getByText("Session 1 · abcdef01")).toBeInTheDocument();
@@ -83,6 +84,12 @@ describe("GrowthPage", () => {
       "href",
       "/journal",
     );
+  });
+
+  it("shows kilogram deltas in the owner's persisted imperial preference", async () => {
+    renderPage(true, [increase], "imperial");
+
+    expect(await screen.findByText("Increase by 2.5 lb")).toBeInTheDocument();
   });
 
   it("requests guidance for a selected training date", async () => {

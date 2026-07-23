@@ -6,6 +6,7 @@ import { NavLink } from "react-router-dom";
 import { apiClient } from "../../api/client";
 import { useAuth } from "../../auth/context";
 import { EmptyState, ErrorState, LoadingState } from "../../ui/AsyncState";
+import { formatRecordValue, type UnitPreference } from "../../utils/units";
 
 type Suggestion = components["schemas"]["GrowthSuggestion"];
 
@@ -17,11 +18,11 @@ async function loadSuggestions(date?: string) {
   return data;
 }
 
-function actionLabel(suggestion: Suggestion) {
+function actionLabel(suggestion: Suggestion, units: UnitPreference) {
   const delta = suggestion.suggested_delta;
   switch (suggestion.suggestion_type) {
     case "increase_load":
-      return `Increase by ${delta ?? 0} ${suggestion.delta_unit ?? "kg"}`;
+      return `Increase by ${formatRecordValue(delta ?? 0, suggestion.delta_unit ?? "kg", units)}`;
     case "add_rep":
       return "Add one rep";
     case "repeat_load":
@@ -44,7 +45,8 @@ function evidenceLabel(sourceId: string, index: number) {
 }
 
 export function GrowthPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const units = user?.preferred_units ?? "metric";
   const [date, setDate] = useState("");
   const [usedExercise, setUsedExercise] = useState<string>();
   const query = useQuery({
@@ -91,7 +93,7 @@ export function GrowthPage() {
                 <div><p className="card-label">{suggestion.confidence} confidence</p><h2>{suggestion.exercise_name}</h2></div>
                 <span className={`confidence-dot confidence-dot--${suggestion.confidence}`} aria-label={`${suggestion.confidence} confidence`} />
               </div>
-              <p className="growth-action">{actionLabel(suggestion)}</p>
+              <p className="growth-action">{actionLabel(suggestion, units)}</p>
               <div className="growth-reasoning">
                 <h3>Why this suggestion</h3>
                 <ul>{suggestion.explanation.map((reason) => <li key={reason}>{reason}</li>)}</ul>

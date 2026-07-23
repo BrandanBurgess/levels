@@ -1,0 +1,75 @@
+.workout-edit-card {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid rgb(196 154 255 / 20%);
+  border-radius: 0.65rem;
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.workout-edit-card__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: end;
+}
+
+.workout-edit-card__row label {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.workout-edit-card__row input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.52rem;
+  border: 1px solid rgb(196 154 255 / 24%);
+  border-radius: 0.4rem;
+  color: var(--text);
+  background: var(--surface-1);
+}
+
+.workout-edit-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.workout-edit-card__actions .button--danger {
+  color: #ffb8c3;
+}
+
+.workout-edit-card .substitution-control label,
+.workout-edit-add label {
+  color: var(--text-muted);
+}
+
+.workout-edit-card .substitution-control select,
+.workout-edit-add select {
+  border-color: rgb(196 154 255 / 24%);
+  color: var(--text);
+  background: var(--surface-1);
+}
+
+.workout-edit-add {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px dashed rgb(196 154 255 / 28%);
+  border-radius: 0.65rem;
+}
+
+.workout-editor-message {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.workout-editor-message[role="alert"] {
+  color: #ffb8c3;
+}

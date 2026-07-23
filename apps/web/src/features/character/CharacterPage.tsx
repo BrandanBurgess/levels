@@ -4,6 +4,7 @@ import { useState, type FormEvent, type KeyboardEvent } from "react";
 
 import { apiClient } from "../../api/client";
 import { ErrorState, LoadingState } from "../../ui/AsyncState";
+import { formatWeight, weightFromKilograms, weightToKilograms, weightUnit } from "../../utils/units";
 import { Avatar } from "../avatar/Avatar";
 import { AppearancePanel } from "./AppearancePanel";
 import "./CharacterPage.css";
@@ -51,18 +52,25 @@ function formatHeight(heightCm: number, units: Profile["preferred_units"]) {
   return `${Math.floor(totalInches / 12)} ft ${totalInches % 12} in`;
 }
 
-function formatWeight(weightKg: number, units: Profile["preferred_units"]) {
-  return units === "metric" ? `${weightKg.toFixed(1)} kg` : `${Math.round(weightKg * 2.20462)} lb`;
-}
-
 function ProfileEditor({ profile }: { profile: Profile }) {
   const queryClient = useQueryClient();
   const [height, setHeight] = useState(profile.height_cm ?? 179);
-  const [weight, setWeight] = useState(profile.body_weight_kg ?? 79.4);
+  const [weightKilograms, setWeightKilograms] = useState(profile.body_weight_kg ?? 79.4);
+  const [weight, setWeight] = useState(() => weightFromKilograms(profile.body_weight_kg ?? 79.4, profile.preferred_units).toString());
+  const displayedWeightUnit = weightUnit(profile.preferred_units);
+  const minimumWeight = weightFromKilograms(35, profile.preferred_units);
+  const maximumWeight = weightFromKilograms(250, profile.preferred_units);
+
+  function updateWeight(value: string) {
+    setWeight(value);
+    if (value !== "" && Number.isFinite(Number(value))) {
+      setWeightKilograms(weightToKilograms(Number(value), profile.preferred_units));
+    }
+  }
   const mutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await apiClient.PATCH("/me/profile", {
-        body: { height_cm: height, body_weight_kg: weight },
+        body: { height_cm: height, body_weight_kg: weightKilograms },
       });
       if (!data || error) throw new Error("Profile update failed");
       return data;
@@ -100,9 +108,9 @@ function ProfileEditor({ profile }: { profile: Profile }) {
 
       <div className="measurement-control">
         <label htmlFor="weight-range">Body weight</label>
-        <output htmlFor="weight-range weight-number">{weight.toFixed(1)} kg</output>
-        <input id="weight-range" max="250" min="35" onChange={(event) => setWeight(Number(event.target.value))} step="0.1" type="range" value={weight} />
-        <input aria-label="Body weight in kilograms" id="weight-number" max="250" min="35" onChange={(event) => setWeight(Number(event.target.value))} step="0.1" type="number" value={weight} />
+        <output htmlFor="weight-range weight-number">{weight} {displayedWeightUnit}</output>
+        <input id="weight-range" max={maximumWeight} min={minimumWeight} onChange={(event) => updateWeight(event.target.value)} step="any" type="range" value={weight} />
+        <input aria-label={`Body weight in ${profile.preferred_units === "imperial" ? "pounds" : "kilograms"}`} id="weight-number" max={maximumWeight} min={minimumWeight} onChange={(event) => updateWeight(event.target.value)} step="any" type="number" value={weight} />
       </div>
 
       {mutation.isError ? <p className="form-error" role="alert">Profile changes could not be saved.</p> : null}
@@ -190,7 +198,7 @@ function CharacterOverviewPanel({ overview }: { overview: CharacterOverview }) {
           <dl className="character-facts">
             <div><dt>Name</dt><dd>{profile.display_name}</dd></div>
             <div><dt>Height</dt><dd>{profile.height_cm != null ? formatHeight(profile.height_cm, profile.preferred_units) : "Not set"}</dd></div>
-            <div><dt>Body weight</dt><dd>{profile.body_weight_kg != null ? formatWeight(profile.body_weight_kg, profile.preferred_units) : "Not set"}</dd></div>
+            <div><dt>Body weight</dt><dd>{profile.body_weight_kg != null ? formatWeight(profile.body_weight_kg, profile.preferred_units, profile.preferred_units === "imperial" ? 0 : 1) : "Not set"}</dd></div>
             <div><dt>Units</dt><dd>{profile.preferred_units}</dd></div>
             <div><dt>Current streak</dt><dd>{today.streak.current_count} · {today.streak.tier}</dd></div>
           </dl>
